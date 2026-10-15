@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hana 的生活札記 · 慢下來的日常、手作與自然。精選生活日誌、靈感相簿與電子報訂閱。">
+  <meta name="theme-color" content="#f7f4ef">
+  <meta property="og:title" content="Hana 的生活札記">
+  <meta property="og:description" content="慢下來的日常、手作與自然。">
+  <meta property="og:image" content="assets/images/life-hero.jpg">
+  <title>Hana 的生活札記｜個人網誌與品牌形象</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500&family=Noto+Serif+TC:wght@400;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Playfair Display"', '"Noto Serif TC"', 'Georgia', 'serif'],
+            sans: ['Inter', '"Noto Sans TC"', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            paper: '#f7f4ef', ink: '#2b2a27', terracotta: '#b5835a', sage: '#8a9a7b'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="bg-paper font-sans text-ink antialiased">
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <!-- ============ 極簡 Header ============ -->
+  <header class="sticky top-0 z-40 bg-paper/90 backdrop-blur-md transition-all duration-300 ease-in-out" data-header-scroll>
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 lg:px-10">
+      <a href="#top" class="group flex items-baseline gap-2" aria-label="Hana 首頁">
+        <span class="font-serif text-2xl italic tracking-tight transition-colors duration-300 group-hover:text-terracotta">Hana</span>
+        <span class="hidden text-xs uppercase tracking-[.3em] text-ink/60 sm:inline">Journal</span>
+      </a>
+
+      <nav aria-label="主要導覽">
+        <ul class="hidden items-center gap-8 text-sm md:flex">
+          <li><a href="#journal" class="underline-offset-8 transition-all duration-300 ease-in-out hover:text-terracotta hover:underline">日誌</a></li>
+          <li><a href="#moodboard" class="underline-offset-8 transition-all duration-300 ease-in-out hover:text-terracotta hover:underline">靈感相簿</a></li>
+          <li><a href="#newsletter" class="underline-offset-8 transition-all duration-300 ease-in-out hover:text-terracotta hover:underline">電子報</a></li>
+          <li><a href="/" class="underline-offset-8 transition-all duration-300 ease-in-out hover:text-terracotta hover:underline">總覽</a></li>
+        </ul>
+        <button type="button" class="grid h-10 w-10 place-items-center md:hidden" data-nav-toggle aria-expanded="false" aria-controls="life-menu">
+          <span class="sr-only">開啟選單</span>
+          <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+        </button>
+      </nav>
+    </div>
+    <div id="life-menu" class="hidden border-t border-ink/10 bg-paper px-6 py-5 md:hidden">
+      <ul class="flex flex-col gap-4 font-serif text-lg">
+        <li><a href="#journal">日誌</a></li>
+        <li><a href="#moodboard">靈感相簿</a></li>
+        <li><a href="#newsletter">電子報</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ Personal Intro ============ -->
+    <section id="top" class="mx-auto max-w-6xl px-6 pb-24 pt-10 lg:px-10 lg:pb-32 lg:pt-16" aria-labelledby="intro-title">
+      <div class="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+        <figure class="reveal lg:col-span-6">
+          <div class="img-zoom relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-sage/20 shadow-[0_1px_2px_rgba(43,42,39,.06),0_8px_24px_-6px_rgba(43,42,39,.18),0_24px_48px_-12px_rgba(43,42,39,.22)]">
+            <img src="assets/images/life-hero.jpg" alt="米色亞麻布上的一杯茶與乾燥尤加利枝條，柔和的晨光從窗邊灑入" width="1200" height="1500" loading="lazy" class="h-full w-full object-cover">
+          </div>
+          <figcaption class="mt-4 text-xs tracking-wide text-ink/50">晨間的靜物 · 攝影 Hana</figcaption>
+        </figure>
+
+        <div class="reveal reveal-delay-1 lg:col-span-6 lg:pl-6">
+          <p class="font-serif text-sm italic text-terracotta">Hello, I'm Hana —</p>
+          <h1 id="intro-title" class="mt-4 font-serif text-4xl font-semibold leading-[1.2] sm:text-5xl lg:text-6xl">
+            慢下來，<br>讓生活有<em class="font-normal italic text-terracotta">質地</em>。
+          </h1>
+          <div class="mt-8 space-y-5 text-base leading-[2] text-ink/80">
+            <p>我是一名居住在台中的手作與文字工作者。過去十年，我在陶藝工作室、紙品設計與旅行攝影之間來回，慢慢理解「少一點、好一點」的意義。</p>
+            <p>這裡記錄的是日常裡微小的美好：一杯剛沖好的手沖咖啡、一本寫到一半的筆記本、窗邊的光影如何在一天之中移動。</p>
+          </div>
+          <blockquote class="mt-10 border-l border-terracotta/60 pl-6 font-serif text-xl italic leading-relaxed text-ink/90">
+            「不必追趕每一件事，只要認真地活在當下。」
+          </blockquote>
+          <ul class="mt-10 flex flex-wrap gap-3 text-sm" aria-label="社群與聯絡">
+            <li><a href="#" class="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:border-terracotta hover:text-terracotta"><i data-lucide="camera" class="h-4 w-4" aria-hidden="true"></i>Instagram</a></li>
+            <li><a href="#" class="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:border-terracotta hover:text-terracotta"><i data-lucide="rss" class="h-4 w-4" aria-hidden="true"></i>Blog RSS</a></li>
+            <li><a href="mailto:hello@hana.example" class="inline-flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:border-terracotta hover:text-terracotta"><i data-lucide="mail" class="h-4 w-4" aria-hidden="true"></i>寫信給我</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Featured Stories ============ -->
+    <section id="journal" class="paper-grain bg-[#f1ece4] py-24 lg:py-32" aria-labelledby="journal-title">
+      <div class="mx-auto max-w-6xl px-6 lg:px-10">
+        <header class="reveal flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+          <div>
+            <p class="text-xs uppercase tracking-[.3em] text-ink/50">Featured Stories</p>
+            <h2 id="journal-title" class="mt-3 font-serif text-3xl font-semibold sm:text-4xl">精選生活日誌</h2>
+          </div>
+          <a href="#journal" class="group inline-flex items-center gap-2 text-sm font-medium">
+            查看所有文章
+            <i data-lucide="arrow-right" class="h-4 w-4 transition-transform duration-300 ease-in-out group-hover:translate-x-1" aria-hidden="true"></i>
+          </a>
+        </header>
+
+        <div class="mt-16 grid gap-12 md:grid-cols-2 lg:gap-x-16 lg:gap-y-20">
+          <!-- 大卡片 -->
+          <article class="reveal group md:col-span-2 md:grid md:grid-cols-12 md:items-center md:gap-10">
+            <a href="#journal" class="img-zoom block overflow-hidden rounded-3xl md:col-span-7 shadow-[0_2px_4px_rgba(43,42,39,.06),0_12px_30px_-8px_rgba(43,42,39,.2)]">
+              <img src="assets/images/life-post-1.jpg" alt="陶製手沖咖啡組擺放在淺色橡木桌上，晨光柔和" width="1200" height="800" loading="lazy" class="aspect-[3/2] w-full object-cover">
+            </a>
+            <div class="mt-6 md:col-span-5 md:mt-0">
+              <ul class="flex flex-wrap gap-2 text-xs" aria-label="文章標籤">
+                <li class="rounded-full bg-terracotta/15 px-3 py-1 text-terracotta">手作</li>
+                <li class="rounded-full bg-sage/20 px-3 py-1 text-ink/80">咖啡</li>
+              </ul>
+              <h3 class="mt-4 font-serif text-2xl font-semibold leading-snug sm:text-3xl">
+                <a href="#journal" class="transition-colors duration-300 ease-in-out group-hover:text-terracotta">一個陶杯的時間：手沖咖啡的晨間儀式</a>
+              </h3>
+              <p class="mt-4 leading-relaxed text-ink/75">在工作室燒出第一批杯子之後，我開始把每天早上的那十分鐘當作一段專注的練習。</p>
+              <p class="mt-5 flex items-center gap-4 text-xs text-ink/55">
+                <time datetime="2026-09-28">2026.09.28</time>
+                <span aria-hidden="true">·</span>
+                <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="h-3.5 w-3.5" aria-hidden="true"></i>閱讀約 6 分鐘</span>
+              </p>
+            </div>
+          </article>
+
+          <article class="reveal reveal-delay-1 group flex flex-col">
+            <a href="#journal" class="img-zoom block overflow-hidden rounded-3xl shadow-[0_2px_4px_rgba(43,42,39,.06),0_12px_30px_-8px_rgba(43,42,39,.2)]">
+              <img src="assets/images/life-post-2.jpg" alt="皮革筆記本與鋼筆，旁邊放著一小枝綠葉" width="1200" height="900" loading="lazy" class="aspect-[4/3] w-full object-cover">
+            </a>
+            <ul class="mt-6 flex flex-wrap gap-2 text-xs" aria-label="文章標籤">
+              <li class="rounded-full bg-sage/20 px-3 py-1 text-ink/80">紙筆</li>
+              <li class="rounded-full bg-sage/20 px-3 py-1 text-ink/80">書寫</li>
+            </ul>
+            <h3 class="mt-4 font-serif text-xl font-semibold leading-snug sm:text-2xl">
+              <a href="#journal" class="transition-colors duration-300 ease-in-out group-hover:text-terracotta">寫給自己的一頁：我的手帳哲學</a>
+            </h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-ink/75">不追求完美的排版，只保留最真實的一天。手帳不是任務清單，而是一面安靜的鏡子。</p>
+            <p class="mt-5 flex items-center gap-4 text-xs text-ink/55">
+              <time datetime="2026-08-14">2026.08.14</time>
+              <span aria-hidden="true">·</span>
+              <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="h-3.5 w-3.5" aria-hidden="true"></i>閱讀約 4 分鐘</span>
+            </p>
+          </article>
+
+          <article class="reveal reveal-delay-2 group flex flex-col">
+            <a href="#journal" class="img-zoom block overflow-hidden rounded-3xl shadow-[0_2px_4px_rgba(43,42,39,.06),0_12px_30px_-8px_rgba(43,42,39,.2)]">
+              <img src="assets/images/life-post-3.jpg" alt="日式和室的矮木桌，上面有一只插著乾燥草的花瓶" width="1200" height="900" loading="lazy" class="aspect-[4/3] w-full object-cover">
+            </a>
+            <ul class="mt-6 flex flex-wrap gap-2 text-xs" aria-label="文章標籤">
+              <li class="rounded-full bg-sage/20 px-3 py-1 text-ink/80">居家</li>
+              <li class="rounded-full bg-terracotta/15 px-3 py-1 text-terracotta">侘寂</li>
+            </ul>
+            <h3 class="mt-4 font-serif text-xl font-semibold leading-snug sm:text-2xl">
+              <a href="#journal" class="transition-colors duration-300 ease-in-out group-hover:text-terracotta">留白的房間：如何用一張矮桌改變生活節奏</a>
+            </h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-ink/75">少即是多並非口號。從整理一張桌子開始，我們的注意力與身心都能找到更舒服的位置。</p>
+            <p class="mt-5 flex items-center gap-4 text-xs text-ink/55">
+              <time datetime="2026-07-02">2026.07.02</time>
+              <span aria-hidden="true">·</span>
+              <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="h-3.5 w-3.5" aria-hidden="true"></i>閱讀約 5 分鐘</span>
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Moodboard Gallery（Lightbox） ============ -->
+    <section id="moodboard" class="mx-auto max-w-6xl px-6 py-24 lg:px-10 lg:py-32" aria-labelledby="mood-title">
+      <div class="reveal mx-auto max-w-2xl text-center">
+        <p class="text-xs uppercase tracking-[.3em] text-ink/50">Curated Moodboard</p>
+        <h2 id="mood-title" class="mt-3 font-serif text-3xl font-semibold sm:text-4xl">靈感相簿</h2>
+        <p class="mt-4 leading-relaxed text-ink/70">旅途中遇見的光、質地與寂靜。點擊任一張作品可放大檢視。</p>
+      </div>
+
+      <ul class="mt-14 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3" role="list">
+        <li class="reveal lg:row-span-2">
+          <button type="button" class="img-zoom group relative block w-full overflow-hidden rounded-2xl text-left" data-lightbox-item data-src="assets/images/life-gallery-1.jpg" data-alt="金色時刻下平滑起伏的沙丘，光影長長地延伸" data-caption="沙丘 · 沙漠的黃昏">
+            <img src="assets/images/life-gallery-1.jpg" alt="金色時刻下平滑起伏的沙丘，光影長長地延伸" width="1200" height="1600" loading="lazy" class="aspect-[3/4] h-full w-full object-cover lg:aspect-auto">
+            <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-5 text-sm text-paper opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100 group-focus-visible:opacity-100">沙丘 · 沙漠的黃昏</span>
+          </button>
+        </li>
+        <li class="reveal reveal-delay-1">
+          <button type="button" class="img-zoom group relative block w-full overflow-hidden rounded-2xl text-left" data-lightbox-item data-src="assets/images/life-gallery-2.jpg" data-alt="斑駁的湖水藍木門，白色牆面與柔和的陰天光線" data-caption="老門 · 時間的顏色">
+            <img src="assets/images/life-gallery-2.jpg" alt="斑駁的湖水藍木門，白色牆面與柔和的陰天光線" width="1200" height="900" loading="lazy" class="aspect-[4/3] h-full w-full object-cover">
+            <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-5 text-sm text-paper opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100 group-focus-visible:opacity-100">老門 · 時間的顏色</span>
+          </button>
+        </li>
+        <li class="reveal reveal-delay-2">
+          <button type="button" class="img-zoom group relative block w-full overflow-hidden rounded-2xl text-left" data-lightbox-item data-src="assets/images/life-gallery-3.jpg" data-alt="暗色石面上的單片白色花瓣特寫" data-caption="花瓣 · 微觀的寂靜">
+            <img src="assets/images/life-gallery-3.jpg" alt="暗色石面上的單片白色花瓣特寫" width="1200" height="900" loading="lazy" class="aspect-[4/3] h-full w-full object-cover">
+            <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-5 text-sm text-paper opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100 group-focus-visible:opacity-100">花瓣 · 微觀的寂靜</span>
+          </button>
+        </li>
+        <li class="reveal lg:col-span-2">
+          <button type="button" class="img-zoom group relative block w-full overflow-hidden rounded-2xl text-left" data-lightbox-item data-src="assets/images/life-gallery-4.jpg" data-alt="黎明時分薄霧籠罩的山脊，黑白層次分明" data-caption="山嵐 · 黎明的層次">
+            <img src="assets/images/life-gallery-4.jpg" alt="黎明時分薄霧籠罩的山脊，黑白層次分明" width="1600" height="900" loading="lazy" class="aspect-[16/9] h-full w-full object-cover">
+            <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-5 text-sm text-paper opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100 group-focus-visible:opacity-100">山嵐 · 黎明的層次</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ============ Newsletter ============ -->
+    <section id="newsletter" class="px-6 pb-24 lg:px-10 lg:pb-32" aria-labelledby="news-title">
+      <div class="reveal mx-auto max-w-3xl rounded-[2rem] bg-ink px-8 py-14 text-center text-paper shadow-[0_2px_4px_rgba(0,0,0,.1),0_16px_40px_-10px_rgba(0,0,0,.35)] sm:px-14">
+        <i data-lucide="mail-open" class="mx-auto h-8 w-8 text-terracotta" aria-hidden="true"></i>
+        <h2 id="news-title" class="mt-5 font-serif text-3xl font-semibold sm:text-4xl">每月一封慢信</h2>
+        <p class="mx-auto mt-4 max-w-md leading-relaxed text-paper/75">收錄本月日誌、手作散記與私藏書單。不打擾、不轟炸，隨時可取消訂閱。</p>
+
+        <form class="mx-auto mt-10 max-w-md" data-validate novalidate aria-labelledby="news-title">
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <div class="flex-1 text-left">
+              <label for="nl-email" class="sr-only">電子信箱</label>
+              <input id="nl-email" name="email" type="email" required autocomplete="email" data-error="請輸入有效的電子信箱" aria-describedby="nl-email-error" placeholder="your@email.com" class="w-full rounded-full border border-paper/20 bg-transparent px-5 py-3.5 text-paper placeholder-paper/40 transition-all duration-300 ease-in-out focus:border-terracotta focus:outline-none focus:ring-4 focus:ring-terracotta/25">
+            </div>
+            <button type="submit" class="rounded-full bg-paper px-7 py-3.5 font-medium text-ink transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-terracotta hover:text-paper">訂閱</button>
+          </div>
+          <p id="nl-email-error" class="mt-3 hidden text-left text-xs text-rose-300" role="alert"></p>
+          <p data-form-success tabindex="-1" class="mt-4 hidden text-sm text-terracotta" role="status">謝謝你！確認信已寄出，請到信箱完成訂閱。</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ Lightbox Dialog ============ -->
+  <dialog id="lightbox" class="site-dialog" aria-label="作品放大檢視">
+    <div class="relative mx-auto w-full">
+      <figure class="overflow-hidden rounded-2xl bg-ink">
+        <img data-lightbox-img src="assets/images/life-gallery-1.jpg" alt="" class="max-h-[80vh] w-full object-contain">
+        <figcaption data-lightbox-caption class="px-6 py-4 font-serif text-paper"></figcaption>
+      </figure>
+      <div class="mt-4 flex items-center justify-between">
+        <button type="button" data-lightbox-prev class="inline-flex items-center gap-2 rounded-full border border-paper/30 px-4 py-2 text-sm text-paper transition-all duration-300 ease-in-out hover:bg-paper/10"><i data-lucide="chevron-left" class="h-4 w-4" aria-hidden="true"></i>上一張</button>
+        <button type="button" data-dialog-close class="inline-flex items-center gap-2 rounded-full border border-paper/30 px-4 py-2 text-sm text-paper transition-all duration-300 ease-in-out hover:bg-paper/10"><i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>關閉</button>
+        <button type="button" data-lightbox-next class="inline-flex items-center gap-2 rounded-full border border-paper/30 px-4 py-2 text-sm text-paper transition-all duration-300 ease-in-out hover:bg-paper/10">下一張<i data-lucide="chevron-right" class="h-4 w-4" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ============ Footer ============ -->
+  <footer class="border-t border-ink/10">
+    <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 py-12 text-sm text-ink/70 sm:flex-row lg:px-10">
+      <a href="#top" class="font-serif text-xl italic text-ink">Hana</a>
+      <nav aria-label="頁尾導覽">
+        <ul class="flex flex-wrap justify-center gap-6">
+          <li><a href="#journal" class="transition-colors duration-300 hover:text-terracotta">日誌</a></li>
+          <li><a href="#moodboard" class="transition-colors duration-300 hover:text-terracotta">靈感相簿</a></li>
+          <li><a href="#" class="transition-colors duration-300 hover:text-terracotta">Instagram</a></li>
+          <li><a href="/" class="transition-colors duration-300 hover:text-terracotta">風格總覽</a></li>
+        </ul>
+      </nav>
+      <p class="text-xs text-ink/50">© <span data-year>2026</span> Hana · 台中</p>
+    </div>
+  </footer>
+</body>
+</html>

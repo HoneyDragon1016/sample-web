@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lumora 企業顧問 · 策略、數位轉型與品牌設計的一站式商務夥伴。預約諮詢，讓成長有清晰方向。">
+  <meta name="theme-color" content="#05060f">
+  <meta property="og:title" content="Lumora 企業顧問｜商務接洽">
+  <meta property="og:description" content="策略、數位轉型與品牌設計的一站式商務夥伴。">
+  <meta property="og:image" content="assets/images/biz-hero.jpg">
+  <title>Lumora 企業顧問｜商務接洽與預約諮詢</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'Noto Sans TC', 'system-ui', 'sans-serif'] },
+          colors: {
+            biz: { bg: '#05060f', brand: '#6366f1', accent: '#22d3ee' }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="bg-biz-bg font-sans text-slate-200 antialiased">
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <!-- ============ Sticky 導航列 ============ -->
+  <header data-header-scroll class="sticky top-0 z-50 border-b border-transparent transition-all duration-300 ease-in-out [&.is-scrolled]:border-white/10 [&.is-scrolled]:bg-biz-bg/70 [&.is-scrolled]:backdrop-blur-xl">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8" aria-label="主要導覽">
+      <a href="#top" class="flex items-center gap-2.5 font-extrabold tracking-tight text-white" aria-label="Lumora 首頁">
+        <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-biz-brand to-biz-accent shadow-[0_0_20px_-2px_rgba(99,102,241,.8)]" aria-hidden="true">
+          <i data-lucide="hexagon" class="h-4 w-4 text-white"></i>
+        </span>
+        <span>Lumora<span class="text-biz-accent">.</span></span>
+      </a>
+
+      <ul class="hidden items-center gap-8 text-sm font-medium text-slate-300 md:flex">
+        <li><a href="#services" class="transition-all duration-300 ease-in-out hover:text-white">服務項目</a></li>
+        <li><a href="#cases" class="transition-all duration-300 ease-in-out hover:text-white">成功案例</a></li>
+        <li><a href="#clients" class="transition-all duration-300 ease-in-out hover:text-white">客戶評價</a></li>
+        <li><a href="/" class="transition-all duration-300 ease-in-out hover:text-white">返回總覽</a></li>
+      </ul>
+
+      <div class="flex items-center gap-3">
+        <a href="#contact" class="btn-glow hidden rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 sm:inline-flex">預約諮詢</a>
+        <button type="button" class="grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-white md:hidden" data-nav-toggle aria-expanded="false" aria-controls="mobile-menu">
+          <span class="sr-only">開啟選單</span>
+          <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+        </button>
+      </div>
+    </nav>
+
+    <div id="mobile-menu" class="hidden border-t border-white/10 bg-biz-bg/95 px-5 py-4 backdrop-blur-xl md:hidden">
+      <ul class="flex flex-col gap-4 text-slate-200">
+        <li><a href="#services" class="block py-1">服務項目</a></li>
+        <li><a href="#cases" class="block py-1">成功案例</a></li>
+        <li><a href="#clients" class="block py-1">客戶評價</a></li>
+        <li><a href="#contact" class="btn-glow mt-2 inline-flex justify-center rounded-full bg-white px-5 py-2.5 font-semibold text-slate-900">預約諮詢</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ Hero ============ -->
+    <section id="top" class="hero-orbs relative isolate overflow-hidden" aria-labelledby="hero-title">
+      <img src="assets/images/biz-hero.jpg" alt="" aria-hidden="true" width="1600" height="900" loading="lazy" class="absolute inset-0 -z-10 h-full w-full object-cover opacity-30 mix-blend-screen">
+      <div class="absolute inset-0 -z-10 bg-gradient-to-b from-biz-bg/20 via-biz-bg/70 to-biz-bg" aria-hidden="true"></div>
+
+      <div class="mx-auto max-w-7xl px-5 pb-20 pt-20 text-center lg:px-8 lg:pb-28 lg:pt-28">
+        <p class="reveal mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-300 backdrop-blur">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></span>
+          2026 企業成長計畫開放申請中
+        </p>
+        <h1 id="hero-title" class="reveal reveal-delay-1 mx-auto mt-6 max-w-4xl text-4xl font-black leading-[1.15] tracking-tight text-white sm:text-5xl lg:text-7xl">
+          讓企業的下一步，<br class="hidden sm:block">
+          <span class="glow-text">有清晰的方向與速度</span>
+        </h1>
+        <p class="reveal reveal-delay-2 mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
+          Lumora 結合策略顧問、數位轉型與品牌設計，陪伴成長型企業從洞察、規劃到落地執行，每一步都有可量測的成果。
+        </p>
+
+        <div class="reveal reveal-delay-3 mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <a href="#contact" class="btn-glow inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-biz-brand to-indigo-500 px-7 py-3.5 font-semibold text-white sm:w-auto">
+            免費預約諮詢
+            <i data-lucide="arrow-right" class="h-4 w-4" aria-hidden="true"></i>
+          </a>
+          <a href="#services" class="btn-glow glass inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white sm:w-auto">
+            <i data-lucide="play" class="h-4 w-4" aria-hidden="true"></i>
+            瀏覽服務內容
+          </a>
+        </div>
+
+        <!-- Metrics -->
+        <dl class="reveal mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-4 lg:grid-cols-4">
+          <div class="glass glow-card rounded-2xl p-6 text-left">
+            <dt class="text-xs font-medium uppercase tracking-wider text-slate-400">合作企業</dt>
+            <dd class="mt-2 text-3xl font-extrabold text-white"><span data-count="320">320</span>+</dd>
+          </div>
+          <div class="glass glow-card rounded-2xl p-6 text-left">
+            <dt class="text-xs font-medium uppercase tracking-wider text-slate-400">客戶續約率</dt>
+            <dd class="mt-2 text-3xl font-extrabold text-white"><span data-count="98">98</span>%</dd>
+          </div>
+          <div class="glass glow-card rounded-2xl p-6 text-left">
+            <dt class="text-xs font-medium uppercase tracking-wider text-slate-400">深耕產業經驗</dt>
+            <dd class="mt-2 text-3xl font-extrabold text-white"><span data-count="12">12</span> 年</dd>
+          </div>
+          <div class="glass glow-card rounded-2xl p-6 text-left">
+            <dt class="text-xs font-medium uppercase tracking-wider text-slate-400">平均回覆時間</dt>
+            <dd class="mt-2 text-3xl font-extrabold text-white">24<span class="text-xl">小時</span></dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- ============ Services ============ -->
+    <section id="services" class="relative mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28" aria-labelledby="services-title">
+      <div class="reveal max-w-2xl">
+        <p class="text-sm font-semibold uppercase tracking-widest text-biz-accent">Core Solutions</p>
+        <h2 id="services-title" class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">四大核心解決方案</h2>
+        <p class="mt-4 text-slate-400">從策略到執行，我們以模組化服務銜接企業各成長階段，依需求組合或單獨導入。</p>
+      </div>
+
+      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <article class="glass glow-card reveal group flex flex-col rounded-2xl p-7 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_20px_50px_-15px_rgba(99,102,241,.5)]">
+          <span class="mb-6 grid h-12 w-12 place-items-center rounded-xl bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-400/30 transition-all duration-300 ease-in-out group-hover:bg-indigo-500/25"><i data-lucide="target" class="h-6 w-6" aria-hidden="true"></i></span>
+          <h3 class="text-lg font-bold text-white">策略顧問</h3>
+          <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">市場定位、商業模式與三年成長藍圖，以數據驗證每一項投資決策。</p>
+          <ul class="mt-6 space-y-2 text-sm text-slate-300">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-biz-accent" aria-hidden="true"></i>市場與競品分析</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-biz-accent" aria-hidden="true"></i>OKR 目標管理</li>
+          </ul>
+        </article>
+
+        <article class="glass glow-card reveal reveal-delay-1 group flex flex-col rounded-2xl p-7 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_20px_50px_-15px_rgba(34,211,238,.4)]">
+          <span class="mb-6 grid h-12 w-12 place-items-center rounded-xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30 transition-all duration-300 ease-in-out group-hover:bg-cyan-500/25"><i data-lucide="cpu" class="h-6 w-6" aria-hidden="true"></i></span>
+          <h3 class="text-lg font-bold text-white">數位轉型</h3>
+          <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">流程自動化、雲端架構與資料中台建置，讓團隊效率與決策速度同步提升。</p>
+          <ul class="mt-6 space-y-2 text-sm text-slate-300">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-biz-accent" aria-hidden="true"></i>雲端與系統整合</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-biz-accent" aria-hidden="true"></i>BI 儀表板建置</li>
+          </ul>
+        </article>
+
+        <article class="glass glow-card reveal reveal-delay-2 group flex flex-col rounded-2xl p-7 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_20px_50px_-15px_rgba(168,85,247,.45)]">
+          <span class="mb-6 grid h-12 w-12 place-items-center rounded-xl bg-violet-500/15 text-violet-300 ring-1 ring-violet-400/30 transition-all duration-300 ease-in-out group-hover:bg-violet-500/25"><i data-lucide="gem" class="h-6 w-6" aria-hidden="true"></i></span>
+          <h3 class="text-lg font-bold text-white">品牌與設計</h3>
+          <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">品牌識別、數位產品介面與內容視覺系統，建立一致且具辨識度的形象。</p>
+          <ul class="mt-6 space-y-2 text-sm text-slate-300">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-biz-accent" aria-hidden="true"></i>VI 視覺識別</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-biz-accent" aria-hidden="true"></i>UI / UX 設計系統</li>
+          </ul>
+        </article>
+
+        <article class="glass glow-card reveal reveal-delay-3 group flex flex-col rounded-2xl p-7 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_20px_50px_-15px_rgba(16,185,129,.35)]">
+          <span class="mb-6 grid h-12 w-12 place-items-center rounded-xl bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30 transition-all duration-300 ease-in-out group-hover:bg-emerald-500/25"><i data-lucide="line-chart" class="h-6 w-6" aria-hidden="true"></i></span>
+          <h3 class="text-lg font-bold text-white">營運優化</h3>
+          <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">供應鏈、成本結構與客戶旅程的診斷與改善，持續追蹤關鍵指標的變化。</p>
+          <ul class="mt-6 space-y-2 text-sm text-slate-300">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-biz-accent" aria-hidden="true"></i>流程再造</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 text-biz-accent" aria-hidden="true"></i>KPI 追蹤與復盤</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ Case Highlights ============ -->
+    <section id="cases" class="mx-auto max-w-7xl px-5 pb-20 lg:px-8 lg:pb-28" aria-labelledby="cases-title">
+      <div class="reveal glass relative overflow-hidden rounded-3xl p-8 sm:p-12 lg:p-16">
+        <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-widest text-biz-accent">Case Study</p>
+            <h2 id="cases-title" class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">某區域物流商的數位轉型 12 週</h2>
+            <p class="mt-5 leading-relaxed text-slate-400">透過資料中台整合六套既有系統，並重新設計派車流程，配送準時率提升，人工對帳工時大幅下降。</p>
+            <a href="#contact" class="btn-glow mt-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 py-3 font-semibold text-white hover:bg-white/10">
+              索取完整案例
+              <i data-lucide="file-text" class="h-4 w-4" aria-hidden="true"></i>
+            </a>
+          </div>
+          <dl class="grid grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-white/10 bg-biz-bg/60 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)]">
+              <dt class="text-sm text-slate-400">準時配送率</dt>
+              <dd class="mt-2 text-4xl font-black text-white">+18<span class="text-lg text-slate-400"> pts</span></dd>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-biz-bg/60 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)]">
+              <dt class="text-sm text-slate-400">對帳工時</dt>
+              <dd class="mt-2 text-4xl font-black text-white">-64<span class="text-lg text-slate-400">%</span></dd>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-biz-bg/60 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)]">
+              <dt class="text-sm text-slate-400">營運成本</dt>
+              <dd class="mt-2 text-4xl font-black text-white">-22<span class="text-lg text-slate-400">%</span></dd>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-biz-bg/60 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,.6)]">
+              <dt class="text-sm text-slate-400">導入週期</dt>
+              <dd class="mt-2 text-4xl font-black text-white">12<span class="text-lg text-slate-400"> 週</span></dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Social Proof / Marquee ============ -->
+    <section id="clients" class="border-y border-white/5 bg-white/[0.02] py-16 lg:py-20" aria-labelledby="clients-title">
+      <div class="mx-auto max-w-7xl px-5 lg:px-8">
+        <h2 id="clients-title" class="reveal text-center text-sm font-semibold uppercase tracking-widest text-slate-400">信任我們的成長型企業</h2>
+      </div>
+      <div class="marquee-wrap mt-10" aria-label="合作夥伴商標輪播">
+        <ul class="marquee gap-16 px-8 text-2xl font-black tracking-tight text-slate-500 lg:text-3xl" role="list">
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white"><i data-lucide="landmark" class="h-7 w-7" aria-hidden="true"></i>Aurelia Bank</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white"><i data-lucide="truck" class="h-7 w-7" aria-hidden="true"></i>Kestrel Logistics</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white"><i data-lucide="heart-pulse" class="h-7 w-7" aria-hidden="true"></i>Tidewater Health</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white"><i data-lucide="shopping-bag" class="h-7 w-7" aria-hidden="true"></i>Monarch Retail</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white"><i data-lucide="zap" class="h-7 w-7" aria-hidden="true"></i>Pinecrest Energy</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white"><i data-lucide="palette" class="h-7 w-7" aria-hidden="true"></i>Solace Studio</li>
+          <!-- 重複一組以達成無縫循環 -->
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white" aria-hidden="true"><i data-lucide="landmark" class="h-7 w-7"></i>Aurelia Bank</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white" aria-hidden="true"><i data-lucide="truck" class="h-7 w-7"></i>Kestrel Logistics</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white" aria-hidden="true"><i data-lucide="heart-pulse" class="h-7 w-7"></i>Tidewater Health</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white" aria-hidden="true"><i data-lucide="shopping-bag" class="h-7 w-7"></i>Monarch Retail</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white" aria-hidden="true"><i data-lucide="zap" class="h-7 w-7"></i>Pinecrest Energy</li>
+          <li class="flex items-center gap-3 transition-colors duration-300 hover:text-white" aria-hidden="true"><i data-lucide="palette" class="h-7 w-7"></i>Solace Studio</li>
+        </ul>
+      </div>
+
+      <div class="mx-auto mt-16 grid max-w-7xl gap-6 px-5 md:grid-cols-3 lg:px-8">
+        <figure class="glass glow-card reveal rounded-2xl p-7">
+          <blockquote class="text-sm leading-relaxed text-slate-300">「Lumora 不只給建議，更陪我們把方案落地。三個月內，團隊的決策節奏明顯加快。」</blockquote>
+          <figcaption class="mt-6 flex items-center gap-3">
+            <span class="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 text-sm font-bold text-white" aria-hidden="true">林</span>
+            <span><span class="block text-sm font-semibold text-white">林怡君</span><span class="block text-xs text-slate-400">營運長・某金融科技公司（範例）</span></span>
+          </figcaption>
+        </figure>
+        <figure class="glass glow-card reveal reveal-delay-1 rounded-2xl p-7">
+          <blockquote class="text-sm leading-relaxed text-slate-300">「品牌視覺與產品介面一次到位，我們的轉換率在改版後第一季提升了 27%。」</blockquote>
+          <figcaption class="mt-6 flex items-center gap-3">
+            <span class="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-400 text-sm font-bold text-white" aria-hidden="true">陳</span>
+            <span><span class="block text-sm font-semibold text-white">陳柏翰</span><span class="block text-xs text-slate-400">創辦人・某電商品牌（範例）</span></span>
+          </figcaption>
+        </figure>
+        <figure class="glass glow-card reveal reveal-delay-2 rounded-2xl p-7">
+          <blockquote class="text-sm leading-relaxed text-slate-300">「專案透明、節奏穩定，每週的指標報告讓董事會對進度一目了然。」</blockquote>
+          <figcaption class="mt-6 flex items-center gap-3">
+            <span class="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-cyan-400 text-sm font-bold text-white" aria-hidden="true">王</span>
+            <span><span class="block text-sm font-semibold text-white">王雅琳</span><span class="block text-xs text-slate-400">總經理・某製造業集團（範例）</span></span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ Contact Form ============ -->
+    <section id="contact" class="relative mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28" aria-labelledby="contact-title">
+      <div class="grid gap-12 lg:grid-cols-5 lg:gap-16">
+        <div class="reveal lg:col-span-2">
+          <p class="text-sm font-semibold uppercase tracking-widest text-biz-accent">Let's Talk</p>
+          <h2 id="contact-title" class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">預約 30 分鐘免費諮詢</h2>
+          <p class="mt-4 leading-relaxed text-slate-400">告訴我們您目前的挑戰與目標，顧問團隊將於 24 小時內與您聯繫，並提供初步的診斷建議。</p>
+          <ul class="mt-8 space-y-4 text-sm text-slate-300">
+            <li class="flex items-center gap-3"><i data-lucide="mail" class="h-5 w-5 text-biz-accent" aria-hidden="true"></i>hello@lumora.example</li>
+            <li class="flex items-center gap-3"><i data-lucide="phone" class="h-5 w-5 text-biz-accent" aria-hidden="true"></i>(04) 2000-0000（週一至週五 09:00–18:00）</li>
+            <li class="flex items-center gap-3"><i data-lucide="map-pin" class="h-5 w-5 text-biz-accent" aria-hidden="true"></i>台中市西屯區範例路 100 號</li>
+          </ul>
+        </div>
+
+        <form class="glass reveal reveal-delay-1 relative rounded-3xl p-7 sm:p-10 lg:col-span-3" data-validate novalidate aria-labelledby="contact-title">
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label for="c-name" class="mb-2 block text-sm font-medium text-slate-200">姓名 <span class="text-rose-400" aria-hidden="true">*</span></label>
+              <input id="c-name" name="name" type="text" required minlength="2" autocomplete="name" data-error="請輸入至少 2 個字的姓名" aria-describedby="c-name-error" class="w-full rounded-xl border border-white/10 bg-biz-bg/70 px-4 py-3 text-white placeholder-slate-500 shadow-inner transition-all duration-300 ease-in-out focus:border-biz-accent focus:outline-none focus:ring-4 focus:ring-biz-accent/15" placeholder="王小明">
+              <p id="c-name-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div>
+              <label for="c-company" class="mb-2 block text-sm font-medium text-slate-200">公司名稱 <span class="text-rose-400" aria-hidden="true">*</span></label>
+              <input id="c-company" name="company" type="text" required autocomplete="organization" data-error="請填寫公司名稱" aria-describedby="c-company-error" class="w-full rounded-xl border border-white/10 bg-biz-bg/70 px-4 py-3 text-white placeholder-slate-500 shadow-inner transition-all duration-300 ease-in-out focus:border-biz-accent focus:outline-none focus:ring-4 focus:ring-biz-accent/15" placeholder="某某股份有限公司">
+              <p id="c-company-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div>
+              <label for="c-email" class="mb-2 block text-sm font-medium text-slate-200">工作信箱 <span class="text-rose-400" aria-hidden="true">*</span></label>
+              <input id="c-email" name="email" type="email" required autocomplete="email" data-error="請輸入有效的 Email 格式" aria-describedby="c-email-error" class="w-full rounded-xl border border-white/10 bg-biz-bg/70 px-4 py-3 text-white placeholder-slate-500 shadow-inner transition-all duration-300 ease-in-out focus:border-biz-accent focus:outline-none focus:ring-4 focus:ring-biz-accent/15" placeholder="name@company.com">
+              <p id="c-email-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div>
+              <label for="c-phone" class="mb-2 block text-sm font-medium text-slate-200">手機（選填）</label>
+              <input id="c-phone" name="phone" type="tel" autocomplete="tel" pattern="09[0-9]{8}" data-error="請輸入 10 碼手機號碼（09 開頭）" aria-describedby="c-phone-error" class="w-full rounded-xl border border-white/10 bg-biz-bg/70 px-4 py-3 text-white placeholder-slate-500 shadow-inner transition-all duration-300 ease-in-out focus:border-biz-accent focus:outline-none focus:ring-4 focus:ring-biz-accent/15" placeholder="0912345678">
+              <p id="c-phone-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div class="sm:col-span-2">
+              <label for="c-service" class="mb-2 block text-sm font-medium text-slate-200">感興趣的服務 <span class="text-rose-400" aria-hidden="true">*</span></label>
+              <select id="c-service" name="service" required data-error="請選擇一項服務" aria-describedby="c-service-error" class="w-full appearance-none rounded-xl border border-white/10 bg-biz-bg/70 px-4 py-3 text-white transition-all duration-300 ease-in-out focus:border-biz-accent focus:outline-none focus:ring-4 focus:ring-biz-accent/15">
+                <option value="">請選擇</option>
+                <option>策略顧問</option>
+                <option>數位轉型</option>
+                <option>品牌與設計</option>
+                <option>營運優化</option>
+                <option>綜合方案</option>
+              </select>
+              <p id="c-service-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div class="sm:col-span-2">
+              <label for="c-message" class="mb-2 block text-sm font-medium text-slate-200">專案說明 <span class="text-rose-400" aria-hidden="true">*</span></label>
+              <textarea id="c-message" name="message" rows="4" required minlength="10" data-error="請簡述需求（至少 10 個字）" aria-describedby="c-message-error" class="w-full resize-y rounded-xl border border-white/10 bg-biz-bg/70 px-4 py-3 text-white placeholder-slate-500 shadow-inner transition-all duration-300 ease-in-out focus:border-biz-accent focus:outline-none focus:ring-4 focus:ring-biz-accent/15" placeholder="例如：希望在明年 Q2 前完成 CRM 與會計系統整合…"></textarea>
+              <p id="c-message-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="flex cursor-pointer items-start gap-3 text-sm text-slate-400">
+                <input type="checkbox" id="c-consent" name="consent" required data-error="請同意隱私權政策後再送出" aria-describedby="c-consent-error" class="mt-0.5 h-4 w-4 rounded border-white/20 bg-biz-bg text-biz-brand focus:ring-biz-accent">
+                <span>我同意 Lumora 依<a href="#" class="text-biz-accent underline-offset-4 hover:underline">隱私權政策</a>蒐集與處理上述資料，僅用於諮詢聯繫。</span>
+              </label>
+              <p id="c-consent-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+          </div>
+
+          <div class="mt-8 flex flex-col-reverse items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-xs text-slate-500">送出後我們會於 24 小時內回覆。</p>
+            <button type="submit" class="btn-glow inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-biz-brand to-indigo-500 px-8 py-3.5 font-semibold text-white">
+              送出諮詢需求
+              <i data-lucide="send" class="h-4 w-4" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div data-form-success tabindex="-1" class="mt-6 hidden rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-300" role="status">
+            感謝您的來信！顧問團隊將於 24 小時內與您聯繫。
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ Footer ============ -->
+  <footer class="border-t border-white/10 bg-biz-bg">
+    <div class="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+      <div class="sm:col-span-2 lg:col-span-1">
+        <p class="text-lg font-extrabold text-white">Lumora<span class="text-biz-accent">.</span></p>
+        <p class="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">策略、科技與設計的一站式商務夥伴，陪伴企業穩健成長。</p>
+      </div>
+      <nav aria-label="服務連結">
+        <h3 class="text-sm font-semibold text-white">服務</h3>
+        <ul class="mt-4 space-y-3 text-sm text-slate-400">
+          <li><a href="#services" class="transition-colors duration-300 hover:text-white">策略顧問</a></li>
+          <li><a href="#services" class="transition-colors duration-300 hover:text-white">數位轉型</a></li>
+          <li><a href="#services" class="transition-colors duration-300 hover:text-white">品牌與設計</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="公司連結">
+        <h3 class="text-sm font-semibold text-white">公司</h3>
+        <ul class="mt-4 space-y-3 text-sm text-slate-400">
+          <li><a href="#cases" class="transition-colors duration-300 hover:text-white">成功案例</a></li>
+          <li><a href="#clients" class="transition-colors duration-300 hover:text-white">客戶評價</a></li>
+          <li><a href="/" class="transition-colors duration-300 hover:text-white">風格總覽</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h3 class="text-sm font-semibold text-white">訂閱產業洞察</h3>
+        <p class="mt-4 text-sm text-slate-400">每月一封，收錄趨勢與實務案例。</p>
+        <a href="#contact" class="btn-glow glass mt-4 inline-flex rounded-full px-5 py-2.5 text-sm font-semibold text-white">聯絡我們</a>
+      </div>
+    </div>
+    <div class="border-t border-white/5">
+      <p class="mx-auto max-w-7xl px-5 py-6 text-xs text-slate-500 lg:px-8">© <span data-year>2026</span> Lumora 企業顧問。All rights reserved. 本頁所有公司名稱與案例皆為展示用途之範例。</p>
+    </div>
+  </footer>
+</body>
+</html>
