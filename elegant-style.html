@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="金廊藝集 Maison Aurel · 當期展覽、典藏精品與百年匠人傳承。預約專屬鑑賞。">
+  <meta name="theme-color" content="#0b0b0d">
+  <meta property="og:title" content="金廊藝集 Maison Aurel｜沉浸式藝廊">
+  <meta property="og:description" content="當期展覽、典藏精品與匠人傳承，預約專屬鑑賞。">
+  <meta property="og:image" content="assets/images/ele-hero.jpg">
+  <title>金廊藝集 Maison Aurel｜沉浸式經典藝廊</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@400;500;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Playfair Display"', '"Noto Serif TC"', 'Georgia', 'serif'],
+            sans: ['"Noto Sans TC"', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            obsidian: '#0b0b0d', alabaster: '#f4f1ea', gold: { DEFAULT: '#c9a961', soft: '#e7cf8f', deep: '#8c6d34' }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="bg-obsidian font-sans text-alabaster antialiased">
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <!-- ============ Header ============ -->
+  <header data-header-scroll class="fixed inset-x-0 top-0 z-50 transition-all duration-300 ease-in-out [&.is-scrolled]:bg-obsidian/85 [&.is-scrolled]:shadow-[0_1px_0_rgba(201,169,97,.25)] [&.is-scrolled]:backdrop-blur-md">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10" aria-label="主要導覽">
+      <a href="#top" class="group flex flex-col leading-none" aria-label="金廊藝集首頁">
+        <span class="font-serif text-xl tracking-[.25em] text-alabaster transition-colors duration-300 group-hover:text-gold">MAISON AUREL</span>
+        <span class="mt-1 text-[10px] tracking-[.4em] text-gold">金廊藝集</span>
+      </a>
+      <ul class="hidden items-center gap-10 text-xs uppercase tracking-[.25em] text-alabaster/80 md:flex">
+        <li><a href="#exhibition" class="transition-colors duration-300 hover:text-gold">展覽路線</a></li>
+        <li><a href="#collection" class="transition-colors duration-300 hover:text-gold">典藏精品</a></li>
+        <li><a href="#heritage" class="transition-colors duration-300 hover:text-gold">品牌傳承</a></li>
+        <li><a href="/" class="transition-colors duration-300 hover:text-gold">總覽</a></li>
+      </ul>
+      <div class="flex items-center gap-4">
+        <a href="#reserve" class="hidden rounded-none border border-gold/70 px-5 py-2.5 text-xs uppercase tracking-[.25em] text-gold transition-all duration-300 ease-in-out hover:bg-gold hover:text-obsidian sm:inline-block">預約鑑賞</a>
+        <button type="button" class="grid h-10 w-10 place-items-center text-alabaster md:hidden" data-nav-toggle aria-expanded="false" aria-controls="ele-menu">
+          <span class="sr-only">開啟選單</span>
+          <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+        </button>
+      </div>
+    </nav>
+    <div id="ele-menu" class="hidden bg-obsidian/95 px-6 py-6 backdrop-blur-md md:hidden">
+      <ul class="flex flex-col gap-5 font-serif text-lg tracking-wide">
+        <li><a href="#exhibition">展覽路線</a></li>
+        <li><a href="#collection">典藏精品</a></li>
+        <li><a href="#heritage">品牌傳承</a></li>
+        <li><a href="#reserve" class="text-gold">預約鑑賞</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ Immersive Hero ============ -->
+    <section id="top" class="relative flex min-h-[100svh] items-end overflow-hidden" aria-labelledby="hero-title">
+      <div class="absolute inset-0 overflow-hidden" aria-hidden="true">
+        <img data-parallax="0.3" src="assets/images/ele-hero.jpg" alt="" width="1600" height="1000" loading="lazy" class="parallax-img h-full w-full object-cover">
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/50 to-obsidian/20" aria-hidden="true"></div>
+
+      <div class="relative mx-auto w-full max-w-7xl px-6 pb-20 pt-40 lg:px-10 lg:pb-28">
+        <p class="reveal text-xs uppercase tracking-[.5em] text-gold">Now Showing · 2026 秋季特展</p>
+        <h1 id="hero-title" class="reveal reveal-delay-1 mt-6 max-w-4xl font-serif text-5xl font-normal leading-[1.05] sm:text-6xl lg:text-8xl">
+          The Gilded <em class="italic text-gold">Silence</em>
+        </h1>
+        <p class="reveal reveal-delay-2 mt-4 font-serif text-xl italic text-alabaster/80 sm:text-2xl">金色靜默 · 關於光、金屬與留白的對話</p>
+        <p class="reveal reveal-delay-2 mt-6 max-w-xl text-sm leading-loose text-alabaster/70">
+          匯集 38 件跨世紀的雕塑、油畫與瓷器，於幽暗的展廳中，讓每一道光線都成為一次凝視。
+        </p>
+        <div class="reveal reveal-delay-3 mt-12 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <a href="#reserve" class="inline-flex items-center justify-center gap-3 bg-gold px-8 py-4 text-xs font-medium uppercase tracking-[.25em] text-obsidian transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-gold-soft hover:shadow-[0_12px_30px_-10px_rgba(201,169,97,.6)]">
+            預約專屬鑑賞
+            <i data-lucide="calendar" class="h-4 w-4" aria-hidden="true"></i>
+          </a>
+          <a href="#exhibition" class="inline-flex items-center justify-center gap-3 border border-alabaster/30 px-8 py-4 text-xs uppercase tracking-[.25em] text-alabaster transition-all duration-300 ease-in-out hover:border-gold hover:text-gold">
+            探索展覽路線
+            <i data-lucide="arrow-down" class="h-4 w-4" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+        <!-- ============ Exhibition Route（Tabs） ============ -->
+    <section id="exhibition" class="mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-40" aria-labelledby="exh-title">
+      <div class="reveal grid gap-8 lg:grid-cols-12 lg:items-end">
+        <div class="lg:col-span-7">
+          <p class="text-xs uppercase tracking-[.4em] text-gold">Virtual Curation · 策展路線</p>
+          <h2 id="exh-title" class="mt-5 font-serif text-4xl font-normal leading-tight sm:text-5xl">依館別，循序漸進地走進展覽</h2>
+        </div>
+        <p class="text-sm leading-loose text-alabaster/65 lg:col-span-4 lg:col-start-9">三條路線分別以時代、媒材與情感為軸心，建議預留 60 至 90 分鐘，慢慢欣賞。</p>
+      </div>
+
+      <div class="mt-16 grid gap-12 lg:grid-cols-12">
+        <div class="lg:col-span-4" data-tabs>
+          <div role="tablist" aria-label="展覽路線選擇" aria-orientation="vertical" class="flex flex-col border-l border-gold/20">
+            <button type="button" role="tab" id="tab-hall-1" aria-controls="panel-hall-1" aria-selected="true" tabindex="0" class="group relative border-l border-transparent py-5 pl-6 pr-4 text-left transition-all duration-300 ease-in-out aria-selected:border-gold aria-selected:text-gold text-alabaster/60 hover:text-alabaster [&[aria-selected=true]]:text-gold [&[aria-selected=true]]:border-gold -ml-px">
+              <span class="block text-[10px] uppercase tracking-[.3em]">Hall I · 路線 A</span>
+              <span class="mt-2 block font-serif text-2xl">古典的重量</span>
+            </button>
+            <button type="button" role="tab" id="tab-hall-2" aria-controls="panel-hall-2" aria-selected="false" tabindex="-1" class="group relative border-l border-transparent py-5 pl-6 pr-4 text-left text-alabaster/60 transition-all duration-300 ease-in-out hover:text-alabaster [&[aria-selected=true]]:text-gold [&[aria-selected=true]]:border-gold -ml-px">
+              <span class="block text-[10px] uppercase tracking-[.3em]">Hall II · 路線 B</span>
+              <span class="mt-2 block font-serif text-2xl">抽象的光線</span>
+            </button>
+            <button type="button" role="tab" id="tab-hall-3" aria-controls="panel-hall-3" aria-selected="false" tabindex="-1" class="group relative border-l border-transparent py-5 pl-6 pr-4 text-left text-alabaster/60 transition-all duration-300 ease-in-out hover:text-alabaster [&[aria-selected=true]]:text-gold [&[aria-selected=true]]:border-gold -ml-px">
+              <span class="block text-[10px] uppercase tracking-[.3em]">Hall III · 路線 C</span>
+              <span class="mt-2 block font-serif text-2xl">白色的溫度</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-8">
+          <div id="panel-hall-1" role="tabpanel" aria-labelledby="tab-hall-1" class="reveal border border-gold/20 bg-white/[0.02] p-8 sm:p-12">
+            <p class="font-serif text-2xl italic text-gold">Hall I · 古典雕塑廳</p>
+            <p class="mt-6 leading-loose text-alabaster/75">從青銅的銹色與金屬的重量出發，追溯人體比例與姿態在不同時代的詮釋，聆聽材質本身的歷史。</p>
+            <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-gold/20 pt-8 text-sm">
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">展品數</dt><dd class="mt-2 font-serif text-2xl">14</dd></div>
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">建議時長</dt><dd class="mt-2 font-serif text-2xl">25 分</dd></div>
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">導覽語言</dt><dd class="mt-2 font-serif text-2xl">中 / 英</dd></div>
+            </dl>
+          </div>
+          <div id="panel-hall-2" role="tabpanel" aria-labelledby="tab-hall-2" hidden class="reveal border border-gold/20 bg-white/[0.02] p-8 sm:p-12">
+            <p class="font-serif text-2xl italic text-gold">Hall II · 當代油畫廳</p>
+            <p class="mt-6 leading-loose text-alabaster/75">以金箔與黑色顏料的層疊，探討畫布上光與暗的交會，觀看筆觸如何在不同角度下改變其面貌。</p>
+            <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-gold/20 pt-8 text-sm">
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">展品數</dt><dd class="mt-2 font-serif text-2xl">12</dd></div>
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">建議時長</dt><dd class="mt-2 font-serif text-2xl">30 分</dd></div>
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">導覽語言</dt><dd class="mt-2 font-serif text-2xl">中 / 英</dd></div>
+            </dl>
+          </div>
+          <div id="panel-hall-3" role="tabpanel" aria-labelledby="tab-hall-3" hidden class="reveal border border-gold/20 bg-white/[0.02] p-8 sm:p-12">
+            <p class="font-serif text-2xl italic text-gold">Hall III · 工藝瓷器廳</p>
+            <p class="mt-6 leading-loose text-alabaster/75">白釉與金線的對話，聚焦窯火與手的痕跡。每一件作品都是匠人與時間共同完成的留白。</p>
+            <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-gold/20 pt-8 text-sm">
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">展品數</dt><dd class="mt-2 font-serif text-2xl">12</dd></div>
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">建議時長</dt><dd class="mt-2 font-serif text-2xl">25 分</dd></div>
+              <div><dt class="text-[10px] uppercase tracking-[.25em] text-alabaster/50">導覽語言</dt><dd class="mt-2 font-serif text-2xl">中 / 英</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Collection（Modal 詳情） ============ -->
+    <section id="collection" class="border-y border-gold/15 bg-alabaster py-28 text-obsidian lg:py-40" aria-labelledby="col-title">
+      <div class="mx-auto max-w-7xl px-6 lg:px-10">
+        <div class="reveal flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+          <div>
+            <p class="text-xs uppercase tracking-[.4em] text-gold-deep">Permanent Collection · 典藏精品</p>
+            <h2 id="col-title" class="mt-5 font-serif text-4xl font-normal sm:text-5xl">精選典藏</h2>
+          </div>
+          <p class="max-w-sm text-sm leading-loose text-obsidian/65">點擊作品可開啟策展筆記與材質年代資訊。</p>
+        </div>
+
+        <ul class="mt-16 grid gap-10 md:grid-cols-3 md:gap-8" role="list">
+          <li class="reveal">
+            <article class="group">
+              <button type="button" data-dialog-open="dlg-art-1" class="block w-full text-left" aria-label="查看《金箔構成 No.1》詳情">
+                <div class="img-zoom relative aspect-[4/5] overflow-hidden bg-obsidian shadow-[0_2px_4px_rgba(0,0,0,.08),0_16px_40px_-12px_rgba(0,0,0,.35)] transition-all duration-300 ease-in-out group-hover:shadow-[0_2px_4px_rgba(0,0,0,.1),0_24px_50px_-12px_rgba(201,169,97,.35)]">
+                  <img src="assets/images/ele-art-1.svg" alt="抽象金箔構成，黑色底面上流動的金色線條與圓形光暈" width="1200" height="1500" loading="lazy" class="h-full w-full object-cover">
+                </div>
+                <div class="mt-6 flex items-baseline justify-between gap-4">
+                  <h3 class="font-serif text-2xl">金箔構成 No.1</h3>
+                  <span class="text-xs tracking-[.2em] text-gold-deep">EX-2026-014</span>
+                </div>
+                <p class="mt-2 text-sm text-obsidian/60">油彩・金箔｜2024｜當代</p>
+              </button>
+            </article>
+          </li>
+          <li class="reveal reveal-delay-1">
+            <article class="group">
+              <button type="button" data-dialog-open="dlg-art-2" class="block w-full text-left" aria-label="查看《光之序列 No.2》詳情">
+                <div class="img-zoom relative aspect-[4/5] overflow-hidden bg-obsidian shadow-[0_2px_4px_rgba(0,0,0,.08),0_16px_40px_-12px_rgba(0,0,0,.35)] transition-all duration-300 ease-in-out group-hover:shadow-[0_2px_4px_rgba(0,0,0,.1),0_24px_50px_-12px_rgba(201,169,97,.35)]">
+                  <img src="assets/images/ele-art-2.svg" alt="同心圓與十字線構成的光之序列作品，中心有金色圓點" width="1200" height="1500" loading="lazy" class="h-full w-full object-cover">
+                </div>
+                <div class="mt-6 flex items-baseline justify-between gap-4">
+                  <h3 class="font-serif text-2xl">光之序列 No.2</h3>
+                  <span class="text-xs tracking-[.2em] text-gold-deep">EX-2026-022</span>
+                </div>
+                <p class="mt-2 text-sm text-obsidian/60">銅版蝕刻・金箔｜2025｜現代</p>
+              </button>
+            </article>
+          </li>
+          <li class="reveal reveal-delay-2">
+            <article class="group">
+              <button type="button" data-dialog-open="dlg-art-3" class="block w-full text-left" aria-label="查看《白釉金線瓶 No.3》詳情">
+                <div class="img-zoom relative aspect-[4/5] overflow-hidden bg-obsidian shadow-[0_2px_4px_rgba(0,0,0,.08),0_16px_40px_-12px_rgba(0,0,0,.35)] transition-all duration-300 ease-in-out group-hover:shadow-[0_2px_4px_rgba(0,0,0,.1),0_24px_50px_-12px_rgba(201,169,97,.35)]">
+                  <img src="assets/images/ele-art-3.svg" alt="白色釉面瓷瓶，帶有兩道細緻的金色線條" width="1200" height="1500" loading="lazy" class="h-full w-full object-cover">
+                </div>
+                <div class="mt-6 flex items-baseline justify-between gap-4">
+                  <h3 class="font-serif text-2xl">白釉金線瓶 No.3</h3>
+                  <span class="text-xs tracking-[.2em] text-gold-deep">EX-2026-031</span>
+                </div>
+                <p class="mt-2 text-sm text-obsidian/60">高溫瓷・24K 金線｜2023｜工藝</p>
+              </button>
+            </article>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 展品詳情 Modal（原生 dialog，具焦點陷阱與 Esc 關閉） -->
+    <dialog id="dlg-art-1" class="site-dialog" aria-labelledby="dlg-art-1-title">
+      <article class="grid overflow-hidden bg-obsidian text-alabaster md:grid-cols-2">
+        <img src="assets/images/ele-art-1.svg" alt="抽象金箔構成，黑色底面上流動的金色線條與圓形光暈" width="1200" height="1500" loading="lazy" class="h-full max-h-[80vh] w-full object-cover">
+        <div class="relative flex flex-col justify-center p-8 sm:p-12">
+          <button type="button" data-dialog-close class="absolute right-4 top-4 grid h-10 w-10 place-items-center text-alabaster/70 transition-colors duration-300 hover:text-gold" aria-label="關閉詳情"><i data-lucide="x" class="h-5 w-5" aria-hidden="true"></i></button>
+          <p class="text-[10px] uppercase tracking-[.4em] text-gold">Exhibit · EX-2026-014</p>
+          <h3 id="dlg-art-1-title" class="mt-4 font-serif text-3xl">金箔構成 No.1</h3>
+          <dl class="mt-8 space-y-4 border-t border-gold/20 pt-6 text-sm">
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">媒材</dt><dd>油彩、金箔、畫布</dd></div>
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">年代</dt><dd>2024</dd></div>
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">尺寸</dt><dd>120 × 150 cm</dd></div>
+          </dl>
+          <p class="mt-8 font-serif text-base italic leading-loose text-alabaster/75">策展筆記：金箔在燈光下的反射會隨觀者的位置而改變，畫面因此成為一面不斷變化的鏡子。</p>
+        </div>
+      </article>
+    </dialog>
+
+    <dialog id="dlg-art-2" class="site-dialog" aria-labelledby="dlg-art-2-title">
+      <article class="grid overflow-hidden bg-obsidian text-alabaster md:grid-cols-2">
+        <img src="assets/images/ele-art-2.svg" alt="同心圓與十字線構成的光之序列作品，中心有金色圓點" width="1200" height="1500" loading="lazy" class="h-full max-h-[80vh] w-full object-cover">
+        <div class="relative flex flex-col justify-center p-8 sm:p-12">
+          <button type="button" data-dialog-close class="absolute right-4 top-4 grid h-10 w-10 place-items-center text-alabaster/70 transition-colors duration-300 hover:text-gold" aria-label="關閉詳情"><i data-lucide="x" class="h-5 w-5" aria-hidden="true"></i></button>
+          <p class="text-[10px] uppercase tracking-[.4em] text-gold">Exhibit · EX-2026-022</p>
+          <h3 id="dlg-art-2-title" class="mt-4 font-serif text-3xl">光之序列 No.2</h3>
+          <dl class="mt-8 space-y-4 border-t border-gold/20 pt-6 text-sm">
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">媒材</dt><dd>銅版蝕刻、金箔</dd></div>
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">年代</dt><dd>2025</dd></div>
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">尺寸</dt><dd>80 × 100 cm</dd></div>
+          </dl>
+          <p class="mt-8 font-serif text-base italic leading-loose text-alabaster/75">策展筆記：同心的圓環象徵時間的擴散，中心的金點則是作者所稱的「不可見的起點」。</p>
+        </div>
+      </article>
+    </dialog>
+
+    <dialog id="dlg-art-3" class="site-dialog" aria-labelledby="dlg-art-3-title">
+      <article class="grid overflow-hidden bg-obsidian text-alabaster md:grid-cols-2">
+        <img src="assets/images/ele-art-3.svg" alt="白色釉面瓷瓶，帶有兩道細緻的金色線條" width="1200" height="1500" loading="lazy" class="h-full max-h-[80vh] w-full object-cover">
+        <div class="relative flex flex-col justify-center p-8 sm:p-12">
+          <button type="button" data-dialog-close class="absolute right-4 top-4 grid h-10 w-10 place-items-center text-alabaster/70 transition-colors duration-300 hover:text-gold" aria-label="關閉詳情"><i data-lucide="x" class="h-5 w-5" aria-hidden="true"></i></button>
+          <p class="text-[10px] uppercase tracking-[.4em] text-gold">Exhibit · EX-2026-031</p>
+          <h3 id="dlg-art-3-title" class="mt-4 font-serif text-3xl">白釉金線瓶 No.3</h3>
+          <dl class="mt-8 space-y-4 border-t border-gold/20 pt-6 text-sm">
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">媒材</dt><dd>高溫瓷、白釉、24K 金線</dd></div>
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">年代</dt><dd>2023</dd></div>
+            <div class="flex justify-between gap-6"><dt class="text-alabaster/50">尺寸</dt><dd>高 42 cm</dd></div>
+          </dl>
+          <p class="mt-8 font-serif text-base italic leading-loose text-alabaster/75">策展筆記：以三次高溫燒成完成，金線為手工描繪，每一件皆獨一無二，僅此一件。</p>
+        </div>
+      </article>
+    </dialog>
+
+    <!-- ============ Brand Heritage Timeline ============ -->
+    <section id="heritage" class="mx-auto max-w-5xl px-6 py-28 lg:px-10 lg:py-40" aria-labelledby="her-title">
+      <div class="reveal text-center">
+        <p class="text-xs uppercase tracking-[.4em] text-gold">Heritage · 匠人精神</p>
+        <h2 id="her-title" class="mt-5 font-serif text-4xl font-normal sm:text-5xl">七十年的一場慢工</h2>
+        <p class="mx-auto mt-6 max-w-xl leading-loose text-alabaster/65">從一間小小的修復工坊起步，我們始終相信，好的作品需要時間、耐心與誠實的手。</p>
+      </div>
+
+      <ol class="relative mt-20 list-none space-y-16 pl-10 sm:pl-0">
+        <li aria-hidden="true" class="timeline-line absolute left-3 top-0 h-full w-px sm:left-1/2 sm:-translate-x-1/2"></li>
+
+        <li class="reveal relative sm:grid sm:grid-cols-2 sm:gap-16">
+          <span class="absolute -left-[1.85rem] top-1 grid h-4 w-4 place-items-center rounded-full border border-gold bg-obsidian sm:left-1/2 sm:-translate-x-1/2" aria-hidden="true"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span></span>
+          <div class="sm:text-right"><p class="font-serif text-3xl text-gold">1952</p></div>
+          <div class="mt-3 sm:mt-0"><h3 class="font-serif text-xl">一間修復工坊</h3><p class="mt-2 text-sm leading-loose text-alabaster/65">創辦人於台北大稻埕開設工坊，專注於古器物的修復與保存。</p></div>
+        </li>
+        <li class="reveal relative sm:grid sm:grid-cols-2 sm:gap-16">
+          <span class="absolute -left-[1.85rem] top-1 grid h-4 w-4 place-items-center rounded-full border border-gold bg-obsidian sm:left-1/2 sm:-translate-x-1/2" aria-hidden="true"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span></span>
+          <div class="sm:order-2 sm:text-left"><p class="font-serif text-3xl text-gold">1978</p></div>
+          <div class="mt-3 sm:order-1 sm:mt-0 sm:text-right"><h3 class="font-serif text-xl">首次策展</h3><p class="mt-2 text-sm leading-loose text-alabaster/65">第一檔以「金與白」為主題的小型展覽，開啟了我們作為藝廊的起點。</p></div>
+        </li>
+        <li class="reveal relative sm:grid sm:grid-cols-2 sm:gap-16">
+          <span class="absolute -left-[1.85rem] top-1 grid h-4 w-4 place-items-center rounded-full border border-gold bg-obsidian sm:left-1/2 sm:-translate-x-1/2" aria-hidden="true"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span></span>
+          <div class="sm:text-right"><p class="font-serif text-3xl text-gold">1996</p></div>
+          <div class="mt-3 sm:mt-0"><h3 class="font-serif text-xl">金廊之名</h3><p class="mt-2 text-sm leading-loose text-alabaster/65">館舍遷入現址，正式命名為「金廊藝集」，並設立常設典藏展廳。</p></div>
+        </li>
+        <li class="reveal relative sm:grid sm:grid-cols-2 sm:gap-16">
+          <span class="absolute -left-[1.85rem] top-1 grid h-4 w-4 place-items-center rounded-full border border-gold bg-obsidian sm:left-1/2 sm:-translate-x-1/2" aria-hidden="true"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span></span>
+          <div class="sm:order-2"><p class="font-serif text-3xl text-gold">2011</p></div>
+          <div class="mt-3 sm:order-1 sm:mt-0 sm:text-right"><h3 class="font-serif text-xl">匠人學院</h3><p class="mt-2 text-sm leading-loose text-alabaster/65">設立傳習計畫，與資深陶瓷與金工匠人合作，將技藝完整傳承給新一代。</p></div>
+        </li>
+        <li class="reveal relative sm:grid sm:grid-cols-2 sm:gap-16">
+          <span class="absolute -left-[1.85rem] top-1 grid h-4 w-4 place-items-center rounded-full border border-gold bg-obsidian sm:left-1/2 sm:-translate-x-1/2" aria-hidden="true"><span class="h-1.5 w-1.5 rounded-full bg-gold"></span></span>
+          <div class="sm:text-right"><p class="font-serif text-3xl text-gold">2026</p></div>
+          <div class="mt-3 sm:mt-0"><h3 class="font-serif text-xl">沉浸式新展廳</h3><p class="mt-2 text-sm leading-loose text-alabaster/65">本季開幕的三館路線，以光線與聲音重新詮釋典藏，邀請您親臨感受。</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ============ Reservation ============ -->
+    <section id="reserve" class="relative isolate overflow-hidden border-t border-gold/15 bg-[#121214] py-28 lg:py-36" aria-labelledby="res-title">
+      <div class="mx-auto grid max-w-6xl gap-16 px-6 lg:grid-cols-5 lg:px-10">
+        <div class="reveal lg:col-span-2">
+          <p class="text-xs uppercase tracking-[.4em] text-gold">Private Viewing · 貴賓預約</p>
+          <h2 id="res-title" class="mt-5 font-serif text-4xl font-normal leading-tight sm:text-5xl">預約一場<br><em class="text-gold">專屬鑑賞</em></h2>
+          <p class="mt-6 leading-loose text-alabaster/65">每日限量開放，由策展人親自導覽。收藏家與會員享有優先預約權與私人休憩空間。</p>
+          <div class="gold-rule mt-10 w-24"></div>
+          <p class="mt-8 text-sm text-alabaster/60">開放時間　週二至週日 10:00–18:00<br>地址　台北市大同區範例街 88 號</p>
+        </div>
+
+        <form class="reveal reveal-delay-1 lg:col-span-3 border border-gold/20 bg-obsidian/60 p-8 sm:p-12" data-validate novalidate aria-labelledby="res-title">
+          <div class="grid gap-8 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+              <label for="r-name" class="block text-[11px] uppercase tracking-[.25em] text-alabaster/60">姓名</label>
+              <input id="r-name" name="name" type="text" required minlength="2" autocomplete="name" data-error="請輸入姓名（至少 2 字）" aria-describedby="r-name-error" class="mt-3 w-full border-0 border-b border-alabaster/25 bg-transparent px-0 py-2 text-alabaster placeholder-alabaster/30 transition-all duration-300 ease-in-out focus:border-gold focus:outline-none focus:ring-0" placeholder="請輸入您的姓名">
+              <p id="r-name-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div>
+              <label for="r-email" class="block text-[11px] uppercase tracking-[.25em] text-alabaster/60">電子信箱</label>
+              <input id="r-email" name="email" type="email" required autocomplete="email" data-error="請輸入有效的電子信箱" aria-describedby="r-email-error" class="mt-3 w-full border-0 border-b border-alabaster/25 bg-transparent px-0 py-2 text-alabaster placeholder-alabaster/30 transition-all duration-300 ease-in-out focus:border-gold focus:outline-none focus:ring-0" placeholder="you@example.com">
+              <p id="r-email-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div>
+              <label for="r-guests" class="block text-[11px] uppercase tracking-[.25em] text-alabaster/60">人數</label>
+              <select id="r-guests" name="guests" required data-error="請選擇人數" aria-describedby="r-guests-error" class="mt-3 w-full appearance-none border-0 border-b border-alabaster/25 bg-transparent px-0 py-2 text-alabaster transition-all duration-300 ease-in-out focus:border-gold focus:outline-none focus:ring-0">
+                <option value="" class="bg-obsidian">請選擇</option>
+                <option value="1" class="bg-obsidian">1 位</option>
+                <option value="2" class="bg-obsidian">2 位</option>
+                <option value="3-4" class="bg-obsidian">3–4 位（小團）</option>
+              </select>
+              <p id="r-guests-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div>
+              <label for="r-date" class="block text-[11px] uppercase tracking-[.25em] text-alabaster/60">預約日期</label>
+              <input id="r-date" name="date" type="date" required data-error="請選擇預約日期" aria-describedby="r-date-error" class="mt-3 w-full border-0 border-b border-alabaster/25 bg-transparent px-0 py-2 text-alabaster transition-all duration-300 ease-in-out focus:border-gold focus:outline-none focus:ring-0 [color-scheme:dark]">
+              <p id="r-date-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+            <div>
+              <label for="r-time" class="block text-[11px] uppercase tracking-[.25em] text-alabaster/60">時段</label>
+              <select id="r-time" name="time" required data-error="請選擇時段" aria-describedby="r-time-error" class="mt-3 w-full appearance-none border-0 border-b border-alabaster/25 bg-transparent px-0 py-2 text-alabaster transition-all duration-300 ease-in-out focus:border-gold focus:outline-none focus:ring-0">
+                <option value="" class="bg-obsidian">請選擇</option>
+                <option value="10" class="bg-obsidian">10:00 – 11:00</option>
+                <option value="13" class="bg-obsidian">13:00 – 14:00</option>
+                <option value="16" class="bg-obsidian">16:00 – 17:00</option>
+              </select>
+              <p id="r-time-error" class="mt-2 hidden text-xs text-rose-400" role="alert"></p>
+            </div>
+          </div>
+          <div class="mt-10 flex flex-col-reverse gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-xs text-alabaster/45">預約將於 24 小時內由專人以信件確認。</p>
+            <button type="submit" class="inline-flex items-center justify-center gap-3 bg-gold px-8 py-4 text-xs font-medium uppercase tracking-[.25em] text-obsidian transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-gold-soft">
+              送出預約
+              <i data-lucide="arrow-right" class="h-4 w-4" aria-hidden="true"></i>
+            </button>
+          </div>
+          <p data-form-success tabindex="-1" class="mt-6 hidden border border-gold/40 p-4 text-sm text-gold" role="status">預約申請已收到，我們將盡快與您確認。</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ Footer ============ -->
+  <footer class="border-t border-gold/15 bg-obsidian">
+    <div class="mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-10">
+      <div>
+        <p class="font-serif text-lg tracking-[.25em]">MAISON AUREL</p>
+        <p class="mt-2 text-xs tracking-[.3em] text-gold">金廊藝集</p>
+        <p class="mt-6 max-w-xs text-sm leading-loose text-alabaster/55">一間以光、金屬與留白為語言的藝廊，致力於經典與當代的對話。</p>
+      </div>
+      <nav aria-label="展覽導覽">
+        <h3 class="text-[11px] uppercase tracking-[.3em] text-gold">展覽</h3>
+        <ul class="mt-5 space-y-3 text-sm text-alabaster/65">
+          <li><a href="#exhibition" class="transition-colors duration-300 hover:text-gold">展覽路線</a></li>
+          <li><a href="#collection" class="transition-colors duration-300 hover:text-gold">典藏精品</a></li>
+          <li><a href="#heritage" class="transition-colors duration-300 hover:text-gold">品牌傳承</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="服務導覽">
+        <h3 class="text-[11px] uppercase tracking-[.3em] text-gold">服務</h3>
+        <ul class="mt-5 space-y-3 text-sm text-alabaster/65">
+          <li><a href="#reserve" class="transition-colors duration-300 hover:text-gold">貴賓預約</a></li>
+          <li><a href="#" class="transition-colors duration-300 hover:text-gold">典藏諮詢</a></li>
+          <li><a href="/" class="transition-colors duration-300 hover:text-gold">風格總覽</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h3 class="text-[11px] uppercase tracking-[.3em] text-gold">聯絡</h3>
+        <ul class="mt-5 space-y-3 text-sm text-alabaster/65">
+          <li><a href="mailto:concierge@maison-aurel.example" class="transition-colors duration-300 hover:text-gold">concierge@maison-aurel.example</a></li>
+          <li>+886 2 0000 0000</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-alabaster/10">
+      <p class="mx-auto max-w-7xl px-6 py-6 text-[11px] tracking-[.15em] text-alabaster/40 lg:px-10">© <span data-year>2026</span> MAISON AUREL 金廊藝集 · 本站所有展品與名稱皆為展示用途之範例。</p>
+    </div>
+  </footer>
+</body>
+</html>

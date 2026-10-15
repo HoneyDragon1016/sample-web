@@ -1,0 +1,13 @@
+# Cloudflare Pages 重新導向與別名（根目錄 _redirects 會被自動讀取）
+# 目標使用「乾淨網址」（不含 .html），避免與 Pages 自動去副檔名規則形成迴圈。
+/index                  /                        301
+/index.html             /                        301
+/business               /business-style-01       301
+/BusinessStyle01        /business-style-01       301
+/BusinessStyle01.html   /business-style-01       301
+/lifestyle              /lifestyle-01            301
+/Lifestyle01            /lifestyle-01            301
+/Lifestyle01.html       /lifestyle-01            301
+/elegant                /elegant-style           301
+/ElegantStyle           /elegant-style           301
+/ElegantStyle.html      /elegant-style           301
