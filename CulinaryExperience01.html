@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Maison Noire 米其林星級餐飲與精品旅宿 · 炭黑、暖木與琥珀金的微醺典雅。">
+  <meta name="theme-color" content="#141210">
+  <meta property="og:title" content="Maison Noire｜米其林星級餐飲與精品旅宿">
+  <meta property="og:description" content="Fine Dining 高端法式料理感的餐飲與旅宿範例。">
+  <meta property="og:image" content="assets/images/culinary-hero.jpg">
+  <title>Maison Noire｜米其林星級餐飲與精品旅宿</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Noto+Serif+TC:wght@400;500;700&family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Playfair Display"', '"Noto Serif TC"', 'Georgia', 'serif'],
+            sans: ['Inter', '"Noto Sans TC"', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            charcoal: { 900: '#0e0c0a', 800: '#141210', 700: '#1f1b17', 600: '#2c2620' },
+            wood: { 500: '#8b5a2b', 400: '#a8713a', 300: '#c99a6a' },
+            amber: { 500: '#c9a36a', 400: '#d4b07a', 300: '#e6c99a' }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="bg-charcoal-800 font-sans text-amber-300/90 antialiased">
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <!-- ============ Header ============ -->
+  <header data-header-scroll class="fixed inset-x-0 top-0 z-50 transition-all duration-300 ease-in-out [&.is-scrolled]:bg-charcoal-800/85 [&.is-scrolled]:backdrop-blur-md [&.is-scrolled]:shadow-[0_1px_0_rgba(201,163,106,.2)]">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10" aria-label="主要導覽">
+      <a href="#top" class="flex flex-col leading-none" aria-label="Maison Noire 首頁">
+        <span class="font-serif text-xl tracking-[.25em] text-amber-300">MAISON NOIRE</span>
+        <span class="mt-1 text-[10px] tracking-[.4em] text-wood-400">米其林 · 精品旅宿</span>
+      </a>
+      <ul class="hidden items-center gap-8 text-xs uppercase tracking-[.25em] text-amber-300/80 md:flex">
+        <li><a href="#philosophy" class="transition-colors hover:text-amber-300">理念</a></li>
+        <li><a href="#menu" class="transition-colors hover:text-amber-300">美饌</a></li>
+        <li><a href="#reserve" class="transition-colors hover:text-amber-300">預訂</a></li>
+        <li><a href="#location" class="transition-colors hover:text-amber-300">位置</a></li>
+        <li><a href="/" class="transition-colors hover:text-amber-300">總覽</a></li>
+      </ul>
+      <div class="flex items-center gap-3">
+        <a href="#reserve" class="hidden rounded-none border border-amber-500/70 px-5 py-2.5 text-xs uppercase tracking-[.25em] text-amber-300 transition-all hover:bg-amber-500 hover:text-charcoal-800 sm:inline-block">立即預訂</a>
+        <button type="button" class="grid h-10 w-10 place-items-center text-amber-300 md:hidden" data-nav-toggle aria-expanded="false" aria-controls="cul-menu">
+          <span class="sr-only">開啟選單</span>
+          <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+        </button>
+      </div>
+    </nav>
+    <div id="cul-menu" class="hidden bg-charcoal-800/95 px-6 py-6 backdrop-blur-md md:hidden">
+      <ul class="flex flex-col gap-5 font-serif text-lg tracking-wide text-amber-300">
+        <li><a href="#philosophy">理念</a></li>
+        <li><a href="#menu">美饌</a></li>
+        <li><a href="#reserve">預訂</a></li>
+        <li><a href="#location">位置</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ Hero ============ -->
+    <section id="top" class="relative flex min-h-[100svh] items-end overflow-hidden" aria-labelledby="hero-title">
+      <div class="absolute inset-0" aria-hidden="true">
+        <img data-parallax="0.25" src="assets/images/culinary-hero.jpg" alt="" width="1600" height="900" loading="eager" class="parallax-img h-full w-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-charcoal-800 via-charcoal-800/60 to-charcoal-800/30"></div>
+      </div>
+      <div class="relative mx-auto w-full max-w-7xl px-6 pb-20 pt-40 lg:px-10 lg:pb-28">
+        <p class="reveal text-xs uppercase tracking-[.5em] text-amber-500">Maison Noire · Since 2018</p>
+        <h1 id="hero-title" class="reveal reveal-delay-1 mt-6 max-w-4xl font-serif text-5xl font-normal leading-[1.05] sm:text-6xl lg:text-8xl">
+          一頓飯，<em class="italic text-amber-400">一場漫長的告白</em>
+        </h1>
+        <p class="reveal reveal-delay-2 mt-4 font-serif text-xl italic text-amber-300/80 sm:text-2xl">Charcoal · Warm Wood · Amber Gold</p>
+        <p class="reveal reveal-delay-2 mt-6 max-w-xl text-sm leading-loose text-amber-300/70">
+          以當令食材與法式技法，於炭黑與暖木交織的空間中，獻上 9 道品嚐菜單。米其林一星 · 亞洲 50 最佳餐廳。
+        </p>
+        <div class="reveal reveal-delay-3 mt-12 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <a href="#reserve" class="inline-flex items-center justify-center gap-3 border border-amber-500/70 bg-amber-500 px-8 py-4 text-xs font-medium uppercase tracking-[.25em] text-charcoal-800 transition-all hover:bg-amber-400">
+            預訂席位
+            <i data-lucide="calendar" class="h-4 w-4" aria-hidden="true"></i>
+          </a>
+          <a href="#menu" class="inline-flex items-center justify-center gap-3 border border-amber-300/30 px-8 py-4 text-xs uppercase tracking-[.25em] text-amber-300 transition-all hover:border-amber-500 hover:text-amber-400">
+            瀏覽美饌
+            <i data-lucide="arrow-down" class="h-4 w-4" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Philosophy ============ -->
+    <section id="philosophy" class="mx-auto max-w-7xl px-6 py-28 lg:px-10" aria-labelledby="phil-title">
+      <div class="grid gap-12 lg:grid-cols-12 lg:items-center">
+        <div class="reveal lg:col-span-5">
+          <p class="text-xs uppercase tracking-[.4em] text-amber-500">Chef's Philosophy</p>
+          <h2 id="phil-title" class="mt-5 font-serif text-4xl font-normal leading-tight sm:text-5xl">主廚哲理與季節概念</h2>
+          <p class="mt-6 text-sm leading-loose text-amber-300/75">
+            主廚 Étienne Moreau 相信，料理不是技術的炫耀，而是與土地、季節與人的對話。每一道菜都從當日清晨的市場開始，尊重食材最原始的風味。
+          </p>
+          <p class="mt-4 text-sm leading-loose text-amber-300/75">
+            我們的品嚐菜單每六週更換一次，跟隨北半球的四季節奏。春季的筍與香草、夏季的番茄與海膽、秋季的松露與野菇、冬季的根莖與慢燉。
+          </p>
+          <div class="mt-8 grid grid-cols-3 gap-4 border-t border-amber-500/20 pt-6 text-center">
+            <div>
+              <p class="font-serif text-3xl text-amber-400">1★</p>
+              <p class="mt-1 text-xs uppercase tracking-wide text-amber-300/60">Michelin</p>
+            </div>
+            <div>
+              <p class="font-serif text-3xl text-amber-400">9</p>
+              <p class="mt-1 text-xs uppercase tracking-wide text-amber-300/60">道品嚐</p>
+            </div>
+            <div>
+              <p class="font-serif text-3xl text-amber-400">24</p>
+              <p class="mt-1 text-xs uppercase tracking-wide text-amber-300/60">席位</p>
+            </div>
+          </div>
+        </div>
+        <div class="reveal reveal-delay-1 lg:col-span-7">
+          <img src="assets/images/culinary-hero.jpg" alt="餐廳環境" width="900" height="600" loading="lazy" class="w-full rounded-sm object-cover shadow-[0_30px_60px_-20px_rgba(0,0,0,.6)]">
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Menu Tabs ============ -->
+    <section id="menu" class="border-t border-amber-500/10 bg-charcoal-700/40 py-28" aria-labelledby="menu-title">
+      <div class="mx-auto max-w-7xl px-6 lg:px-10">
+        <div class="reveal text-center">
+          <p class="text-xs uppercase tracking-[.4em] text-amber-500">Menu</p>
+          <h2 id="menu-title" class="mt-5 font-serif text-4xl font-normal sm:text-5xl">互動美饌菜單</h2>
+          <p class="mt-4 text-sm text-amber-300/70">切換品嚐菜單 / 單點 / 酒搭，查看食材細節與過敏原提示。</p>
+        </div>
+
+        <div class="mt-12" data-tabs>
+          <div role="tablist" aria-label="菜單分類" class="flex flex-wrap justify-center gap-2 border-b border-amber-500/20 pb-4">
+            <button type="button" role="tab" id="tab-tasting" aria-controls="panel-tasting" aria-selected="true" tabindex="0" class="px-5 py-2.5 text-xs uppercase tracking-[.25em] text-amber-300/60 transition-colors [&[aria-selected=true]]:border-b-2 [&[aria-selected=true]]:border-amber-500 [&[aria-selected=true]]:text-amber-400">Tasting Menu</button>
+            <button type="button" role="tab" id="tab-alacarte" aria-controls="panel-alacarte" aria-selected="false" tabindex="-1" class="px-5 py-2.5 text-xs uppercase tracking-[.25em] text-amber-300/60 transition-colors [&[aria-selected=true]]:border-b-2 [&[aria-selected=true]]:border-amber-500 [&[aria-selected=true]]:text-amber-400">A La Carte</button>
+            <button type="button" role="tab" id="tab-wine" aria-controls="panel-wine" aria-selected="false" tabindex="-1" class="px-5 py-2.5 text-xs uppercase tracking-[.25em] text-amber-300/60 transition-colors [&[aria-selected=true]]:border-b-2 [&[aria-selected=true]]:border-amber-500 [&[aria-selected=true]]:text-amber-400">Wine Pairing</button>
+          </div>
+
+          <!-- Tasting -->
+          <div id="panel-tasting" role="tabpanel" aria-labelledby="tab-tasting" class="mt-8 grid gap-4 md:grid-cols-2">
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">海膽 · 山藥 · 魚子醬</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 1,280</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">北海道馬糞海膽、新鮮山藥泥、Oscietra 魚子醬，以柚子泡沫提亮。</p>
+              <p class="mt-3 text-xs text-amber-300/50">過敏原：甲殼類、魚卵 · 含生食</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">黑松露 · 野菇 · 蛋黃</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 1,680</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">佩里戈爾黑松露刨片、本地野菇、63°C 慢煮蛋黃、奶油吐司。</p>
+              <p class="mt-3 text-xs text-amber-300/50">過敏原：蛋、麩質、奶類</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">和牛 · 紅酒醬 · 根莖</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 2,180</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">A5 和牛菲力、波爾多紅酒醬、慢烤根莖蔬菜、黑蒜。</p>
+              <p class="mt-3 text-xs text-amber-300/50">過敏原：奶類 · 含酒精</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">柚子 · 白巧克力 · 蜂蜜</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 680</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">柚子雪酪、白巧克力慕斯、在地蜂蜜脆片、香草油。</p>
+              <p class="mt-3 text-xs text-amber-300/50">過敏原：奶類 · 含蜂蜜</p>
+            </article>
+          </div>
+
+          <!-- A La Carte -->
+          <div id="panel-alacarte" role="tabpanel" aria-labelledby="tab-alacarte" hidden class="mt-8 grid gap-4 md:grid-cols-2">
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">法式洋蔥湯</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 480</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">慢燉洋蔥、牛骨高湯、格魯耶爾起司、法國麵包。</p>
+              <p class="mt-3 text-xs text-amber-300/50">過敏原：麩質、奶類</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">鴨胸 · 橙醬 · 甜菜</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 1,380</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">舒肥鴨胸、大橘子醬汁、甜菜根純泥、羽衣甘藍。</p>
+              <p class="mt-3 text-xs text-amber-300/50">過敏原：奶類 · 含酒精</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">龍蝦 · 奶油 · 蒜</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 1,980</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">半隻波士頓龍蝦、大蒜奶油、白酒、香草。</p>
+              <p class="mt-3 text-xs text-amber-300/50">過敏原：甲殼類、奶類 · 含酒精</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">巧克力 · 海鹽 · 榛果</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 580</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">70% 黑巧克力塔、海鹽焦糖、榛果脆、香草冰淇淋。</p>
+              <p class="mt-3 text-xs text-amber-300/50">過敏原：奶類、堅果、麩質</p>
+            </article>
+          </div>
+
+          <!-- Wine -->
+          <div id="panel-wine" role="tabpanel" aria-labelledby="tab-wine" hidden class="mt-8 grid gap-4 md:grid-cols-2">
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">Champagne Brut NV</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 680 / 杯</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">細緻氣泡、青蘋果與白花香，適合開胃小點。</p>
+              <p class="mt-3 text-xs text-amber-300/50">酒精濃度 12% · 法國香檳區</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">Bourgogne Chardonnay</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 580 / 杯</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">礦物感與奶油質地，與海鮮料理完美搭配。</p>
+              <p class="mt-3 text-xs text-amber-300/50">酒精濃度 13% · 法國勃根地</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">Bordeaux Rouge 2018</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 780 / 杯</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">黑莓、雪松與單寧結構，搭配和牛與鴨胸。</p>
+              <p class="mt-3 text-xs text-amber-300/50">酒精濃度 13.5% · 法國波爾多</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <div class="flex items-start justify-between gap-4">
+                <h3 class="font-serif text-xl text-amber-300">Sauternes 2016</h3>
+                <span class="text-sm font-semibold text-amber-500">NT$ 680 / 杯</span>
+              </div>
+              <p class="mt-2 text-sm text-amber-300/70">蜂蜜、杏桃與貴腐香氣，為甜點劃下句點。</p>
+              <p class="mt-3 text-xs text-amber-300/50">酒精濃度 14% · 法國蘇玳</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Reservation ============ -->
+    <section id="reserve" class="mx-auto max-w-4xl px-6 py-28 lg:px-10" aria-labelledby="reserve-title">
+      <div class="reveal text-center">
+        <p class="text-xs uppercase tracking-[.4em] text-amber-500">Reservation</p>
+        <h2 id="reserve-title" class="mt-5 font-serif text-4xl font-normal sm:text-5xl">線上席位預訂</h2>
+        <p class="mt-4 text-sm text-amber-300/70">選擇日期、時段與人數，我們將於 24 小時內確認。</p>
+      </div>
+      <form data-validate class="mt-10 rounded-sm border border-amber-500/30 bg-charcoal-700/40 p-8" novalidate>
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label for="res-name" class="block text-xs uppercase tracking-[.2em] text-amber-300/80">姓名</label>
+            <input id="res-name" name="name" type="text" required data-error="請輸入姓名" class="mt-2 w-full rounded-sm border border-amber-500/30 bg-charcoal-800 px-4 py-3 text-amber-300 placeholder-amber-300/40 focus:border-amber-500 focus:outline-none" placeholder="王小明">
+            <p id="res-name-error" class="mt-1 hidden text-xs text-rose-400"></p>
+          </div>
+          <div>
+            <label for="res-email" class="block text-xs uppercase tracking-[.2em] text-amber-300/80">Email</label>
+            <input id="res-email" name="email" type="email" required data-error="請輸入有效的 Email" class="mt-2 w-full rounded-sm border border-amber-500/30 bg-charcoal-800 px-4 py-3 text-amber-300 placeholder-amber-300/40 focus:border-amber-500 focus:outline-none" placeholder="you@example.com">
+            <p id="res-email-error" class="mt-1 hidden text-xs text-rose-400"></p>
+          </div>
+          <div>
+            <label for="res-date" class="block text-xs uppercase tracking-[.2em] text-amber-300/80">日期</label>
+            <input id="res-date" name="date" type="date" required data-error="請選擇日期" class="mt-2 w-full rounded-sm border border-amber-500/30 bg-charcoal-800 px-4 py-3 text-amber-300 focus:border-amber-500 focus:outline-none">
+            <p id="res-date-error" class="mt-1 hidden text-xs text-rose-400"></p>
+          </div>
+          <div>
+            <label for="res-time" class="block text-xs uppercase tracking-[.2em] text-amber-300/80">時段</label>
+            <select id="res-time" name="time" required data-error="請選擇時段" class="mt-2 w-full rounded-sm border border-amber-500/30 bg-charcoal-800 px-4 py-3 text-amber-300 focus:border-amber-500 focus:outline-none">
+              <option value="">選擇時段</option>
+              <option>18:00</option>
+              <option>18:30</option>
+              <option>19:00</option>
+              <option>19:30</option>
+              <option>20:00</option>
+            </select>
+            <p id="res-time-error" class="mt-1 hidden text-xs text-rose-400"></p>
+          </div>
+          <div>
+            <label for="res-guests" class="block text-xs uppercase tracking-[.2em] text-amber-300/80">人數</label>
+            <select id="res-guests" name="guests" required data-error="請選擇人數" class="mt-2 w-full rounded-sm border border-amber-500/30 bg-charcoal-800 px-4 py-3 text-amber-300 focus:border-amber-500 focus:outline-none">
+              <option value="">選擇人數</option>
+              <option>1 位</option>
+              <option>2 位</option>
+              <option>3 位</option>
+              <option>4 位</option>
+              <option>5-6 位（包廂）</option>
+            </select>
+            <p id="res-guests-error" class="mt-1 hidden text-xs text-rose-400"></p>
+          </div>
+          <div>
+            <label for="res-phone" class="block text-xs uppercase tracking-[.2em] text-amber-300/80">電話（選填）</label>
+            <input id="res-phone" name="phone" type="tel" class="mt-2 w-full rounded-sm border border-amber-500/30 bg-charcoal-800 px-4 py-3 text-amber-300 placeholder-amber-300/40 focus:border-amber-500 focus:outline-none" placeholder="+886 9xx xxx xxx">
+          </div>
+        </div>
+        <div class="mt-6">
+          <label for="res-notes" class="block text-xs uppercase tracking-[.2em] text-amber-300/80">特殊需求（過敏原、慶祝等）</label>
+          <textarea id="res-notes" name="notes" rows="3" class="mt-2 w-full rounded-sm border border-amber-500/30 bg-charcoal-800 px-4 py-3 text-amber-300 placeholder-amber-300/40 focus:border-amber-500 focus:outline-none" placeholder="例如：一位客人對甲殼類過敏"></textarea>
+        </div>
+        <div class="mt-8 flex items-center justify-between">
+          <p data-form-success tabindex="-1" class="hidden text-sm text-emerald-400">預訂申請已送出，我們將於 24 小時內確認。</p>
+          <button type="submit" class="ml-auto inline-flex items-center justify-center gap-2 border border-amber-500 bg-amber-500 px-8 py-3 text-xs font-medium uppercase tracking-[.25em] text-charcoal-800 transition-all hover:bg-amber-400">
+            送出預訂
+            <i data-lucide="send" class="h-4 w-4" aria-hidden="true"></i>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ Location ============ -->
+    <section id="location" class="border-t border-amber-500/10 bg-charcoal-700/30 py-28" aria-labelledby="loc-title">
+      <div class="mx-auto max-w-7xl px-6 lg:px-10">
+        <div class="reveal max-w-2xl">
+          <p class="text-xs uppercase tracking-[.4em] text-amber-500">Location & Private Dining</p>
+          <h2 id="loc-title" class="mt-5 font-serif text-4xl font-normal sm:text-5xl">交通位置與私人包廂</h2>
+        </div>
+        <div class="mt-12 grid gap-8 lg:grid-cols-2">
+          <div class="reveal">
+            <div class="overflow-hidden rounded-sm border border-amber-500/20">
+              <iframe title="Maison Noire 地圖" src="https://www.google.com/maps?q=Taipei+101&output=embed" width="100%" height="360" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+            <p class="mt-4 text-sm text-amber-300/70">
+              台北市信義區松智路 1 號 45 樓 · 捷運台北 101/世貿站 3 號出口步行 5 分鐘
+            </p>
+            <a href="https://www.google.com/maps/search/?api=1&query=Taipei+101" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-[.2em] text-amber-400 hover:text-amber-300">
+              開啟 Google 地圖 <i data-lucide="external-link" class="h-3.5 w-3.5" aria-hidden="true"></i>
+            </a>
+          </div>
+          <div class="reveal reveal-delay-1 space-y-4">
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <h3 class="font-serif text-xl text-amber-300">私人包廂 · Salon Privé</h3>
+              <p class="mt-2 text-sm text-amber-300/70">最多 8 位賓客，獨立空間與專屬侍酒師，適合求婚、家族聚餐與商務宴請。</p>
+              <p class="mt-3 text-xs text-amber-300/50">最低消費 NT$ 38,000 · 需提前 7 日預訂</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <h3 class="font-serif text-xl text-amber-300">品酒室 · Cellar</h3>
+              <p class="mt-2 text-sm text-amber-300/70">地下酒窖品酒體驗，由侍酒師帶領探索 200+ 款藏酒。</p>
+              <p class="mt-3 text-xs text-amber-300/50">每場 NT$ 4,800 / 人 · 週五、六 21:00</p>
+            </article>
+            <article class="rounded-sm border border-amber-500/20 bg-charcoal-800/60 p-6">
+              <h3 class="font-serif text-xl text-amber-300">停車與交通</h3>
+              <p class="mt-2 text-sm text-amber-300/70">提供代客泊車服務；捷運台北 101/世貿站步行 5 分鐘。</p>
+              <p class="mt-3 text-xs text-amber-300/50">營業時間：週二至週日 18:00–23:00（週一休）</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-amber-500/10">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-amber-300/60 sm:flex-row lg:px-10">
+      <p>© <span data-year>2026</span> Maison Noire · 米其林餐飲與精品旅宿示範</p>
+      <a href="/" class="transition-colors hover:text-amber-300">返回總覽</a>
+    </div>
+  </footer>
+</body>
+</html>

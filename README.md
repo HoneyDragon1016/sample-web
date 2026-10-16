@@ -8,7 +8,7 @@
 [![A11y](https://img.shields.io/badge/A11y-WCAG%20minded-2EA44F)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Static](https://img.shields.io/badge/Architecture-Pure%20Static-111827)](#技術架構)
 
-> 一套以純靜態技術打造的三風格形象網站範例，推送至 Git 即可由 Cloudflare Pages 自動構建與發布，無需任何打包工具。
+> 一套以純靜態技術打造的九款形象網站範例，推送至 Git 即可由 Cloudflare Pages 自動構建與發布，無需任何打包工具。
 
 ---
 
@@ -16,9 +16,10 @@
 
 - [專案願景](#專案願景)
 - [視覺設計概念](#視覺設計概念)
-- [三種風格範例](#三種風格範例)
+- [九款頁面特色對照總覽](#九款頁面特色對照總覽)
 - [專案目錄架構](#專案目錄架構)
 - [技術架構](#技術架構)
+- [動態引擎架構指南](#動態引擎架構指南)
 - [本地預覽](#本地預覽)
 - [Cloudflare Pages 部署說明](#cloudflare-pages-部署說明)
 - [頁面模組化指南](#頁面模組化指南)
@@ -31,28 +32,46 @@
 
 ## 專案願景
 
-**讓形象網站回歸「內容與質感」本身。** 不需要複雜的框架、不需要後端伺服器，一個 Git 儲存庫即可交付三種截然不同的品牌氣質：
+**讓形象網站回歸「內容與質感」本身。** 不需要複雜的框架、不需要後端伺服器，一個 Git 儲存庫即可交付九種截然不同的品牌氣質：
 
 | 場景 | 氣質關鍵字 | 對應頁面 |
 | --- | --- | --- |
 | 企業接洽、SaaS、顧問服務 | 科技、精準、可信賴 | `business-style-01.html` |
 | 個人品牌、生活美學、創作者 | 溫潤、留白、慢節奏 | `lifestyle-01.html` |
 | 藝廊、精品、高端品牌 | 莊重、奢華、沉浸 | `elegant-style.html` |
+| 旗艦單品、DTC 電商發售 | 科技工藝、規格導向、轉換導向 | `ProductLaunch01.html` |
+| 創意設計工作室、新創品牌 | 大膽、活潑、強烈個性 | `CreativeStudio01.html` |
+| 米其林餐飲、精品旅宿 | 典雅、微醺、沉浸式體驗 | `CulinaryExperience01.html` |
+| 科技敘事、產品解構、深度專題 | 電影感、捲動敘事、空間感 | `SpatialStory01.html` |
+| 先鋒數位創意工作室 | 賽博、動態排版、強烈互動 | `KineticAgency01.html` |
+| 微互動展示、互動實驗、產品手感 | 流體、物理、多感官回饋 | `InteractivePlayground01.html` |
 
 ## 視覺設計概念
 
 - **Business · Tech Editorial**：深夜藍底（`#05060f`）搭配靛藍與青色光暈，玻璃擬態（Glassmorphism）卡片與發光邊框，參考 Stripe / Linear 的層次感。
 - **Lifestyle · Nordic-Japanese Editorial**：紙白（`#f7f4ef`）與墨色（`#2b2a27`），以陶土色（`#b5835a`）與鼠尾草綠（`#8a9a7b`）點綴；襯線標題搭配無襯線內文，留白優先。
 - **Elegant · Gallery Noir**：黑曜石（`#0b0b0d`）、象牙白（`#f4f1ea`）與香檳金（`#c9a961`）；全螢幕視差 Hero、金線分隔、時間軸與原生 Dialog 展品詳情。
+- **Product · Obsidian Tech**：黑曜石（`#0a0b0f`）、冰白與青色光暈；全螢幕產品 Hero、Bento 規格網格、互動熱點與吸底購買列。
+- **Studio · Neo-Brutalism**：鮮黃（`#facc15`）、紫（`#a855f7`）、薄荷綠（`#6ee7b7`）搭配深黑線條；粗線框、硬陰影、跑馬燈與瀑布流案例。
+- **Culinary · Fine Dining**：炭黑（`#141210`）、暖木色（`#8b5a2b`）與琥珀金（`#c9a36a`）；沉浸式 Hero、主廚哲理、互動菜單與席位預訂。
+- **Spatial · Deep Scroll Story**：深空黑（`#05060a`）與青/橘能量光暈；釘選式 360° 解構、SVG 路徑繪製、文字遮罩擦除與深度儀表板。
+- **Kinetic · Cyber Neon**：賽博黑（`#07060d`）搭霓虹粉（`#ff2d78`）、電光藍（`#00e0ff`）與酸性綠（`#d9ff3f`）；磁吸游標、橫向展廊與 Kinetic Type。
+- **Lab · Fluid Playground**：實驗室黑（`#06060c`）與紫/粉/青流體光暈；3D 傾斜流光、Canvas 粒子場、物理拖曳與 Web Audio 微聲效。
 
-## 三種風格範例
+## 九款頁面特色對照總覽
 
-| # | 頁面 | 關鍵區塊 |
-| --- | --- | --- |
-| 0 | [`index.html`](index.html) | Showcase Hub：三個風格預覽卡片、特色標籤與直達按鈕 |
-| 1 | [`business-style-01.html`](business-style-01.html) | Sticky 導航、Hero 與動態數據、服務卡片（Hover 狀態）、案例數據、客戶商標跑馬燈、評價、即時驗證表單、企業頁尾 |
-| 2 | [`lifestyle-01.html`](lifestyle-01.html) | 極簡 Header、個人介紹與理念引言、精選日誌（閱讀時長與標籤）、靈感相簿（燈箱 + 鍵盤操作）、電子報訂閱、極簡頁尾 |
-| 3 | [`elegant-style.html`](elegant-style.html) | 全螢幕沉浸 Hero（視差）、策展路線分頁（Tabs）、典藏精品卡片與 Modal 詳情、匠人傳承時間軸、貴賓預約表單 |
+| # | 頁面 | 分類 | 動效技術 | 關鍵區塊 |
+| --- | --- | --- | --- | --- |
+| 0 | [`index.html`](index.html) | — | Vanilla JS Filter | 風格矩陣 Hub：分類篩選器、9 款預覽卡片、技術標籤與直達按鈕 |
+| 1 | [`business-style-01.html`](business-style-01.html) | 商業形象 | CSS Transition | Sticky 導航、Hero 與動態數據、服務卡片（Hover 狀態）、案例數據、客戶商標跑馬燈、評價、即時驗證表單、企業頁尾 |
+| 2 | [`lifestyle-01.html`](lifestyle-01.html) | 品牌生活 | CSS + Lightbox | 極簡 Header、個人介紹與理念引言、精選日誌（閱讀時長與標籤）、靈感相簿（燈箱 + 鍵盤操作）、電子報訂閱、極簡頁尾 |
+| 3 | [`elegant-style.html`](elegant-style.html) | 奢華體驗 | Parallax + Modal | 全螢幕沉浸 Hero（視差）、策展路線分頁（Tabs）、典藏精品卡片與 Modal 詳情、匠人傳承時間軸、貴賓預約表單 |
+| 4 | [`ProductLaunch01.html`](ProductLaunch01.html) | 商業形象 | IO + Sticky Bar | 全螢幕產品 Hero、核心規格 Bento Grid、互動 Feature Hotspots、媒體評測引言、吸底懸浮購買列 |
+| 5 | [`CreativeStudio01.html`](CreativeStudio01.html) | 品牌生活 | CSS Hard Shadow | 搞怪 Hero Slogan、精選專案瀑布流（Hover 位移縮放）、拍立得團隊卡片、趣味報價計算機 |
+| 6 | [`CulinaryExperience01.html`](CulinaryExperience01.html) | 奢華體驗 | Tabs + Parallax | 沉浸式氛圍 Hero、主廚哲理、互動美饌菜單（Tabs + 過敏原）、線上席位預訂、位置與私人包廂 |
+| 7 | [`SpatialStory01.html`](SpatialStory01.html) | 動效互動 | **Lenis + GSAP Pin & Scrub** | 釘選式 360° 空間解構（分層爆發 + 數據飛入）、SVG 路徑動態繪製、文字遮罩擦除、章節深度儀表板 |
+| 8 | [`KineticAgency01.html`](KineticAgency01.html) | 動效互動 | **Lenis + GSAP + Magnetic Cursor** | 磁吸自定義游標（延遲外環 + 差值反色 + 提示字）、橫向滾動視差展廊（containerAnimation）、字元波浪抖動、Kinetic Marquee |
+| 9 | [`InteractivePlayground01.html`](InteractivePlayground01.html) | 動效互動 | **Lenis + GSAP + Canvas + Web Audio** | 3D 傾斜流光卡（Specular Glare）、Canvas 粒子場（點擊衝擊波）、慣性物理拖曳（邊界回彈）、Web Audio 微晶片聲效 |
 
 ## 專案目錄架構
 
@@ -62,6 +81,12 @@ sample-web/
 ├── business-style-01.html      # 風格 1：商務接洽與企業形象
 ├── lifestyle-01.html           # 風格 2：簡約個人網誌與品牌形象
 ├── elegant-style.html          # 風格 3：經典藝廊與沉浸式品牌
+├── ProductLaunch01.html        # 風格 4：旗艦單品與 DTC 電商發售
+├── CreativeStudio01.html       # 風格 5：新野蠻主義創意設計工作室
+├── CulinaryExperience01.html   # 風格 6：米其林星級餐飲與精品旅宿
+├── SpatialStory01.html         # 風格 7：沉浸式滾動敘事與空間解構（動效）
+├── KineticAgency01.html        # 風格 8：動態排版與賽博感先鋒設計（動效）
+├── InteractivePlayground01.html # 風格 9：微互動實驗室與流體物理場（動效）
 ├── 404.html                    # 自訂 404 頁（Cloudflare Pages 自動使用）
 ├── _redirects                  # 大小寫別名與乾淨網址的 301 重新導向
 ├── README.md                   # 專案文件
@@ -69,14 +94,21 @@ sample-web/
     ├── css/
     │   └── site.css            # 共用設計 Token、玻璃擬態、動態與無障礙樣式
     ├── js/
-    │   └── site.js             # 共用互動：選單、Reveal、表單驗證、Lightbox、Dialog、Tabs、Parallax
+    │   ├── site.js             # 共用互動：選單、Reveal、表單驗證、Lightbox、Dialog、Tabs、Parallax
+    │   └── motion-engine.js    # 動態引擎：Lenis × GSAP ScrollTrigger 同步核心（動效頁共用）
     └── images/                 # 原創 AI 生成圖與 SVG 作品（無版權疑慮）
         ├── biz-hero.jpg
         ├── life-hero.jpg
         ├── life-post-1.jpg ~ life-post-3.jpg
         ├── life-gallery-1.jpg ~ life-gallery-4.jpg
         ├── ele-hero.jpg
-        └── ele-art-1.svg ~ ele-art-3.svg
+        ├── ele-art-1.svg ~ ele-art-3.svg
+        ├── product-hero.jpg      # ProductLaunch01 產品主視覺
+        ├── studio-hero.jpg       # CreativeStudio01 創意視覺
+        ├── culinary-hero.jpg     # CulinaryExperience01 餐廳氛圍
+        ├── spatial-hero.jpg      # SpatialStory01 機械核心主視覺
+        ├── kinetic-hero.jpg      # KineticAgency01 賽博排版視覺
+        └── playground-hero.jpg   # InteractivePlayground01 流體粒子視覺
 ```
 
 ## 技術架構
@@ -88,7 +120,71 @@ sample-web/
 | 字體 | Google Fonts：Inter、Playfair Display、Noto Sans TC、Noto Serif TC | 以 `preconnect` + `display=swap` 優化載入 |
 | 圖示 | Lucide Icons（UMD CDN，版本鎖定 `0.460.0`） | 以 `data-lucide` 屬性宣告 |
 | 互動 | 原生 ES6+（無套件） | IntersectionObserver、`<dialog>`、WAI-ARIA Tabs 模式 |
+| 動效引擎（動效頁） | Lenis 1.x + GSAP 3.12.5 + ScrollTrigger | 平滑滾動與捲動觸發動畫，以 `motion-engine.js` 統一同步，見[動態引擎架構指南](#動態引擎架構指南) |
 | 部署 | Cloudflare Pages | 無構建指令，直接發布根目錄 |
+
+## 動態引擎架構指南
+
+> 適用頁面：`SpatialStory01.html`、`KineticAgency01.html`、`InteractivePlayground01.html`
+> 動效技術棧：**Lenis 1.x**（平滑滾動）＋ **GSAP 3.12.5 / ScrollTrigger**（捲動觸發動效），皆以 CDN 引入，維持 Cloudflare Pages 零配置構建。
+
+### 整合原理：為什麼是 Lenis × ScrollTrigger？
+
+平滑滾動引擎與捲動動畫引擎各自監聽 scroll 事件時，會產生「相位差」——畫面滾動位置與動畫進度不同步，造成抖動與掉幀。整合的關鍵是**讓兩者共用同一份座標系與同一個 rAF 迴圈**，由 `assets/js/motion-engine.js` 一次完成：
+
+```js
+// 1. 建立 Lenis 實例（平滑滾動）
+const lenis = new Lenis({ duration: 1.15, smoothWheel: true });
+
+// 2. 關鍵同步：Lenis 每次捲動 → 通知 ScrollTrigger 重算進度
+lenis.on('scroll', ScrollTrigger.update);
+
+// 3. 關鍵同步：由 gsap.ticker 驅動 Lenis 渲染（單一 rAF，杜絕掉幀）
+gsap.ticker.add((time) => {
+  lenis.raf(time * 1000);   // gsap.ticker 單位為秒，Lenis 為毫秒
+});
+
+// 4. 關閉 lag smoothing：捲動跟手、不做補間平滑
+gsap.ticker.lagSmoothing(0);
+```
+
+`motion-engine.js` 另外封裝了：
+
+| 機制 | 說明 |
+| --- | --- |
+| Resize 防抖重算 | `resize` 後 200ms 呼叫 `lenis.resize()` + `ScrollTrigger.refresh()`，確保 Pin / Scrub 座標正確 |
+| 錨點平滑捲動 | 攔截 `a[href^="#"]`，改以 `lenis.scrollTo()`（無 Lenis 時降級原生 `scrollTo`） |
+| 減少動態偏好 | `prefers-reduced-motion: reduce` 時完全停用 Lenis，回退原生捲動 |
+| 觸控裝置降級 | `(pointer: coarse)` 停用平滑捲動與磁吸游標，行動端捲動維持原生順滑 |
+| `onScrollProgress()` | 以 `ScrollTrigger.create` 回傳整頁捲動進度（供深度儀表板等 HUD 使用） |
+
+### 效能優化配置
+
+| 規範 | 實作 |
+| --- | --- |
+| 硬體加速 | 所有動畫僅使用 `transform`（`translate3d` / `scale` / `rotate`）與 `opacity`，全部落在合成層，零 Layout 重排 |
+| 單一 rAF | GSAP ticker 同時驅動 Lenis、粒子場與拖曳物理，避免多個 `requestAnimationFrame` 爭搶 |
+| 低延遲補間 | 磁吸游標、3D 傾斜採 `gsap.quickTo()` / `gsap.quickSetter()` 直寫 transform，繞過一般 tween 的排程成本 |
+| 捲動事件 | 一律 `{ passive: true }`；進度回饋以 `ScrollTrigger.update` 取代手寫 scroll 監聽 |
+| Pin & Scrub | `scrub: 1` 加入輕微平滑、`invalidateOnRefresh: true` 讓函式值（如 `end: '+=2600'`）在 resize 時重算 |
+| 橫向展廊視差 | 以 `containerAnimation` 將次級 ScrollTrigger 掛在橫向 tween 上，避免自寫座標換算 |
+| 視覺效果濾鏡 | SVG 發光以 `feGaussianBlur` 靜態濾鏡，避免動畫中每幀重算 |
+| Canvas 粒子場 | `devicePixelRatio` 上限 2、`document.hidden` 時暫停 rAF、減少動態偏好時僅繪製靜態一幀 |
+| Web Audio | 懶建立 `AudioContext`（需使用者手勢），振盪器 30–50ms 極短包絡後自動釋放，無音訊檔案載入 |
+| Resize | 防抖 200ms → `ScrollTrigger.refresh()` 重算所有 Pin / Trigger 座標 |
+
+### 動效頁的 Script 載入順序
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
+<script src="assets/js/motion-engine.js"></script>   <!-- 讀取三者後初始化同步 -->
+<script src="assets/js/site.js"></script>            <!-- 既有共用互動 -->
+<script>/* 各頁動效腳本：MotionEngine.init() 後註冊 */</script>
+```
+
+> **容錯設計**：所有動效腳本皆以 `if (!window.gsap) return;` 守衛，CDN 載入失敗時頁面維持靜態可讀；初始隱藏狀態一律由 JS（`gsap.from` / `gsap.set`）建立，未載入 GSAP 時內容不會被 CSS 藏住。
 
 ## 本地預覽
 
@@ -215,12 +311,16 @@ npx serve .
 | 語意化 HTML | ✅ | `header`、`nav`、`main`、`section`、`article`、`figure`、`dl`、`dialog` |
 | ARIA | ✅ | `aria-label`、`aria-expanded`、`aria-controls`、`aria-invalid`、`aria-describedby`、Tabs 與 `role="status"` |
 | 鍵盤與焦點 | ✅ | `skip-link`、`:focus-visible` 樣式、Dialog 內建焦點管理、Tabs 左右鍵 |
-| 動態偏好 | ✅ | `prefers-reduced-motion` 會停用跑馬燈、視差與 Reveal 動畫 |
+| 動態偏好 | ✅ | `prefers-reduced-motion` 停用 Lenis、跑馬燈、視差、粒子動畫與 Reveal；內容保持靜態可讀 |
+| 動效引擎同步 | ✅ | Lenis `scroll` → `ScrollTrigger.update`；`gsap.ticker` 驅動 `lenis.raf`；`lagSmoothing(0)` |
+| 觸控裝置適配 | ✅ | `(pointer: coarse)` 自動停用磁吸游標與 3D 傾斜、回退原生捲動，行動端滾動順滑 |
+| Resize 重算 | ✅ | 防抖 200ms 後呼叫 `lenis.resize()` + `ScrollTrigger.refresh()`，Pin / Scrub 座標自動重算 |
+| Console Errors | ✅ | 全部動效腳本以 `if (!window.gsap)` 等守衛包覆，CDN 失敗優雅降級；Canvas / Audio 例外安全 |
 | 死連結 | ✅ 已檢查 | 本地資源、圖片與頁內錨點已以腳本檢查；外部 CDN 無法在建置環境中連線驗證，請於部署後確認 |
 
 ## 已知限制與後續建議
 
-- **外部 CDN 依賴**：Tailwind Play CDN 適合展示與快速原型，正式環境建議改為 Tailwind CLI 預先編譯 CSS 以減少執行期成本。
+- **外部 CDN 依賴**：Tailwind Play CDN 適合展示與快速原型，正式環境建議改為 Tailwind CLI 預先編譯 CSS 以減少執行期成本；動效頁另依賴 GSAP（cdnjs）與 Lenis（unpkg）CDN，離線環境需自備檔案。
 - **表單未串接後端**：見上方「表單的整合」。
 - **內容為範例**：文案、數據與人物皆為虛構，請依品牌替換。
 - **Lucide 版本鎖定**：若升級版本，請留意圖示名稱是否有異動。

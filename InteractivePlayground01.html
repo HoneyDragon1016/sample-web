@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MOTION LAB 微互動實驗室 · 3D 傾斜流光卡、Canvas 粒子場、物理拖曳與 Web Audio 微聲效。">
+  <meta name="theme-color" content="#06060c">
+  <meta property="og:title" content="MOTION LAB｜微互動實驗室與流體物理場">
+  <meta property="og:description" content="3D Tilt × Canvas Particle Field × Elastic Drag × Web Audio Micro-clicks 動效專題。">
+  <meta property="og:image" content="assets/images/playground-hero.jpg">
+  <title>MOTION LAB｜微互動實驗室與流體物理場</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    window.tailwind = window.tailwind || {}; window.tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Space Grotesk"', '"Noto Sans TC"', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            lab: { DEFAULT: '#06060c', deep: '#0b0b16', mid: '#121224' },
+            glow: { violet: '#7c3aed', pink: '#ec4899', cyan: '#22d3ee', amber: '#fbbf24' }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <style>
+    #particle-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .lab-layer { position: relative; z-index: 1; }
+
+    /* 3D 傾斜流光卡 */
+    .tilt-card { transform-style: preserve-3d; will-change: transform; }
+    .tilt-glare {
+      position: absolute; inset: -40%; border-radius: inherit; pointer-events: none;
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.34), rgba(255,255,255,0) 55%);
+      opacity: 0; will-change: transform, opacity;
+    }
+
+    /* 物理拖曳場 */
+    .drag-field { position: relative; overflow: hidden; touch-action: none; }
+    .drag-chip {
+      position: absolute; top: 0; left: 0; user-select: none; -webkit-user-select: none;
+      will-change: transform; cursor: grab; touch-action: none;
+    }
+    .drag-chip:active { cursor: grabbing; }
+
+    /* 聲效開關 */
+    .sound-toggle[aria-pressed="true"] { background: linear-gradient(135deg, #7c3aed, #ec4899); color: #fff; border-color: transparent; box-shadow: 0 0 26px rgba(124,58,237,.5); }
+    .sound-wave { display: inline-block; width: 3px; margin: 0 1.5px; border-radius: 2px; background: currentColor; vertical-align: middle; }
+  </style>
+</head>
+<body class="bg-lab font-sans text-slate-200 antialiased">
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <!-- 純原生 Canvas 粒子場 -->
+  <canvas id="particle-canvas" aria-hidden="true"></canvas>
+
+  <!-- 聲效微互動開關 -->
+  <div class="fixed right-5 top-5 z-[60]">
+    <button type="button" id="sound-toggle" class="sound-toggle inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-lab-deep/80 px-4 py-2.5 text-xs font-semibold uppercase tracking-[.22em] text-slate-300 backdrop-blur transition-all hover:border-glow-violet/60" aria-pressed="false">
+      <span class="flex h-4 items-end" aria-hidden="true">
+        <span class="sound-wave h-1.5" style="animation: none"></span>
+        <span class="sound-wave h-3" style="animation: none"></span>
+        <span class="sound-wave h-2" style="animation: none"></span>
+      </span>
+      <span id="sound-label">Sound Off</span>
+      <span class="sr-only">切換微聲效</span>
+    </button>
+  </div>
+
+  <!-- ============ Header ============ -->
+  <header data-header-scroll class="fixed inset-x-0 top-0 z-50 transition-all duration-300 [&.is-scrolled]:bg-lab/80 [&.is-scrolled]:backdrop-blur-xl">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10" aria-label="主要導覽">
+      <a href="#top" class="flex items-center gap-2.5 font-bold tracking-tight text-white" aria-label="MOTION LAB 首頁">
+        <span class="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-glow-violet to-glow-pink text-white shadow-[0_0_22px_rgba(124,58,237,.55)]" aria-hidden="true">
+          <i data-lucide="flask-conical" class="h-4 w-4"></i>
+        </span>
+        <span>MOTION<span class="text-glow-cyan">.LAB</span></span>
+      </a>
+      <ul class="hidden items-center gap-8 text-xs uppercase tracking-[.28em] text-slate-400 md:flex">
+        <li><a href="#experiments" class="transition-colors hover:text-white">實驗</a></li>
+        <li><a href="#drag" class="transition-colors hover:text-white">物理場</a></li>
+        <li><a href="#about" class="transition-colors hover:text-white">關於</a></li>
+        <li><a href="/" class="transition-colors hover:text-white">總覽</a></li>
+      </ul>
+      <a href="#drag" class="hidden rounded-full border border-glow-cyan/50 px-5 py-2 text-xs uppercase tracking-[.25em] text-glow-cyan transition-all hover:bg-glow-cyan hover:text-lab sm:inline-block">開始玩</a>
+      <button type="button" class="grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-white md:hidden" data-nav-toggle aria-expanded="false" aria-controls="lab-menu">
+        <span class="sr-only">開啟選單</span>
+        <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+      </button>
+    </nav>
+    <div id="lab-menu" class="hidden border-t border-white/10 bg-lab/95 px-6 py-5 backdrop-blur-xl md:hidden">
+      <ul class="flex flex-col gap-4 text-slate-200">
+        <li><a href="#experiments">實驗</a></li>
+        <li><a href="#drag">物理場</a></li>
+        <li><a href="#about">關於</a></li>
+        <li><a href="/">總覽</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main" class="lab-layer">
+    <!-- ============ Hero ============ -->
+    <section id="top" class="relative flex min-h-[100svh] items-center overflow-hidden" aria-labelledby="hero-title">
+      <div class="absolute inset-0" aria-hidden="true">
+        <img src="assets/images/playground-hero.jpg" alt="" width="1600" height="900" loading="eager" class="h-full w-full object-cover opacity-30">
+        <div class="absolute inset-0 bg-gradient-to-b from-lab/70 via-lab/50 to-lab"></div>
+      </div>
+      <div class="relative mx-auto w-full max-w-7xl px-6 py-28 lg:px-10">
+        <p class="lab-hero-item inline-flex items-center gap-2 rounded-full border border-glow-violet/40 bg-glow-violet/10 px-4 py-1.5 text-[11px] uppercase tracking-[.35em] text-glow-violet">
+          <span class="h-1.5 w-1.5 rounded-full bg-glow-pink"></span>
+          Micro-interaction Playground · 60fps
+        </p>
+        <h1 id="hero-title" class="lab-hero-item mt-8 max-w-4xl text-5xl font-bold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-8xl">
+          用指尖，<br>感受<span class="bg-gradient-to-r from-glow-violet via-glow-pink to-glow-cyan bg-clip-text text-transparent">物理與手感</span>
+        </h1>
+        <p class="lab-hero-item mt-7 max-w-xl text-base leading-loose text-slate-400 sm:text-lg">
+          這裡是微互動的遊樂場：3D 傾斜流光、Canvas 粒子衝擊波、帶慣性的物理拖曳，
+          以及由 Web Audio 即時合成的極短高頻微聲效。試試看點擊背景任意處。
+        </p>
+        <div class="lab-hero-item mt-10 flex flex-wrap items-center gap-4">
+          <a href="#experiments" class="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-lab transition-all hover:-translate-y-0.5 hover:bg-glow-cyan">
+            進入實驗室
+            <i data-lucide="arrow-down" class="h-4 w-4" aria-hidden="true"></i>
+          </a>
+          <a href="#drag" class="inline-flex items-center gap-2 rounded-full border border-white/20 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:border-glow-pink hover:text-glow-pink">
+            玩物理拖曳
+            <i data-lucide="move" class="h-4 w-4" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3D 傾斜流光卡 ============ -->
+    <section id="experiments" class="mx-auto max-w-7xl px-6 py-24 lg:px-10" aria-labelledby="exp-title">
+      <div class="max-w-2xl">
+        <p class="text-xs uppercase tracking-[.4em] text-glow-cyan">Experiment 01</p>
+        <h2 id="exp-title" class="mt-4 text-4xl font-bold leading-tight text-white sm:text-5xl">3D 傾斜流光卡</h2>
+        <p class="mt-5 text-base leading-loose text-slate-400">
+          滑鼠座標即時換算 <code class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-glow-cyan">rotateX</code> /
+          <code class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-glow-cyan">rotateY</code>，
+          邊緣帶有隨光標移動的鏡面流光（Specular Glare）。觸控裝置自動停用傾斜，保留捲動順暢度。
+        </p>
+      </div>
+
+      <div class="mt-14 grid gap-8 md:grid-cols-3">
+        <article class="tilt-card relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-glow-violet/15 to-transparent p-8" data-sound>
+          <div class="tilt-glare rounded-3xl"></div>
+          <div class="relative">
+            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-glow-violet/25 text-glow-violet" aria-hidden="true"><i data-lucide="rotate-3d" class="h-6 w-6"></i></span>
+            <h3 class="mt-6 text-xl font-bold text-white">Perspective Tilt</h3>
+            <p class="mt-3 text-sm leading-relaxed text-slate-400">
+              以 <code class="text-glow-cyan">gsap.quickTo</code> 建立低延遲補間，指標移動即時映射 3D 角度，離開時以彈性曲線回正。
+            </p>
+            <p class="mt-6 text-xs uppercase tracking-[.3em] text-slate-500">rotateX / rotateY ±12°</p>
+          </div>
+        </article>
+
+        <article class="tilt-card relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-glow-pink/15 to-transparent p-8" data-sound>
+          <div class="tilt-glare rounded-3xl"></div>
+          <div class="relative">
+            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-glow-pink/25 text-glow-pink" aria-hidden="true"><i data-lucide="sun" class="h-6 w-6"></i></span>
+            <h3 class="mt-6 text-xl font-bold text-white">Specular Glare</h3>
+            <p class="mt-3 text-sm leading-relaxed text-slate-400">
+              流光反射層以放射狀漸層疊加，隨光標座標平移，營造玻璃表面的鏡面高光。
+            </p>
+            <p class="mt-6 text-xs uppercase tracking-[.3em] text-slate-500">transform only · 0 repaint</p>
+          </div>
+        </article>
+
+        <article class="tilt-card relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-glow-cyan/15 to-transparent p-8" data-sound>
+          <div class="tilt-glare rounded-3xl"></div>
+          <div class="relative">
+            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-glow-cyan/25 text-glow-cyan" aria-hidden="true"><i data-lucide="gauge" class="h-6 w-6"></i></span>
+            <h3 class="mt-6 text-xl font-bold text-white">60fps Budget</h3>
+            <p class="mt-3 text-sm leading-relaxed text-slate-400">
+              所有動畫僅觸發合成層（Composite），嚴禁 Layout 重排；rAF 節流確保每幀預算 < 16ms。
+            </p>
+            <p class="mt-6 text-xs uppercase tracking-[.3em] text-slate-500">will-change · passive events</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 物理拖曳場 ============ -->
+    <section id="drag" class="mx-auto max-w-7xl px-6 py-24 lg:px-10" aria-labelledby="drag-title">
+      <div class="flex flex-wrap items-end justify-between gap-6">
+        <div class="max-w-2xl">
+          <p class="text-xs uppercase tracking-[.4em] text-glow-pink">Experiment 02</p>
+          <h2 id="drag-title" class="mt-4 text-4xl font-bold leading-tight text-white sm:text-5xl">彈性物理拖曳場</h2>
+          <p class="mt-5 text-base leading-loose text-slate-400">
+            抓住任一標籤甩甩看——釋放後帶有投擲慣性，撞到邊界會回彈衰減。所有運算以
+            <code class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-glow-pink">gsap.quickSetter</code> 寫入 transform，零重排。
+          </p>
+        </div>
+        <p class="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-xs text-slate-400">
+          <i data-lucide="hand" class="mr-1.5 inline h-3.5 w-3.5" aria-hidden="true"></i>
+          拖曳 · 甩出 · 觀察回彈
+        </p>
+      </div>
+
+      <div id="drag-field" class="drag-field mt-12 h-[420px] rounded-3xl border border-white/10 bg-gradient-to-br from-lab-deep to-lab-mid/60 sm:h-[520px]">
+        <div class="drag-chip rounded-2xl border border-glow-violet/50 bg-glow-violet/20 px-6 py-4 backdrop-blur" data-sound>
+          <p class="text-xs uppercase tracking-[.25em] text-glow-violet">Tag 01</p>
+          <p class="mt-1 text-lg font-bold text-white">Inertia</p>
+        </div>
+        <div class="drag-chip rounded-2xl border border-glow-pink/50 bg-glow-pink/20 px-6 py-4 backdrop-blur" data-sound>
+          <p class="text-xs uppercase tracking-[.25em] text-glow-pink">Tag 02</p>
+          <p class="mt-1 text-lg font-bold text-white">Bounce</p>
+        </div>
+        <div class="drag-chip rounded-2xl border border-glow-cyan/50 bg-glow-cyan/20 px-6 py-4 backdrop-blur" data-sound>
+          <p class="text-xs uppercase tracking-[.25em] text-glow-cyan">Tag 03</p>
+          <p class="mt-1 text-lg font-bold text-white">Damping</p>
+        </div>
+        <div class="drag-chip rounded-2xl border border-glow-amber/50 bg-glow-amber/20 px-6 py-4 backdrop-blur" data-sound>
+          <p class="text-xs uppercase tracking-[.25em] text-glow-amber">Tag 04</p>
+          <p class="mt-1 text-lg font-bold text-white">Velocity</p>
+        </div>
+        <p class="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 text-[11px] uppercase tracking-[.35em] text-slate-500">Drag the tags · 邊界回彈模擬</p>
+      </div>
+    </section>
+
+    <!-- ============ 聲效與多感官 ============ -->
+    <section id="about" class="relative border-t border-white/5 py-24" aria-labelledby="about-title">
+      <div class="mx-auto max-w-7xl px-6 lg:px-10">
+        <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div>
+            <p class="text-xs uppercase tracking-[.4em] text-glow-amber">Experiment 03</p>
+            <h2 id="about-title" class="mt-4 text-4xl font-bold leading-tight text-white sm:text-5xl">Web Audio 微聲效</h2>
+            <p class="mt-5 text-base leading-loose text-slate-400">
+              右上角的聲效開關啟用後，滑過或點擊卡片會由瀏覽器原生
+              <code class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-glow-amber">OscillatorNode</code>
+              即時合成極短高頻「微晶片點擊聲」——不載入任何音訊檔案，零網路成本。
+            </p>
+            <ul class="mt-8 space-y-4">
+              <li class="flex items-start gap-3">
+                <span class="mt-1 grid h-6 w-6 flex-none place-items-center rounded-full bg-glow-amber/20 text-glow-amber" aria-hidden="true"><i data-lucide="volume-2" class="h-3.5 w-3.5"></i></span>
+                <p class="text-sm leading-relaxed text-slate-400"><strong class="text-white">Hover 微聲</strong>：3.2kHz 正弦波、30ms 極短包絡，音量低至 0.03。</p>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-1 grid h-6 w-6 flex-none place-items-center rounded-full bg-glow-pink/20 text-glow-pink" aria-hidden="true"><i data-lucide="mouse-pointer-click" class="h-3.5 w-3.5"></i></span>
+                <p class="text-sm leading-relaxed text-slate-400"><strong class="text-white">點擊回饋</strong>：1.8kHz 雙音階短促下潛，模擬機械微動開關。</p>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-1 grid h-6 w-6 flex-none place-items-center rounded-full bg-glow-cyan/20 text-glow-cyan" aria-hidden="true"><i data-lucide="shield-check" class="h-3.5 w-3.5"></i></span>
+                <p class="text-sm leading-relaxed text-slate-400"><strong class="text-white">無障礙</strong>：預設關閉、需使用者手勢啟用；尊重系統減少動態偏好。</p>
+              </li>
+            </ul>
+          </div>
+          <div class="relative">
+            <img src="assets/images/playground-hero.jpg" alt="微互動實驗室氛圍視覺" width="900" height="600" loading="lazy" class="w-full rounded-3xl border border-white/10 object-cover">
+            <div class="absolute -bottom-6 left-6 right-6 rounded-2xl border border-white/10 bg-lab-deep/90 p-5 backdrop-blur">
+              <p class="text-xs uppercase tracking-[.3em] text-glow-cyan">Tech Stack</p>
+              <p class="mt-2 text-sm text-slate-300">Web Audio API · Canvas 2D · Pointer Events · requestAnimationFrame · gsap.quickSetter</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="py-24" aria-labelledby="lab-cta-title">
+      <div class="mx-auto max-w-4xl rounded-[2rem] border border-white/10 bg-gradient-to-br from-glow-violet/15 via-transparent to-glow-pink/15 px-8 py-16 text-center">
+        <h2 id="lab-cta-title" class="text-4xl font-bold text-white sm:text-5xl">玩出你的手感</h2>
+        <p class="mx-auto mt-5 max-w-xl text-base leading-loose text-slate-400">
+          微互動不是裝飾，而是人與介面之間的信任建立。歡迎帶著你的產品來實驗室。
+        </p>
+        <a href="mailto:lab@motion.dev" class="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-semibold text-lab transition-all hover:-translate-y-0.5 hover:bg-glow-cyan">
+          預約參觀實驗室
+          <i data-lucide="flask-conical" class="h-4 w-4" aria-hidden="true"></i>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="lab-layer border-t border-white/10">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-slate-500 sm:flex-row lg:px-10">
+      <p>© <span data-year>2026</span> MOTION LAB · 微互動實驗室示範（Lenis × GSAP ScrollTrigger）</p>
+      <a href="/" class="transition-colors hover:text-glow-cyan">返回總覽</a>
+    </div>
+  </footer>
+
+  <!-- 動效引擎：GSAP 3 + ScrollTrigger + Lenis（CDN，零配置） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
+  <script src="assets/js/motion-engine.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/site.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var engine = window.MotionEngine ? window.MotionEngine.init({ anchorOffset: 88 }) : null;
+      var gsap = window.gsap;
+      var reduced = engine ? engine.reducedMotion : window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var fine = window.matchMedia('(pointer: fine)').matches;
+
+      if (gsap) {
+        gsap.from('.lab-hero-item', { y: 44, opacity: 0, duration: 1.05, stagger: 0.12, ease: 'power3.out', delay: 0.15 });
+      }
+
+      /* ================= Web Audio 微聲效 ================= */
+      var audioCtx = null;
+      var soundOn = false;
+      var soundBtn = document.getElementById('sound-toggle');
+      var soundLabel = document.getElementById('sound-label');
+
+      function blip(freq, dur, type, vol) {
+        if (!soundOn || !audioCtx) return;
+        try {
+          var t = audioCtx.currentTime;
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = type || 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          osc.frequency.exponentialRampToValueAtTime(Math.max(80, freq * 0.72), t + dur);
+          gain.gain.setValueAtTime(0.0001, t);
+          gain.gain.linearRampToValueAtTime(vol || 0.03, t + 0.004);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + dur + 0.02);
+        } catch (err) { /* 音訊失敗不影響互動 */ }
+      }
+
+      if (soundBtn) {
+        soundBtn.addEventListener('click', function () {
+          soundOn = !soundOn;
+          soundBtn.setAttribute('aria-pressed', String(soundOn));
+          if (soundLabel) soundLabel.textContent = soundOn ? 'Sound On' : 'Sound Off';
+          if (soundOn && !audioCtx) {
+            try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; }
+          }
+          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+          if (soundOn) blip(1980, 0.05, 'sine', 0.035);
+        });
+      }
+
+      document.querySelectorAll('[data-sound]').forEach(function (el) {
+        el.addEventListener('mouseenter', function () { blip(3200, 0.028, 'sine', 0.022); });
+        el.addEventListener('click', function () { blip(1800, 0.045, 'triangle', 0.035); });
+      });
+
+      /* ================= 3D 傾斜流光卡 ================= */
+      if (gsap && fine && !reduced) {
+        document.querySelectorAll('.tilt-card').forEach(function (card) {
+          var glare = card.querySelector('.tilt-glare');
+          var setRX = gsap.quickTo(card, 'rotateX', { duration: 0.55, ease: 'power3.out' });
+          var setRY = gsap.quickTo(card, 'rotateY', { duration: 0.55, ease: 'power3.out' });
+          gsap.set(card, { transformPerspective: 900 });
+
+          card.addEventListener('mousemove', function (e) {
+            var r = card.getBoundingClientRect();
+            var px = (e.clientX - r.left) / r.width;   /* 0 → 1 */
+            var py = (e.clientY - r.top) / r.height;
+            setRY((px - 0.5) * 22);                     /* ±11° */
+            setRX((0.5 - py) * 22);
+            if (glare) {
+              gsap.to(glare, {
+                x: (px - 0.5) * r.width * 0.6,
+                y: (py - 0.5) * r.height * 0.6,
+                opacity: 0.9,
+                duration: 0.35, ease: 'power2.out', overwrite: 'auto'
+              });
+            }
+          });
+          card.addEventListener('mouseleave', function () {
+            gsap.to(card, { rotateX: 0, rotateY: 0, duration: 1, ease: 'elastic.out(1, 0.4)' });
+            if (glare) gsap.to(glare, { opacity: 0, x: 0, y: 0, duration: 0.5, ease: 'power2.out' });
+          });
+        });
+      }
+
+      /* ================= 物理拖曳（慣性 + 邊界回彈） ================= */
+      (function () {
+        var field = document.getElementById('drag-field');
+        if (!field || !gsap) return;
+        var chips = Array.prototype.slice.call(field.querySelectorAll('.drag-chip'));
+        if (!chips.length) return;
+
+        var items = chips.map(function (el, i) {
+          return {
+            el: el,
+            x: 0, y: 0, vx: 0, vy: 0,
+            w: el.offsetWidth, h: el.offsetHeight,
+            rot: 0,
+            dragging: false,
+            setX: gsap.quickSetter(el, 'x', 'px'),
+            setY: gsap.quickSetter(el, 'y', 'px'),
+            setR: gsap.quickSetter(el, 'rotation', 'deg')
+          };
+        });
+
+        function layout() {
+          var fw = field.clientWidth, fh = field.clientHeight;
+          items.forEach(function (it, i) {
+            it.w = it.el.offsetWidth;
+            it.h = it.el.offsetHeight;
+            /* 四角初始分佈 */
+            var cols = 2, col = i % cols, row = Math.floor(i / cols);
+            it.x = Math.min(fw - it.w - 16, 24 + col * (fw / 2 - it.w * 0.4));
+            it.y = Math.min(fh - it.h - 40, 36 + row * (fh / 2 - it.h * 0.5));
+            it.setX(it.x); it.setY(it.y);
+          });
+        }
+        layout();
+        window.addEventListener('resize', function () { setTimeout(layout, 220); });
+
+        items.forEach(function (it) {
+          var startX = 0, startY = 0, lastX = 0, lastY = 0, lastT = 0;
+
+          it.el.addEventListener('pointerdown', function (e) {
+            e.preventDefault();
+            it.dragging = true;
+            it.vx = 0; it.vy = 0;
+            startX = e.clientX - it.x;
+            startY = e.clientY - it.y;
+            lastX = e.clientX; lastY = e.clientY; lastT = performance.now();
+            it.el.setPointerCapture(e.pointerId);
+            gsap.to(it.el, { scale: 1.06, duration: 0.25, ease: 'power2.out' });
+            blip(2200, 0.035, 'triangle', 0.03);
+          });
+
+          it.el.addEventListener('pointermove', function (e) {
+            if (!it.dragging) return;
+            var now = performance.now();
+            var dt = Math.max(1, now - lastT);
+            it.x = e.clientX - startX;
+            it.y = e.clientY - startY;
+            it.vx = (e.clientX - lastX) / dt * 16; /* 歸一化為每幀位移 */
+            it.vy = (e.clientY - lastY) / dt * 16;
+            lastX = e.clientX; lastY = e.clientY; lastT = now;
+            it.setX(it.x); it.setY(it.y);
+            it.rot = Math.max(-12, Math.min(12, it.vx * 0.9));
+            it.setR(it.rot);
+          });
+
+          function release() {
+            if (!it.dragging) return;
+            it.dragging = false;
+            gsap.to(it.el, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.45)' });
+            blip(1400, 0.05, 'sine', 0.028);
+          }
+          it.el.addEventListener('pointerup', release);
+          it.el.addEventListener('pointercancel', release);
+        });
+
+        /* 運算迴圈：統一由 gsap.ticker 驅動（與 Lenis 同一 rAF） */
+        gsap.ticker.add(function () {
+          var fw = field.clientWidth, fh = field.clientHeight;
+          var energy = 0;
+          items.forEach(function (it) {
+            if (it.dragging) { energy += Math.abs(it.vx) + Math.abs(it.vy); return; }
+            it.x += it.vx;
+            it.y += it.vy;
+            it.vx *= 0.96; /* 摩擦阻尼 */
+            it.vy *= 0.96;
+
+            /* 邊界回彈（能量衰減 0.72） */
+            if (it.x < 0) { it.x = 0; it.vx = Math.abs(it.vx) * 0.72; bounceFx(it); }
+            if (it.y < 0) { it.y = 0; it.vy = Math.abs(it.vy) * 0.72; bounceFx(it); }
+            if (it.x + it.w > fw) { it.x = fw - it.w; it.vx = -Math.abs(it.vx) * 0.72; bounceFx(it); }
+            if (it.y + it.h > fh) { it.y = fh - it.h; it.vy = -Math.abs(it.vy) * 0.72; bounceFx(it); }
+
+            /* 速度趨近 0 時校正，避免殘留微幅抖動 */
+            if (Math.abs(it.vx) < 0.02) it.vx = 0;
+            if (Math.abs(it.vy) < 0.02) it.vy = 0;
+
+            it.setX(it.x); it.setY(it.y);
+            if (!reduced) {
+              it.rot += ((Math.max(-12, Math.min(12, it.vx * 0.9))) - it.rot) * 0.12;
+              it.setR(it.rot);
+            }
+            energy += Math.abs(it.vx) + Math.abs(it.vy);
+          });
+          return energy; /* 無能量時可被未來的休眠優化使用 */
+        });
+
+        function bounceFx(it) {
+          if (reduced) return;
+          gsap.fromTo(it.el, { scale: 1 }, { scale: 1.045, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out', overwrite: 'auto' });
+          blip(900, 0.04, 'sine', 0.02);
+        }
+      })();
+
+      /* ================= Canvas 粒子場 + 點擊衝擊波 ================= */
+      (function () {
+        var canvas = document.getElementById('particle-canvas');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var W = 0, H = 0, particles = [], waves = [];
+        var COLORS = ['124,58,237', '236,72,153', '34,211,238'];
+
+        function resize() {
+          W = window.innerWidth; H = window.innerHeight;
+          canvas.width = W * dpr; canvas.height = H * dpr;
+          canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          var count = Math.min(96, Math.round(W / 16));
+          particles = [];
+          for (var i = 0; i < count; i++) {
+            particles.push({
+              x: Math.random() * W,
+              y: Math.random() * H,
+              vx: (Math.random() - 0.5) * 0.32,
+              vy: (Math.random() - 0.5) * 0.32,
+              r: 1 + Math.random() * 1.8,
+              c: COLORS[i % COLORS.length]
+            });
+          }
+        }
+        resize();
+        var resizeT = null;
+        window.addEventListener('resize', function () {
+          clearTimeout(resizeT);
+          resizeT = setTimeout(resize, 220);
+        });
+
+        /* 點擊／觸碰衝擊波 */
+        function shockwave(x, y) {
+          waves.push({ x: x, y: y, r: 8, max: 190, alpha: 0.55 });
+          particles.forEach(function (p) {
+            var dx = p.x - x, dy = p.y - y;
+            var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            if (dist < 220) {
+              var force = (1 - dist / 220) * 5.2;
+              p.vx += (dx / dist) * force;
+              p.vy += (dy / dist) * force;
+            }
+          });
+          blip(2600, 0.05, 'sine', 0.025);
+        }
+        window.addEventListener('pointerdown', function (e) {
+          if (e.target.closest('a, button, .drag-chip, input, select, textarea, label')) return;
+          shockwave(e.clientX, e.clientY);
+        }, { passive: true });
+
+        var LINK_DIST = 128;
+        function draw() {
+          ctx.clearRect(0, 0, W, H);
+
+          /* 連線 */
+          for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            for (var j = i + 1; j < particles.length; j++) {
+              var q = particles[j];
+              var dx = p.x - q.x, dy = p.y - q.y;
+              var d2 = dx * dx + dy * dy;
+              if (d2 < LINK_DIST * LINK_DIST) {
+                var alpha = (1 - Math.sqrt(d2) / LINK_DIST) * 0.16;
+                ctx.strokeStyle = 'rgba(34,211,238,' + alpha.toFixed(3) + ')';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(q.x, q.y);
+                ctx.stroke();
+              }
+            }
+          }
+
+          /* 粒子 */
+          particles.forEach(function (p) {
+            p.x += p.vx; p.y += p.vy;
+            p.vx *= 0.992; p.vy *= 0.992;
+            /* 緩慢補充漂移動能 */
+            if (Math.abs(p.vx) < 0.06) p.vx += (Math.random() - 0.5) * 0.02;
+            if (Math.abs(p.vy) < 0.06) p.vy += (Math.random() - 0.5) * 0.02;
+            /* 邊界環繞 */
+            if (p.x < -12) p.x = W + 12;
+            if (p.x > W + 12) p.x = -12;
+            if (p.y < -12) p.y = H + 12;
+            if (p.y > H + 12) p.y = -12;
+
+            ctx.fillStyle = 'rgba(' + p.c + ',0.55)';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          /* 衝擊波環 */
+          for (var k = waves.length - 1; k >= 0; k--) {
+            var w = waves[k];
+            w.r += 6.5;
+            w.alpha *= 0.955;
+            if (w.r > w.max || w.alpha < 0.02) { waves.splice(k, 1); continue; }
+            ctx.strokeStyle = 'rgba(236,72,153,' + w.alpha.toFixed(3) + ')';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+
+        if (reduced) {
+          /* 減少動態偏好：只繪製靜態一幀 */
+          draw();
+        } else {
+          var running = true;
+          document.addEventListener('visibilitychange', function () {
+            running = !document.hidden;
+            if (running) requestAnimationFrame(loop);
+          });
+          function loop() {
+            if (!running) return;
+            draw();
+            requestAnimationFrame(loop);
+          }
+          requestAnimationFrame(loop);
+        }
+      })();
+
+      if (gsap && window.ScrollTrigger) window.ScrollTrigger.refresh();
+    })();
+  </script>
+</body>
+</html>
