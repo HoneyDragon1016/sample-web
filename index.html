@@ -3,23 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="sample-web 形象網站展示庫：三種風格的靜態網站範例，適用於 Cloudflare Pages 零配置部署。">
+  <meta name="description" content="sample-web 設計範本風格矩陣：9 款風格迥異的靜態網站範例，涵蓋商業形象、品牌生活、奢華體驗與動效互動。">
   <meta name="theme-color" content="#0b0b0d">
-  <meta property="og:title" content="sample-web｜形象網站展示庫">
-  <meta property="og:image" content="assets/images/biz-hero.jpg">
-  <title>sample-web｜形象網站展示庫（Showcase Hub）</title>
+  <meta property="og:title" content="sample-web｜設計範本風格矩陣">
+  <meta property="og:image" content="assets/images/spatial-hero.jpg">
+  <title>sample-web｜設計範本風格矩陣（Style Matrix Hub）</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
+    window.tailwind = window.tailwind || {}; window.tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
             sans: ['Inter', '"Noto Sans TC"', 'system-ui', 'sans-serif'],
-            serif: ['"Playfair Display"', 'Georgia', 'serif']
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            display: ['"Archivo Black"', 'Inter', '"Noto Sans TC"', 'sans-serif']
           }
         }
       }
@@ -28,18 +29,36 @@
   <link rel="stylesheet" href="assets/css/site.css">
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" defer></script>
   <script src="assets/js/site.js" defer></script>
+  <style>
+    /* 風格矩陣卡片過濾 */
+    #tpl-grid { position: relative; }
+    .tpl-card {
+      transition: opacity .45s cubic-bezier(.2,.7,.2,1), transform .45s cubic-bezier(.2,.7,.2,1);
+    }
+    .tpl-card.is-filtered-out {
+      opacity: 0; transform: scale(.94) translateY(12px); pointer-events: none;
+      position: absolute; visibility: hidden;
+      transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+    }
+    .filter-btn { transition: all .3s ease; }
+    .filter-btn[aria-pressed="true"] {
+      background: #fff; color: #0b0b0d; border-color: #fff;
+      box-shadow: 0 8px 24px -8px rgba(255,255,255,.35);
+    }
+    .tag-chip { font-variant-numeric: tabular-nums; }
+  </style>
 </head>
 <body class="bg-[#07080d] font-sans text-slate-200 antialiased">
-  <a href="#showcase" class="skip-link">跳至展示內容</a>
+  <a href="#matrix" class="skip-link">跳至展示內容</a>
 
-  <header class="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 lg:px-10">
+  <header class="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
     <a href="/" class="flex items-center gap-2.5 font-bold tracking-tight text-white" aria-label="sample-web 首頁">
-      <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400" aria-hidden="true"><i data-lucide="layers" class="h-4 w-4 text-white"></i></span>
+      <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400" aria-hidden="true"><i data-lucide="layout-grid" class="h-4 w-4 text-white"></i></span>
       sample-web
     </a>
     <nav aria-label="頁面導覽">
       <ul class="flex items-center gap-6 text-sm text-slate-400">
-        <li><a href="#showcase" class="transition-colors duration-300 hover:text-white">風格範例</a></li>
+        <li><a href="#matrix" class="transition-colors duration-300 hover:text-white">風格矩陣</a></li>
         <li><a href="#stack" class="transition-colors duration-300 hover:text-white">技術架構</a></li>
         <li><a href="README.md" class="transition-colors duration-300 hover:text-white">文件</a></li>
       </ul>
@@ -49,45 +68,58 @@
   <main id="main">
     <!-- Hero -->
     <section class="hero-orbs relative isolate overflow-hidden" aria-labelledby="hub-title">
-      <div class="mx-auto max-w-6xl px-6 pb-16 pt-16 text-center lg:px-10 lg:pb-24 lg:pt-24">
+      <div class="mx-auto max-w-7xl px-6 pb-14 pt-14 text-center lg:px-10 lg:pb-20 lg:pt-20">
         <p class="reveal inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-slate-300 backdrop-blur">
           <i data-lucide="sparkles" class="h-3.5 w-3.5 text-cyan-300" aria-hidden="true"></i>
-          Static · HTML5 + Tailwind CDN + ES6+
+          Static · HTML5 + Tailwind CDN + GSAP × Lenis · 9 Templates
         </p>
-        <h1 id="hub-title" class="reveal reveal-delay-1 mx-auto mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-          三種風格，<span class="glow-text">一套零配置的靜態形象網站</span>
+        <h1 id="hub-title" class="reveal reveal-delay-1 mx-auto mt-6 max-w-4xl text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+          設計範本<span class="glow-text">風格矩陣</span>
         </h1>
         <p class="reveal reveal-delay-2 mx-auto mt-6 max-w-2xl leading-relaxed text-slate-400">
-          以現代商務、日系雜誌與高端藝廊為靈感的展示範例。直接推送至 Git，即可由 Cloudflare Pages 自動構建與發布。
+          九款氣質迥異的形象網站範例——從企業商務、生活美學到 Awwwards 等級的動效實驗室。純靜態、零配置，推送即上線。
         </p>
-        <div class="reveal reveal-delay-3 mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-          <a href="#showcase" class="btn-glow inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 font-semibold text-slate-900">
-            探索三種風格
-            <i data-lucide="arrow-down" class="h-4 w-4" aria-hidden="true"></i>
-          </a>
-          <a href="README.md" class="btn-glow glass inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white">
-            <i data-lucide="book-open" class="h-4 w-4" aria-hidden="true"></i>
-            閱讀部署文件
-          </a>
+        <div class="reveal reveal-delay-3 mt-10 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400">
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-4 py-2"><span class="h-1.5 w-1.5 rounded-full bg-indigo-400"></span>9 個展示頁</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-4 py-2"><span class="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>Lenis × GSAP 3</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-4 py-2"><span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>100% 響應式</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-4 py-2"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>Cloudflare Pages</span>
         </div>
       </div>
     </section>
 
-    <!-- Showcase cards -->
-    <section id="showcase" class="mx-auto max-w-6xl px-6 pb-24 lg:px-10" aria-labelledby="showcase-title">
-      <h2 id="showcase-title" class="reveal sr-only">風格範例</h2>
-      <div class="grid gap-8 lg:grid-cols-3">
+    <!-- Style Matrix -->
+    <section id="matrix" class="mx-auto max-w-7xl px-6 pb-24 lg:px-10" aria-labelledby="matrix-title">
+      <div class="reveal flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-end">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[.3em] text-cyan-300">Style Matrix</p>
+          <h2 id="matrix-title" class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">探索九款設計範本</h2>
+          <p class="mt-3 max-w-xl text-sm leading-relaxed text-slate-400">以分類篩選快速定位所需風格，每張卡片皆標註關鍵動效與設計技法。</p>
+        </div>
+        <!-- Filter Tabs -->
+        <div class="flex flex-wrap gap-2.5" role="group" aria-label="風格分類篩選">
+          <button type="button" class="filter-btn rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:border-white/40 hover:text-white" data-filter="all" aria-pressed="true">全部 <span class="ml-1 text-xs opacity-60">9</span></button>
+          <button type="button" class="filter-btn rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:border-white/40 hover:text-white" data-filter="corporate" aria-pressed="false">商業形象 <span class="ml-1 text-xs opacity-60">2</span></button>
+          <button type="button" class="filter-btn rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:border-white/40 hover:text-white" data-filter="lifestyle" aria-pressed="false">品牌生活 <span class="ml-1 text-xs opacity-60">2</span></button>
+          <button type="button" class="filter-btn rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:border-white/40 hover:text-white" data-filter="luxury" aria-pressed="false">奢華體驗 <span class="ml-1 text-xs opacity-60">2</span></button>
+          <button type="button" class="filter-btn rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:border-white/40 hover:text-white" data-filter="motion" aria-pressed="false">動效互動 <span class="ml-1 text-xs opacity-60">3</span></button>
+        </div>
+      </div>
+
+      <p id="filter-status" class="sr-only" role="status" aria-live="polite"></p>
+
+      <div id="tpl-grid" class="mt-12 grid gap-8 lg:grid-cols-3">
 
         <!-- 1. Business -->
-        <article class="reveal group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-indigo-400/40 hover:shadow-[0_24px_60px_-20px_rgba(99,102,241,.45)]">
+        <article class="tpl-card reveal group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-indigo-400/40 hover:shadow-[0_24px_60px_-20px_rgba(99,102,241,.45)]" data-category="corporate">
           <div class="img-zoom relative aspect-[16/10] overflow-hidden bg-[#05060f]">
             <img src="assets/images/biz-hero.jpg" alt="深藍色背景上發光的玻璃面板與漸層光束，科技感的商務視覺" width="1600" height="900" loading="lazy" class="h-full w-full object-cover">
-            <span class="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white backdrop-blur">01 · Tech Business</span>
+            <span class="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white backdrop-blur">01 · Corporate</span>
           </div>
           <div class="flex flex-1 flex-col p-7">
             <h3 class="text-xl font-bold text-white">商務接洽與企業形象</h3>
             <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">Stripe / Linear 風格的深色科技感設計，含玻璃擬態卡片、發光邊框、客戶商標輪播與即時驗證的預約諮詢表單。</p>
-            <ul class="mt-5 flex flex-wrap gap-2 text-xs text-slate-300">
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs text-slate-300">
               <li class="rounded-full border border-white/10 px-3 py-1">Glassmorphism</li>
               <li class="rounded-full border border-white/10 px-3 py-1">Marquee</li>
               <li class="rounded-full border border-white/10 px-3 py-1">Form Validation</li>
@@ -101,15 +133,15 @@
         </article>
 
         <!-- 2. Lifestyle -->
-        <article class="reveal reveal-delay-1 group flex flex-col overflow-hidden rounded-3xl border border-stone-300/40 bg-[#f7f4ef] text-[#2b2a27] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_24px_60px_-20px_rgba(181,131,90,.5)]">
+        <article class="tpl-card reveal reveal-delay-1 group flex flex-col overflow-hidden rounded-3xl border border-stone-300/40 bg-[#f7f4ef] text-[#2b2a27] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_24px_60px_-20px_rgba(181,131,90,.5)]" data-category="lifestyle">
           <div class="img-zoom relative aspect-[16/10] overflow-hidden">
             <img src="assets/images/life-hero.jpg" alt="米色亞麻布上的一杯茶與乾燥尤加利，柔和晨光" width="1200" height="750" loading="lazy" class="h-full w-full object-cover">
-            <span class="absolute left-4 top-4 rounded-full bg-[#f7f4ef]/90 px-3 py-1 text-xs font-medium text-[#2b2a27] backdrop-blur">02 · Editorial Lifestyle</span>
+            <span class="absolute left-4 top-4 rounded-full bg-[#f7f4ef]/90 px-3 py-1 text-xs font-medium text-[#2b2a27] backdrop-blur">02 · Editorial</span>
           </div>
           <div class="flex flex-1 flex-col p-7">
             <h3 class="font-serif text-2xl font-semibold">簡約個人網誌與品牌</h3>
             <p class="mt-3 flex-1 text-sm leading-relaxed text-[#2b2a27]/75">北歐與日系雜誌排版，大量留白、襯線標題與紙張紋理。包含精選日誌、瀑布流相簿與燈箱放大，以及電子報訂閱。</p>
-            <ul class="mt-5 flex flex-wrap gap-2 text-xs">
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs">
               <li class="rounded-full bg-[#b5835a]/15 px-3 py-1 text-[#8a5a34]">Serif + Sans</li>
               <li class="rounded-full bg-[#8a9a7b]/25 px-3 py-1">Lightbox</li>
               <li class="rounded-full bg-[#8a9a7b]/25 px-3 py-1">Newsletter</li>
@@ -123,15 +155,15 @@
         </article>
 
         <!-- 3. Elegant -->
-        <article class="reveal reveal-delay-2 group flex flex-col overflow-hidden rounded-3xl border border-[#c9a961]/20 bg-[#0b0b0d] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-[#c9a961]/60 hover:shadow-[0_24px_60px_-20px_rgba(201,169,97,.35)]">
+        <article class="tpl-card reveal reveal-delay-2 group flex flex-col overflow-hidden rounded-3xl border border-[#c9a961]/20 bg-[#0b0b0d] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-[#c9a961]/60 hover:shadow-[0_24px_60px_-20px_rgba(201,169,97,.35)]" data-category="luxury">
           <div class="img-zoom relative aspect-[16/10] overflow-hidden">
             <img src="assets/images/ele-hero.jpg" alt="暗色藝廊中一道聚光燈照亮青銅雕塑，地板反射金色光澤" width="1600" height="1000" loading="lazy" class="h-full w-full object-cover">
-            <span class="absolute left-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-[#e7cf8f] backdrop-blur">03 · Luxury Gallery</span>
+            <span class="absolute left-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-[#e7cf8f] backdrop-blur">03 · Luxury</span>
           </div>
           <div class="flex flex-1 flex-col p-7">
             <h3 class="font-serif text-2xl text-[#f4f1ea]">經典藝廊與沉浸式品牌</h3>
             <p class="mt-3 flex-1 text-sm leading-relaxed text-[#f4f1ea]/70">黑金與象牙白的高端對比，全螢幕視差 Hero、虛擬策展路線分頁、展品詳情 Modal、匠人傳承時間軸與貴賓預約。</p>
-            <ul class="mt-5 flex flex-wrap gap-2 text-xs text-[#e7cf8f]">
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs text-[#e7cf8f]">
               <li class="rounded-full border border-[#c9a961]/30 px-3 py-1">Parallax</li>
               <li class="rounded-full border border-[#c9a961]/30 px-3 py-1">Tabs</li>
               <li class="rounded-full border border-[#c9a961]/30 px-3 py-1">Modal</li>
@@ -143,12 +175,145 @@
             </div>
           </div>
         </article>
+
+        <!-- 4. Product Launch -->
+        <article class="tpl-card reveal group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0a0b0f] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-[0_24px_60px_-20px_rgba(34,211,238,.35)]" data-category="corporate">
+          <div class="img-zoom relative aspect-[16/10] overflow-hidden bg-[#05060a]">
+            <img src="assets/images/product-hero.jpg" alt="深色背景上的旗艦單品特寫，科技感的電商視覺" width="1600" height="900" loading="lazy" class="h-full w-full object-cover">
+            <span class="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white backdrop-blur">04 · E-commerce</span>
+          </div>
+          <div class="flex flex-1 flex-col p-7">
+            <h3 class="text-xl font-bold text-white">旗艦單品與 DTC 電商發售</h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">Apple / Nothing / Dyson 風格的極致科技工藝感，全螢幕 Hero、Bento 規格網格、互動熱點、媒體評測卡與吸底購買列。</p>
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs text-slate-300">
+              <li class="rounded-full border border-white/10 px-3 py-1">Bento Grid</li>
+              <li class="rounded-full border border-white/10 px-3 py-1">Hotspots</li>
+              <li class="rounded-full border border-white/10 px-3 py-1">Sticky Bar</li>
+            </ul>
+            <div class="mt-7 flex gap-3">
+              <a href="ProductLaunch01.html" class="btn-glow inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400 px-5 py-3 text-sm font-semibold text-white">
+                開啟範例 <i data-lucide="arrow-up-right" class="h-4 w-4" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5. Creative Studio -->
+        <article class="tpl-card reveal reveal-delay-1 group flex flex-col overflow-hidden rounded-3xl border-2 border-black bg-[#facc15] text-black transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_24px_60px_-20px_rgba(168,85,247,.45)]" data-category="lifestyle">
+          <div class="img-zoom relative aspect-[16/10] overflow-hidden border-b-2 border-black">
+            <img src="assets/images/studio-hero.jpg" alt="新野蠻主義風格的創意工作室視覺，鮮明撞色" width="1200" height="750" loading="lazy" class="h-full w-full object-cover">
+            <span class="absolute left-4 top-4 rounded-full border-2 border-black bg-white px-3 py-1 text-xs font-bold">05 · Brutalism</span>
+          </div>
+          <div class="flex flex-1 flex-col p-7">
+            <h3 class="font-display text-2xl font-black">新野蠻主義創意設計工作室</h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed font-medium">Gumroad / Figma 潮流的新野蠻主義，鮮明撞色、粗線框、硬陰影、跑馬燈、瀑布流案例與趣味報價計算機。</p>
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs font-bold">
+              <li class="rounded-full border-2 border-black bg-white px-3 py-1">Neo-Brutalism</li>
+              <li class="rounded-full border-2 border-black bg-white px-3 py-1">Marquee</li>
+              <li class="rounded-full border-2 border-black bg-white px-3 py-1">Calculator</li>
+            </ul>
+            <div class="mt-7 flex gap-3">
+              <a href="CreativeStudio01.html" class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-black bg-black px-5 py-3 text-sm font-bold text-[#facc15] shadow-[4px_4px_0_#000] transition-transform hover:-translate-y-0.5">
+                開啟範例 <i data-lucide="arrow-up-right" class="h-4 w-4" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 6. Culinary -->
+        <article class="tpl-card reveal reveal-delay-2 group flex flex-col overflow-hidden rounded-3xl border border-amber-500/20 bg-[#141210] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-amber-500/60 hover:shadow-[0_24px_60px_-20px_rgba(201,163,106,.35)]" data-category="luxury">
+          <div class="img-zoom relative aspect-[16/10] overflow-hidden">
+            <img src="assets/images/culinary-hero.jpg" alt="炭黑與暖木交織的米其林餐廳環境，琥珀金燈光" width="1600" height="900" loading="lazy" class="h-full w-full object-cover">
+            <span class="absolute left-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-amber-300 backdrop-blur">06 · Hospitality</span>
+          </div>
+          <div class="flex flex-1 flex-col p-7 text-amber-300/90">
+            <h3 class="font-serif text-2xl text-amber-300">米其林星級餐飲與精品旅宿</h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-amber-300/70">Fine Dining 高端法式料理感，沉浸式 Hero、主廚哲理、互動美饌菜單（Tabs + 過敏原）、線上席位預訂與位置包廂。</p>
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs text-amber-300">
+              <li class="rounded-full border border-amber-500/30 px-3 py-1">Tabs</li>
+              <li class="rounded-full border border-amber-500/30 px-3 py-1">Reservation</li>
+              <li class="rounded-full border border-amber-500/30 px-3 py-1">Map</li>
+            </ul>
+            <div class="mt-7 flex gap-3">
+              <a href="CulinaryExperience01.html" class="btn-glow inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-amber-500 px-5 py-3 text-sm font-semibold text-[#141210] hover:bg-amber-400">
+                開啟範例 <i data-lucide="arrow-up-right" class="h-4 w-4" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 7. Spatial Story -->
+        <article class="tpl-card reveal group flex flex-col overflow-hidden rounded-3xl border border-cyan-400/20 bg-[#05060a] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-[0_24px_60px_-20px_rgba(34,211,238,.4)]" data-category="motion">
+          <div class="img-zoom relative aspect-[16/10] overflow-hidden">
+            <img src="assets/images/spatial-hero.jpg" alt="深空中漂浮的未來機械核心，分層解構的鈦合金環與能量球" width="1600" height="900" loading="lazy" class="h-full w-full object-cover">
+            <span class="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-cyan-300 backdrop-blur">07 · Scroll Story</span>
+          </div>
+          <div class="flex flex-1 flex-col p-7">
+            <h3 class="text-xl font-bold text-white">沉浸式滾動敘事與空間解構</h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">Apple Keynote 式的釘選捲動序列：360° 旋轉、分層爆發展開、SVG 路徑繪製、文字遮罩擦除與側邊深度儀表板。</p>
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs text-cyan-300">
+              <li class="rounded-full border border-cyan-400/25 px-3 py-1">Lenis Scroll</li>
+              <li class="rounded-full border border-cyan-400/25 px-3 py-1">GSAP 3</li>
+              <li class="rounded-full border border-cyan-400/25 px-3 py-1">Pin &amp; Scrub</li>
+              <li class="rounded-full border border-cyan-400/25 px-3 py-1">SVG Path</li>
+            </ul>
+            <div class="mt-7 flex gap-3">
+              <a href="SpatialStory01.html" class="btn-glow inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-[#05060a] hover:bg-cyan-300">
+                開啟範例 <i data-lucide="arrow-up-right" class="h-4 w-4" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 8. Kinetic Agency -->
+        <article class="tpl-card reveal reveal-delay-1 group flex flex-col overflow-hidden rounded-3xl border border-fuchsia-400/25 bg-[#07060d] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-fuchsia-400/60 hover:shadow-[0_24px_60px_-20px_rgba(217,70,239,.4)]" data-category="motion">
+          <div class="img-zoom relative aspect-[16/10] overflow-hidden">
+            <img src="assets/images/kinetic-hero.jpg" alt="賽博感霓虹動態字體裝置，品紅與電光藍光軌" width="1600" height="900" loading="lazy" class="h-full w-full object-cover">
+            <span class="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-fuchsia-300 backdrop-blur">08 · Kinetic Type</span>
+          </div>
+          <div class="flex flex-1 flex-col p-7">
+            <h3 class="text-xl font-bold text-white">動態排版與賽博先鋒設計</h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">Active Theory 式的先鋒工作室：磁吸自定義游標、橫向滾動視差展廊、字元波浪抖動與 Kinetic Marquee。</p>
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs text-fuchsia-300">
+              <li class="rounded-full border border-fuchsia-400/25 px-3 py-1">Magnetic Cursor</li>
+              <li class="rounded-full border border-fuchsia-400/25 px-3 py-1">Horizontal Scroll</li>
+              <li class="rounded-full border border-fuchsia-400/25 px-3 py-1">Stagger Text</li>
+            </ul>
+            <div class="mt-7 flex gap-3">
+              <a href="KineticAgency01.html" class="btn-glow inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-fuchsia-500 px-5 py-3 text-sm font-semibold text-white hover:bg-fuchsia-400">
+                開啟範例 <i data-lucide="arrow-up-right" class="h-4 w-4" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 9. Interactive Playground -->
+        <article class="tpl-card reveal reveal-delay-2 group flex flex-col overflow-hidden rounded-3xl border border-violet-400/25 bg-[#06060c] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-violet-400/60 hover:shadow-[0_24px_60px_-20px_rgba(124,58,237,.45)]" data-category="motion">
+          <div class="img-zoom relative aspect-[16/10] overflow-hidden">
+            <img src="assets/images/playground-hero.jpg" alt="紫粉與青色的流體粒子場，發光的節點與連線" width="1600" height="900" loading="lazy" class="h-full w-full object-cover">
+            <span class="absolute left-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-violet-300 backdrop-blur">09 · Micro-interaction</span>
+          </div>
+          <div class="flex flex-1 flex-col p-7">
+            <h3 class="text-xl font-bold text-white">微互動實驗室與流體物理場</h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-slate-400">Lusion 式的高互動遊樂場：3D 傾斜流光卡、Canvas 粒子衝擊波、慣性物理拖曳與 Web Audio 微聲效。</p>
+            <ul class="tag-chip mt-5 flex flex-wrap gap-2 text-xs text-violet-300">
+              <li class="rounded-full border border-violet-400/25 px-3 py-1">3D Tilt + Glare</li>
+              <li class="rounded-full border border-violet-400/25 px-3 py-1">Canvas Particles</li>
+              <li class="rounded-full border border-violet-400/25 px-3 py-1">Web Audio</li>
+            </ul>
+            <div class="mt-7 flex gap-3">
+              <a href="InteractivePlayground01.html" class="btn-glow inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-pink-500 px-5 py-3 text-sm font-semibold text-white">
+                開啟範例 <i data-lucide="arrow-up-right" class="h-4 w-4" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
     <!-- Stack -->
     <section id="stack" class="border-t border-white/5 bg-white/[0.015] py-24" aria-labelledby="stack-title">
-      <div class="mx-auto max-w-6xl px-6 lg:px-10">
+      <div class="mx-auto max-w-7xl px-6 lg:px-10">
         <div class="reveal max-w-2xl">
           <p class="text-xs font-semibold uppercase tracking-[.3em] text-cyan-300">Architecture</p>
           <h2 id="stack-title" class="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">零配置，即刻構建</h2>
@@ -156,7 +321,7 @@
         </div>
         <dl class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <div class="glass rounded-2xl p-6"><dt class="flex items-center gap-2 text-sm font-semibold text-white"><i data-lucide="code-2" class="h-4 w-4 text-indigo-300" aria-hidden="true"></i>HTML5</dt><dd class="mt-2 text-sm text-slate-400">語意化標籤與 ARIA 無障礙標記</dd></div>
-          <div class="glass rounded-2xl p-6"><dt class="flex items-center gap-2 text-sm font-semibold text-white"><i data-lucide="paintbrush" class="h-4 w-4 text-cyan-300" aria-hidden="true"></i>Tailwind CDN</dt><dd class="mt-2 text-sm text-slate-400">原子化樣式與響應式斷點</dd></div>
+          <div class="glass rounded-2xl p-6"><dt class="flex items-center gap-2 text-sm font-semibold text-white"><i data-lucide="move-3d" class="h-4 w-4 text-cyan-300" aria-hidden="true"></i>Lenis × GSAP</dt><dd class="mt-2 text-sm text-slate-400">平滑滾動與 ScrollTrigger 無縫同步</dd></div>
           <div class="glass rounded-2xl p-6"><dt class="flex items-center gap-2 text-sm font-semibold text-white"><i data-lucide="zap" class="h-4 w-4 text-amber-300" aria-hidden="true"></i>Vanilla ES6+</dt><dd class="mt-2 text-sm text-slate-400">無相依的原生 JavaScript 互動</dd></div>
           <div class="glass rounded-2xl p-6"><dt class="flex items-center gap-2 text-sm font-semibold text-white"><i data-lucide="cloud" class="h-4 w-4 text-orange-300" aria-hidden="true"></i>Cloudflare Pages</dt><dd class="mt-2 text-sm text-slate-400">Git 推送即自動部署，全球邊緣快取</dd></div>
         </dl>
@@ -165,10 +330,38 @@
   </main>
 
   <footer class="border-t border-white/10">
-    <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-slate-500 sm:flex-row lg:px-10">
-      <p>© <span data-year>2026</span> sample-web · Showcase Hub</p>
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-slate-500 sm:flex-row lg:px-10">
+      <p>© <span data-year>2026</span> sample-web · Style Matrix Hub</p>
       <p>圖片皆為 AI 原創生成，無版權問題；範例內容均為展示用途。</p>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      'use strict';
+      var buttons = Array.prototype.slice.call(document.querySelectorAll('.filter-btn'));
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.tpl-card'));
+      var status = document.getElementById('filter-status');
+
+      function applyFilter(filter) {
+        var visible = 0;
+        cards.forEach(function (card) {
+          var match = filter === 'all' || card.dataset.category === filter;
+          card.classList.toggle('is-filtered-out', !match);
+          if (match) visible++;
+        });
+        buttons.forEach(function (btn) {
+          btn.setAttribute('aria-pressed', String(btn.dataset.filter === filter));
+        });
+        if (status) status.textContent = '目前顯示 ' + visible + ' 個範本';
+      }
+
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          applyFilter(btn.dataset.filter);
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

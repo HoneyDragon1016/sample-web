@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Popcorn Studio 新野蠻主義創意設計工作室 · 大膽、活潑、強烈個性。">
+  <meta name="theme-color" content="#facc15">
+  <meta property="og:title" content="Popcorn Studio｜新野蠻主義創意設計">
+  <meta property="og:description" content="Gumroad / Figma 潮流的新野蠻主義設計工作室範例。">
+  <meta property="og:image" content="assets/images/studio-hero.jpg">
+  <title>Popcorn Studio｜新野蠻主義創意設計工作室</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Archivo Black"', 'Inter', 'Noto Sans TC', 'sans-serif'],
+            sans: ['Inter', 'Noto Sans TC', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            pop: { yellow: '#facc15', purple: '#a855f7', mint: '#6ee7b7', pink: '#f472b6', black: '#0a0a0a' }
+          },
+          boxShadow: { hard: '4px 4px 0px #0a0a0a', 'hard-lg': '8px 8px 0px #0a0a0a' }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+  <style>
+    .marquee-fast { animation: marquee 18s linear infinite; }
+    .marquee-fast > span { padding-right: 2rem; }
+    .tilt-neg { transform: rotate(-3deg); }
+    .tilt-pos { transform: rotate(3deg); }
+    .sticker { display: inline-block; padding: .25rem .6rem; border: 2px solid #0a0a0a; border-radius: 9999px; font-weight: 800; font-size: .75rem; box-shadow: 2px 2px 0 #0a0a0a; }
+  </style>
+</head>
+<body class="bg-pop-yellow font-sans text-pop-black antialiased">
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <!-- ============ Header ============ -->
+  <header class="sticky top-0 z-50 border-b-2 border-black bg-pop-yellow">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8" aria-label="主要導覽">
+      <a href="#top" class="flex items-center gap-2 font-black tracking-tight" aria-label="Popcorn Studio 首頁">
+        <span class="grid h-9 w-9 place-items-center rounded-lg border-2 border-black bg-pop-purple text-white shadow-hard">P</span>
+        <span class="text-lg">Popcorn<span class="text-pop-purple">.</span>Studio</span>
+      </a>
+      <ul class="hidden items-center gap-6 text-sm font-bold md:flex">
+        <li><a href="#work" class="transition-transform hover:-translate-y-0.5">作品</a></li>
+        <li><a href="#team" class="transition-transform hover:-translate-y-0.5">團隊</a></li>
+        <li><a href="#quote" class="transition-transform hover:-translate-y-0.5">報價</a></li>
+        <li><a href="/" class="transition-transform hover:-translate-y-0.5">總覽</a></li>
+      </ul>
+      <a href="#quote" class="hidden rounded-lg border-2 border-black bg-pop-black px-4 py-2 text-sm font-bold text-pop-yellow shadow-hard transition-transform hover:-translate-y-0.5 sm:inline-block">開始合作</a>
+      <button type="button" class="grid h-10 w-10 place-items-center rounded-lg border-2 border-black bg-white md:hidden" data-nav-toggle aria-expanded="false" aria-controls="studio-menu">
+        <span class="sr-only">開啟選單</span>
+        <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+      </button>
+    </nav>
+    <div id="studio-menu" class="hidden border-t-2 border-black bg-pop-yellow px-5 py-4 md:hidden">
+      <ul class="flex flex-col gap-3 font-bold">
+        <li><a href="#work">作品</a></li>
+        <li><a href="#team">團隊</a></li>
+        <li><a href="#quote">報價</a></li>
+        <li><a href="/">總覽</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ Marquee ============ -->
+    <div class="overflow-hidden border-y-2 border-black bg-pop-black py-3 text-pop-yellow">
+      <div class="marquee marquee-fast whitespace-nowrap font-display text-xl uppercase tracking-wide">
+        <span>★ Branding ★ Web Design ★ Motion ★ Art Direction ★ No Boring Stuff ★</span>
+        <span aria-hidden="true">★ Branding ★ Web Design ★ Motion ★ Art Direction ★ No Boring Stuff ★</span>
+      </div>
+    </div>
+
+    <!-- ============ Hero ============ -->
+    <section id="top" class="relative overflow-hidden px-5 py-20 lg:px-8 lg:py-28" aria-labelledby="hero-title">
+      <div class="mx-auto max-w-7xl">
+        <div class="grid gap-10 lg:grid-cols-12 lg:items-center">
+          <div class="lg:col-span-8">
+            <span class="sticker bg-pop-mint tilt-neg inline-block">New Studio · 2026</span>
+            <h1 id="hero-title" class="reveal mt-6 font-display text-5xl leading-[0.95] tracking-tight sm:text-7xl lg:text-8xl">
+              我們把<span class="text-pop-purple">無聊</span>的設計，
+              <br>直接<span class="text-pop-pink">丟進垃圾桶</span>。
+            </h1>
+            <p class="reveal reveal-delay-1 mt-6 max-w-2xl text-lg font-medium leading-relaxed">
+              Popcorn Studio 是一間專門製造視覺混亂（好的那種）的創意工作室。品牌識別、網站、動態影像，我們通通來。
+            </p>
+            <div class="reveal reveal-delay-2 mt-8 flex flex-col gap-4 sm:flex-row">
+              <a href="#work" class="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-black bg-pop-black px-6 py-3 font-bold text-pop-yellow shadow-hard transition-transform hover:-translate-y-1 hover:-translate-x-1">
+                看作品 <i data-lucide="arrow-down" class="h-4 w-4" aria-hidden="true"></i>
+              </a>
+              <a href="#quote" class="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-black bg-white px-6 py-3 font-bold shadow-hard transition-transform hover:-translate-y-1 hover:-translate-x-1">
+                算報價 <i data-lucide="calculator" class="h-4 w-4" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+          <div class="lg:col-span-4">
+            <div class="relative">
+              <img src="assets/images/studio-hero.jpg" alt="創意工作室視覺" width="600" height="600" loading="lazy" class="w-full rounded-2xl border-2 border-black shadow-hard-lg">
+              <span class="sticker bg-pop-yellow absolute -right-3 -top-3 tilt-pos">🔥 HOT</span>
+              <span class="sticker bg-pop-mint absolute -bottom-3 -left-3 tilt-neg">✨ NEW</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Projects ============ -->
+    <section id="work" class="border-y-2 border-black bg-white py-20" aria-labelledby="work-title">
+      <div class="mx-auto max-w-7xl px-5 lg:px-8">
+        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[.3em]">Selected Work</p>
+            <h2 id="work-title" class="mt-2 font-display text-4xl sm:text-5xl">精選專案案例</h2>
+          </div>
+          <p class="max-w-md text-sm font-medium">Hover 卡片會產生位移與縮放動畫，像被手拍了一下。</p>
+        </div>
+        <div class="mt-12 columns-1 gap-6 sm:columns-2 lg:columns-3">
+          <article class="reveal mb-6 break-inside-avoid rounded-2xl border-2 border-black bg-pop-yellow p-5 shadow-hard transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-hard-lg">
+            <div class="aspect-[4/3] overflow-hidden rounded-xl border-2 border-black bg-pop-purple">
+              <img src="assets/images/studio-hero.jpg" alt="專案 A" width="600" height="450" loading="lazy" class="h-full w-full object-cover mix-blend-multiply opacity-80">
+            </div>
+            <h3 class="mt-4 font-display text-xl">Neon Ramen</h3>
+            <p class="mt-1 text-sm font-medium">拉麵品牌識別與包裝設計</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="sticker bg-white">Branding</span>
+              <span class="sticker bg-pop-mint">Packaging</span>
+            </div>
+          </article>
+          <article class="reveal reveal-delay-1 mb-6 break-inside-avoid rounded-2xl border-2 border-black bg-pop-mint p-5 shadow-hard transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-hard-lg">
+            <div class="aspect-square overflow-hidden rounded-xl border-2 border-black bg-pop-pink">
+              <img src="assets/images/studio-hero.jpg" alt="專案 B" width="600" height="600" loading="lazy" class="h-full w-full object-cover mix-blend-screen opacity-70">
+            </div>
+            <h3 class="mt-4 font-display text-xl">Glitch Pop</h3>
+            <p class="mt-1 text-sm font-medium">音樂祭網站與動態主視覺</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="sticker bg-white">Web</span>
+              <span class="sticker bg-pop-yellow">Motion</span>
+            </div>
+          </article>
+          <article class="reveal reveal-delay-2 mb-6 break-inside-avoid rounded-2xl border-2 border-black bg-pop-purple p-5 text-white shadow-hard transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-hard-lg">
+            <div class="aspect-[3/4] overflow-hidden rounded-xl border-2 border-black bg-pop-yellow">
+              <img src="assets/images/studio-hero.jpg" alt="專案 C" width="450" height="600" loading="lazy" class="h-full w-full object-cover mix-blend-difference opacity-60">
+            </div>
+            <h3 class="mt-4 font-display text-xl">Soft Chaos</h3>
+            <p class="mt-1 text-sm font-medium">保養品電商視覺系統</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="sticker bg-white text-black">E-com</span>
+              <span class="sticker bg-pop-mint text-black">Art Dir.</span>
+            </div>
+          </article>
+          <article class="reveal mb-6 break-inside-avoid rounded-2xl border-2 border-black bg-pop-pink p-5 shadow-hard transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-hard-lg">
+            <div class="aspect-[4/3] overflow-hidden rounded-xl border-2 border-black bg-pop-yellow">
+              <img src="assets/images/studio-hero.jpg" alt="專案 D" width="600" height="450" loading="lazy" class="h-full w-full object-cover mix-blend-multiply opacity-75">
+            </div>
+            <h3 class="mt-4 font-display text-xl">Tiny Giants</h3>
+            <p class="mt-1 text-sm font-medium">兒童教育 App 角色設計</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="sticker bg-white">Character</span>
+              <span class="sticker bg-pop-purple text-white">UI</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Team ============ -->
+    <section id="team" class="bg-pop-yellow py-20" aria-labelledby="team-title">
+      <div class="mx-auto max-w-7xl px-5 lg:px-8">
+        <div class="text-center">
+          <p class="text-xs font-black uppercase tracking-[.3em]">The Crew</p>
+          <h2 id="team-title" class="mt-2 font-display text-4xl sm:text-5xl">團隊成員</h2>
+        </div>
+        <div class="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <article class="reveal rounded-2xl border-2 border-black bg-white p-4 shadow-hard transition-transform hover:-rotate-2">
+            <div class="aspect-square overflow-hidden rounded-xl border-2 border-black bg-pop-purple">
+              <img src="assets/images/studio-hero.jpg" alt="成員 Maya" width="400" height="400" loading="lazy" class="h-full w-full object-cover grayscale">
+            </div>
+            <div class="mt-3 text-center">
+              <p class="font-display text-lg">Maya Lin</p>
+              <p class="text-xs font-bold uppercase tracking-wide">Art Director</p>
+            </div>
+          </article>
+          <article class="reveal reveal-delay-1 rounded-2xl border-2 border-black bg-white p-4 shadow-hard transition-transform hover:rotate-2">
+            <div class="aspect-square overflow-hidden rounded-xl border-2 border-black bg-pop-mint">
+              <img src="assets/images/studio-hero.jpg" alt="成員 Ken" width="400" height="400" loading="lazy" class="h-full w-full object-cover grayscale">
+            </div>
+            <div class="mt-3 text-center">
+              <p class="font-display text-lg">Ken Wu</p>
+              <p class="text-xs font-bold uppercase tracking-wide">Lead Designer</p>
+            </div>
+          </article>
+          <article class="reveal reveal-delay-2 rounded-2xl border-2 border-black bg-white p-4 shadow-hard transition-transform hover:-rotate-2">
+            <div class="aspect-square overflow-hidden rounded-xl border-2 border-black bg-pop-pink">
+              <img src="assets/images/studio-hero.jpg" alt="成員 Rio" width="400" height="400" loading="lazy" class="h-full w-full object-cover grayscale">
+            </div>
+            <div class="mt-3 text-center">
+              <p class="font-display text-lg">Rio Chen</p>
+              <p class="text-xs font-bold uppercase tracking-wide">Motion Lead</p>
+            </div>
+          </article>
+          <article class="reveal reveal-delay-3 rounded-2xl border-2 border-black bg-white p-4 shadow-hard transition-transform hover:rotate-2">
+            <div class="aspect-square overflow-hidden rounded-xl border-2 border-black bg-pop-yellow">
+              <img src="assets/images/studio-hero.jpg" alt="成員 Lina" width="400" height="400" loading="lazy" class="h-full w-full object-cover grayscale">
+            </div>
+            <div class="mt-3 text-center">
+              <p class="font-display text-lg">Lina Park</p>
+              <p class="text-xs font-bold uppercase tracking-wide">Strategist</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Quote Calculator ============ -->
+    <section id="quote" class="border-y-2 border-black bg-pop-black py-20 text-white" aria-labelledby="quote-title">
+      <div class="mx-auto max-w-4xl px-5 lg:px-8">
+        <div class="text-center">
+          <p class="text-xs font-black uppercase tracking-[.3em] text-pop-yellow">Quick Quote</p>
+          <h2 id="quote-title" class="mt-2 font-display text-4xl sm:text-5xl">趣味報價計算機</h2>
+          <p class="mt-3 text-sm font-medium text-white/80">勾選你需要的服務，即時估算預算。</p>
+        </div>
+        <form id="quote-form" class="mt-10 rounded-2xl border-2 border-white bg-white p-6 text-pop-black shadow-hard-lg">
+          <fieldset>
+            <legend class="sr-only">服務項目</legend>
+            <ul class="space-y-3">
+              <li class="flex items-center justify-between rounded-xl border-2 border-black p-4">
+                <label class="flex items-center gap-3 font-bold">
+                  <input type="checkbox" data-price="80000" class="h-5 w-5 accent-pop-purple">
+                  品牌識別設計（Logo + VI）
+                </label>
+                <span class="font-black">NT$ 80,000</span>
+              </li>
+              <li class="flex items-center justify-between rounded-xl border-2 border-black p-4">
+                <label class="flex items-center gap-3 font-bold">
+                  <input type="checkbox" data-price="120000" class="h-5 w-5 accent-pop-purple">
+                  官方網站設計與開發
+                </label>
+                <span class="font-black">NT$ 120,000</span>
+              </li>
+              <li class="flex items-center justify-between rounded-xl border-2 border-black p-4">
+                <label class="flex items-center gap-3 font-bold">
+                  <input type="checkbox" data-price="60000" class="h-5 w-5 accent-pop-purple">
+                  動態主視覺 / Motion
+                </label>
+                <span class="font-black">NT$ 60,000</span>
+              </li>
+              <li class="flex items-center justify-between rounded-xl border-2 border-black p-4">
+                <label class="flex items-center gap-3 font-bold">
+                  <input type="checkbox" data-price="40000" class="h-5 w-5 accent-pop-purple">
+                  社群素材包（30 組）
+                </label>
+                <span class="font-black">NT$ 40,000</span>
+              </li>
+            </ul>
+          </fieldset>
+          <div class="mt-6 flex items-center justify-between rounded-xl border-2 border-black bg-pop-yellow p-4">
+            <span class="font-display text-xl">預估總價</span>
+            <span id="quote-total" class="font-display text-2xl">NT$ 0</span>
+          </div>
+          <p class="mt-3 text-xs font-medium text-black/60">* 實際報價依需求調整，此為快速估算。</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t-2 border-black bg-pop-yellow">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-sm font-bold sm:flex-row lg:px-8">
+      <p>© <span data-year>2026</span> Popcorn Studio · 創意設計示範</p>
+      <a href="/" class="transition-transform hover:-translate-y-0.5">返回總覽</a>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const totalEl = document.getElementById('quote-total');
+      const checkboxes = document.querySelectorAll('#quote-form input[type="checkbox"][data-price]');
+      function update() {
+        let sum = 0;
+        checkboxes.forEach((cb) => { if (cb.checked) sum += parseInt(cb.dataset.price, 10) || 0; });
+        totalEl.textContent = 'NT$ ' + sum.toLocaleString('zh-TW');
+      }
+      checkboxes.forEach((cb) => cb.addEventListener('change', update));
+      update();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ORBITAL CORE 軌道核心 · 沉浸式滾動敘事與空間解構。釘選式深度滾動、SVG 路徑繪製與文字擦除動效展示。">
+  <meta name="theme-color" content="#05060a">
+  <meta property="og:title" content="ORBITAL CORE｜沉浸式滾動敘事">
+  <meta property="og:description" content="Pin & Scrub 深度滾動 × SVG Path Drawing × Text Scrub Reveal 動效專題。">
+  <meta property="og:image" content="assets/images/spatial-hero.jpg">
+  <title>ORBITAL CORE｜沉浸式滾動敘事與空間解構</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    window.tailwind = window.tailwind || {}; window.tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Space Grotesk"', '"Noto Sans TC"', 'system-ui', 'sans-serif'],
+            mono: ['"Space Grotesk"', 'ui-monospace', 'monospace']
+          },
+          colors: {
+            void: { DEFAULT: '#05060a', deep: '#0a0e1a', mid: '#111827' },
+            ice: { DEFAULT: '#e2e8f0', dim: '#94a3b8' },
+            flux: { cyan: '#22d3ee', ember: '#f97316', violet: '#8b5cf6' }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <style>
+    /* 空間解構舞台 */
+    .core-scene { perspective: 1200px; perspective-origin: 50% 45%; }
+    .core-object { transform-style: preserve-3d; will-change: transform; }
+    .core-ring {
+      position: absolute; inset: 0; margin: auto; border-radius: 9999px;
+      border: 2px solid rgba(34, 211, 238, .35);
+      box-shadow: 0 0 40px rgba(34, 211, 238, .18), inset 0 0 30px rgba(34, 211, 238, .12);
+    }
+    .core-ring--a { width: min(62vw, 420px); height: min(62vw, 420px); transform: rotateX(72deg); border-color: rgba(249, 115, 22, .4); }
+    .core-ring--b { width: min(52vw, 350px); height: min(52vw, 350px); transform: rotateX(72deg) rotateZ(60deg); }
+    .core-ring--c { width: min(72vw, 500px); height: min(72vw, 500px); transform: rotateX(72deg) rotateZ(120deg); border-style: dashed; border-color: rgba(139, 92, 246, .3); }
+    .core-sphere {
+      width: min(30vw, 190px); height: min(30vw, 190px); border-radius: 9999px;
+      background: radial-gradient(circle at 34% 30%, #67e8f9, #22d3ee 26%, #0e7490 58%, #082f49 100%);
+      box-shadow: 0 0 90px rgba(34, 211, 238, .55), inset -18px -14px 50px rgba(2, 12, 27, .75);
+      will-change: transform;
+    }
+    .core-panel {
+      position: absolute; top: 50%; left: 50%; width: min(30vw, 160px); height: min(20vw, 104px);
+      margin: calc(min(20vw, 104px) / -2) 0 0 calc(min(30vw, 160px) / -2);
+      border-radius: 14px; border: 1px solid rgba(226, 232, 240, .18);
+      background: linear-gradient(145deg, rgba(226, 232, 240, .10), rgba(34, 211, 238, .06));
+      backdrop-filter: blur(2px); will-change: transform, opacity;
+    }
+    .hud-line { stroke-dasharray: 1; stroke-dashoffset: 1; }
+    .scrub-line { position: relative; display: inline-block; }
+    .scrub-line .scrub-fill {
+      position: absolute; inset: 0; color: #e2e8f0;
+      clip-path: inset(0 100% 0 0); will-change: clip-path;
+      text-shadow: 0 0 24px rgba(34, 211, 238, .45);
+    }
+    .scrub-line .scrub-base { color: rgba(148, 163, 184, .32); }
+  </style>
+</head>
+<body class="bg-void font-sans text-ice antialiased">
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <!-- ============ Header ============ -->
+  <header data-header-scroll class="fixed inset-x-0 top-0 z-50 transition-all duration-300 [&.is-scrolled]:bg-void/80 [&.is-scrolled]:backdrop-blur-xl">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10" aria-label="主要導覽">
+      <a href="#top" class="flex items-center gap-2.5 font-bold tracking-tight text-white" aria-label="ORBITAL CORE 首頁">
+        <span class="grid h-8 w-8 place-items-center rounded-full border border-flux-cyan/60 text-flux-cyan shadow-[0_0_18px_rgba(34,211,238,.45)]" aria-hidden="true">
+          <span class="h-2 w-2 rounded-full bg-flux-cyan"></span>
+        </span>
+        <span>ORBITAL<span class="text-flux-cyan">.CORE</span></span>
+      </a>
+      <ul class="hidden items-center gap-8 text-xs uppercase tracking-[.28em] text-ice-dim md:flex">
+        <li><a href="#deconstruct" class="transition-colors hover:text-flux-cyan">解構</a></li>
+        <li><a href="#trajectory" class="transition-colors hover:text-flux-cyan">軌跡</a></li>
+        <li><a href="#manifesto" class="transition-colors hover:text-flux-cyan">宣言</a></li>
+        <li><a href="/" class="transition-colors hover:text-flux-cyan">總覽</a></li>
+      </ul>
+      <a href="#data" class="hidden rounded-full border border-flux-cyan/50 px-5 py-2 text-xs uppercase tracking-[.25em] text-flux-cyan transition-all hover:bg-flux-cyan hover:text-void sm:inline-block">任務數據</a>
+      <button type="button" class="grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-white md:hidden" data-nav-toggle aria-expanded="false" aria-controls="spatial-menu">
+        <span class="sr-only">開啟選單</span>
+        <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+      </button>
+    </nav>
+    <div id="spatial-menu" class="hidden border-t border-white/10 bg-void/95 px-6 py-5 backdrop-blur-xl md:hidden">
+      <ul class="flex flex-col gap-4 text-ice">
+        <li><a href="#deconstruct">解構</a></li>
+        <li><a href="#trajectory">軌跡</a></li>
+        <li><a href="#manifesto">宣言</a></li>
+        <li><a href="#data">任務數據</a></li>
+        <li><a href="/">總覽</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ============ 章節進度儀表板（側邊 HUD） ============ -->
+  <aside id="depth-hud" class="pointer-events-none fixed right-6 top-1/2 z-40 hidden -translate-y-1/2 lg:block" aria-hidden="true">
+    <div class="flex items-center gap-4">
+      <div class="flex flex-col items-end gap-6 text-right">
+        <p class="text-[10px] uppercase tracking-[.35em] text-ice-dim">Depth</p>
+        <p class="font-mono text-3xl font-bold text-white"><span id="depth-value">00</span><span class="text-flux-cyan">%</span></p>
+        <ul class="space-y-3 text-[10px] uppercase tracking-[.25em] text-ice-dim">
+          <li data-chapter="1" class="transition-colors duration-300">01 · 序章</li>
+          <li data-chapter="2" class="transition-colors duration-300">02 · 解構</li>
+          <li data-chapter="3" class="transition-colors duration-300">03 · 軌跡</li>
+          <li data-chapter="4" class="transition-colors duration-300">04 · 宣言</li>
+        </ul>
+      </div>
+      <div class="relative h-64 w-px bg-white/10">
+        <div id="depth-bar" class="absolute left-0 top-0 h-full w-px origin-top bg-gradient-to-b from-flux-cyan to-flux-ember" style="transform:scaleY(0)"></div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <!-- ============ Hero ============ -->
+    <section id="top" class="relative flex min-h-[100svh] items-center overflow-hidden" aria-labelledby="hero-title">
+      <div class="absolute inset-0" aria-hidden="true">
+        <img id="spatial-hero-img" src="assets/images/spatial-hero.jpg" alt="" width="1600" height="900" loading="eager" class="h-full w-full object-cover opacity-55">
+        <div class="absolute inset-0 bg-gradient-to-b from-void/70 via-void/40 to-void"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_55%,rgba(34,211,238,.14),transparent_60%)]"></div>
+      </div>
+      <div class="relative mx-auto w-full max-w-7xl px-6 py-28 lg:px-10">
+        <p class="sp-hero-item inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[.35em] text-ice-dim backdrop-blur">
+          <span class="h-1.5 w-1.5 rounded-full bg-flux-cyan"></span>
+          Scroll Narrative · 2026
+        </p>
+        <h1 id="hero-title" class="sp-hero-item mt-8 max-w-4xl text-5xl font-bold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-8xl">
+          解構一場<br><span class="text-flux-cyan">深度滾動</span>的空間敘事
+        </h1>
+        <p class="sp-hero-item mt-7 max-w-xl text-base leading-loose text-ice-dim sm:text-lg">
+          以釘選式捲動序列拆解「軌道核心」的每一層結構。滾動即是時間軸——你的指尖決定故事的節奏。
+        </p>
+        <div class="sp-hero-item mt-10 flex flex-wrap items-center gap-4">
+          <a href="#deconstruct" class="inline-flex items-center gap-2 rounded-full bg-flux-cyan px-7 py-3.5 text-sm font-semibold text-void transition-all hover:-translate-y-0.5 hover:bg-cyan-300">
+            開始解構
+            <i data-lucide="arrow-down" class="h-4 w-4" aria-hidden="true"></i>
+          </a>
+          <a href="#manifesto" class="inline-flex items-center gap-2 rounded-full border border-white/20 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:border-flux-cyan hover:text-flux-cyan">
+            閱讀宣言
+          </a>
+        </div>
+      </div>
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2" aria-hidden="true">
+        <div class="flex h-10 w-6 items-start justify-center rounded-full border border-white/25 p-1.5">
+          <span class="scroll-dot h-2 w-1 rounded-full bg-flux-cyan"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 釘選式深度滾動：空間解構 ============ -->
+    <section id="deconstruct" class="relative" aria-labelledby="deconstruct-title">
+      <h2 id="deconstruct-title" class="sr-only">核心解構捲動序列</h2>
+      <div id="pin-stage" class="relative flex h-[100svh] items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,.08),transparent_55%)]" aria-hidden="true"></div>
+
+        <!-- 3D 核心主體 -->
+        <div class="core-scene relative h-[70vmin] w-[70vmin]" aria-hidden="true">
+          <div id="core-object" class="core-object absolute inset-0">
+            <div class="core-ring core-ring--c layer" data-layer="ring-c"></div>
+            <div class="core-ring core-ring--a layer" data-layer="ring-a"></div>
+            <div class="core-ring core-ring--b layer" data-layer="ring-b"></div>
+            <div class="core-panel layer" data-layer="panel-1" style="transform: translateZ(120px) rotateY(24deg);"></div>
+            <div class="core-panel layer" data-layer="panel-2" style="transform: translateZ(120px) rotateY(-150deg);"></div>
+            <div class="core-panel layer" data-layer="panel-3" style="transform: translateZ(-120px) rotateY(90deg);"></div>
+            <div class="absolute inset-0 grid place-items-center">
+              <div class="core-sphere layer" data-layer="sphere"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 組件數據標籤 -->
+        <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+          <div class="data-label absolute left-[8%] top-[22%] max-w-[200px] rounded-xl border border-flux-cyan/30 bg-void-deep/80 p-4 backdrop-blur">
+            <p class="text-[10px] uppercase tracking-[.3em] text-flux-cyan">Component 01</p>
+            <p class="mt-1.5 text-sm font-semibold text-white">鈦合金環形骨架</p>
+            <p class="mt-1 text-xs text-ice-dim">承受 12,000 RPM 離心應力</p>
+          </div>
+          <div class="data-label absolute right-[8%] top-[30%] max-w-[200px] rounded-xl border border-flux-ember/30 bg-void-deep/80 p-4 backdrop-blur">
+            <p class="text-[10px] uppercase tracking-[.3em] text-flux-ember">Component 02</p>
+            <p class="mt-1.5 text-sm font-semibold text-white">等離子推進葉片</p>
+            <p class="mt-1 text-xs text-ice-dim">微秒級向量噴嘴控制</p>
+          </div>
+          <div class="data-label absolute bottom-[20%] left-[12%] max-w-[200px] rounded-xl border border-flux-violet/30 bg-void-deep/80 p-4 backdrop-blur">
+            <p class="text-[10px] uppercase tracking-[.3em] text-flux-violet">Component 03</p>
+            <p class="mt-1.5 text-sm font-semibold text-white">量子導航面板</p>
+            <p class="mt-1 text-xs text-ice-dim">星際誤差 ±0.0001 光年</p>
+          </div>
+          <div class="data-label absolute bottom-[16%] right-[10%] max-w-[200px] rounded-xl border border-flux-cyan/30 bg-void-deep/80 p-4 backdrop-blur">
+            <p class="text-[10px] uppercase tracking-[.3em] text-flux-cyan">Core</p>
+            <p class="mt-1.5 text-sm font-semibold text-white">奇點能量核心</p>
+            <p class="mt-1 text-xs text-ice-dim">輸出 4.2 PW 持續功率</p>
+          </div>
+        </div>
+
+        <p class="absolute bottom-8 left-1/2 -translate-x-1/2 text-[11px] uppercase tracking-[.4em] text-ice-dim">Scroll to deconstruct · 持續滾動以解構</p>
+      </div>
+    </section>
+
+    <!-- ============ SVG 路徑動態繪製 ============ -->
+    <section id="trajectory" class="relative overflow-hidden border-t border-white/5 py-28 lg:py-36" aria-labelledby="traj-title">
+      <div class="mx-auto max-w-7xl px-6 lg:px-10">
+        <div class="max-w-2xl">
+          <p class="text-xs uppercase tracking-[.4em] text-flux-cyan">Trajectory</p>
+          <h2 id="traj-title" class="mt-4 text-4xl font-bold leading-tight text-white sm:text-5xl">軌跡，隨滾動即時繪出</h2>
+          <p class="mt-5 text-base leading-loose text-ice-dim">
+            背景的光纖軌跡以 <code class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-flux-cyan">stroke-dashoffset</code> 隨捲動進度計算，每一條曲線都是任務時間軸的一段。
+          </p>
+        </div>
+
+        <div class="relative mt-16">
+          <svg id="trajectory-svg" viewBox="0 0 1200 420" class="w-full" role="img" aria-label="隨滾動繪製的任務軌跡線條">
+            <defs>
+              <linearGradient id="traj-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#22d3ee"></stop>
+                <stop offset="55%" stop-color="#8b5cf6"></stop>
+                <stop offset="100%" stop-color="#f97316"></stop>
+              </linearGradient>
+              <filter id="traj-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
+                <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+              </filter>
+            </defs>
+            <path class="traj-path" d="M 40 340 C 240 340, 260 80, 480 80 S 760 340, 940 220 S 1120 90, 1160 90"
+              fill="none" stroke="url(#traj-grad)" stroke-width="3" stroke-linecap="round" filter="url(#traj-glow)"></path>
+            <path class="traj-path" d="M 40 380 C 300 380, 320 180, 560 200 S 820 360, 1160 160"
+              fill="none" stroke="url(#traj-grad)" stroke-width="1.5" stroke-linecap="round" opacity=".55"></path>
+            <g class="traj-node" data-node="0"><circle cx="40" cy="340" r="7" fill="#22d3ee"></circle><circle cx="40" cy="340" r="14" fill="none" stroke="#22d3ee" stroke-opacity=".4"></circle></g>
+            <g class="traj-node" data-node="1"><circle cx="480" cy="80" r="7" fill="#8b5cf6"></circle><circle cx="480" cy="80" r="14" fill="none" stroke="#8b5cf6" stroke-opacity=".4"></circle></g>
+            <g class="traj-node" data-node="2"><circle cx="940" cy="220" r="7" fill="#f97316"></circle><circle cx="940" cy="220" r="14" fill="none" stroke="#f97316" stroke-opacity=".4"></circle></g>
+            <g class="traj-node" data-node="3"><circle cx="1160" cy="90" r="7" fill="#22d3ee"></circle><circle cx="1160" cy="90" r="14" fill="none" stroke="#22d3ee" stroke-opacity=".4"></circle></g>
+          </svg>
+          <ul class="mt-10 grid gap-6 text-sm sm:grid-cols-3">
+            <li class="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <p class="text-xs uppercase tracking-[.25em] text-flux-cyan">T-00:00</p>
+              <p class="mt-2 font-semibold text-white">發射與軌道注入</p>
+              <p class="mt-1 text-ice-dim">核心於赤道軌道完成三軸穩定。</p>
+            </li>
+            <li class="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <p class="text-xs uppercase tracking-[.25em] text-flux-violet">T-06:30</p>
+              <p class="mt-2 font-semibold text-white">深空巡航</p>
+              <p class="mt-1 text-ice-dim">光帆展開，進入行星際滑行段。</p>
+            </li>
+            <li class="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <p class="text-xs uppercase tracking-[.25em] text-flux-ember">T-18:00</p>
+              <p class="mt-2 font-semibold text-white">目標抵達</p>
+              <p class="mt-1 text-ice-dim">量子導航鎖定，開始科學觀測。</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 文字遮罩擦除 ============ -->
+    <section id="manifesto" class="relative border-t border-white/5 py-28 lg:py-40" aria-labelledby="manifesto-title">
+      <div class="mx-auto max-w-5xl px-6 text-center lg:px-10">
+        <p class="text-xs uppercase tracking-[.4em] text-flux-cyan">Manifesto</p>
+        <h2 id="manifesto-title" class="mt-8 space-y-4 text-3xl font-bold leading-[1.35] sm:text-5xl lg:text-6xl lg:leading-[1.28]">
+          <span class="scrub-line block"><span class="scrub-base">滾動不是位移，</span><span class="scrub-fill" aria-hidden="true">滾動不是位移，</span></span>
+          <span class="scrub-line block"><span class="scrub-base">而是一種敘事的時間軸。</span><span class="scrub-fill" aria-hidden="true">而是一種敘事的時間軸。</span></span>
+          <span class="scrub-line block"><span class="scrub-base">我們把每一像素的移動，</span><span class="scrub-fill" aria-hidden="true">我們把每一像素的移動，</span></span>
+          <span class="scrub-line block"><span class="scrub-base">都變成一次精確的運算。</span><span class="scrub-fill" aria-hidden="true">都變成一次精確的運算。</span></span>
+        </h2>
+        <p class="mx-auto mt-10 max-w-2xl text-sm leading-loose text-ice-dim">
+          ORBITAL CORE 的動態語彙完全建立在 <code class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-flux-cyan">transform</code> 與
+          <code class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-flux-cyan">opacity</code> 之上——硬體加速、零重排、60fps 穩定輸出。
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ 任務數據 ============ -->
+    <section id="data" class="border-t border-white/5 bg-white/[0.015] py-28" aria-labelledby="data-title">
+      <div class="mx-auto max-w-7xl px-6 lg:px-10">
+        <div class="max-w-2xl">
+          <p class="text-xs uppercase tracking-[.4em] text-flux-cyan">Mission Data</p>
+          <h2 id="data-title" class="mt-4 text-4xl font-bold text-white sm:text-5xl">任務數據面板</h2>
+        </div>
+        <dl class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="data-card rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+            <dt class="text-xs uppercase tracking-[.25em] text-ice-dim">續航里程</dt>
+            <dd class="mt-3 text-4xl font-bold text-white"><span class="data-count" data-target="128">0</span><span class="text-flux-cyan"> AU</span></dd>
+          </div>
+          <div class="data-card rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+            <dt class="text-xs uppercase tracking-[.25em] text-ice-dim">組件精度</dt>
+            <dd class="mt-3 text-4xl font-bold text-white">±<span class="data-count" data-target="2">0</span><span class="text-flux-cyan"> μm</span></dd>
+          </div>
+          <div class="data-card rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+            <dt class="text-xs uppercase tracking-[.25em] text-ice-dim">訊號延遲</dt>
+            <dd class="mt-3 text-4xl font-bold text-white"><span class="data-count" data-target="4">0</span><span class="text-flux-cyan"> ms</span></dd>
+          </div>
+          <div class="data-card rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+            <dt class="text-xs uppercase tracking-[.25em] text-ice-dim">任務成功率</dt>
+            <dd class="mt-3 text-4xl font-bold text-white"><span class="data-count" data-target="99">0</span><span class="text-flux-cyan">%</span></dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-white/10">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-ice-dim sm:flex-row lg:px-10">
+      <p>© <span data-year>2026</span> ORBITAL CORE · 滾動敘事動效示範（Lenis × GSAP ScrollTrigger）</p>
+      <a href="/" class="transition-colors hover:text-flux-cyan">返回總覽</a>
+    </div>
+  </footer>
+
+  <!-- 動效引擎：GSAP 3 + ScrollTrigger + Lenis（CDN，零配置） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
+  <script src="assets/js/motion-engine.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/site.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var engine = window.MotionEngine ? window.MotionEngine.init({ anchorOffset: 88 }) : null;
+      if (!window.gsap || !window.ScrollTrigger) return; /* CDN 失敗時保持靜態可讀 */
+      var gsap = window.gsap;
+      var ScrollTrigger = window.ScrollTrigger;
+      var reduced = engine ? engine.reducedMotion : window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* ---------- Hero 進場 ---------- */
+      gsap.from('.sp-hero-item', {
+        y: 44, opacity: 0, duration: 1.1, stagger: 0.12, ease: 'power3.out', delay: 0.15
+      });
+      if (!reduced) {
+        gsap.fromTo('#spatial-hero-img',
+          { scale: 1.12, yPercent: -4 },
+          { yPercent: 6, scale: 1.12, ease: 'none',
+            scrollTrigger: { trigger: '#top', start: 'top top', end: 'bottom top', scrub: true } });
+      }
+      gsap.to('.scroll-dot', { y: 10, opacity: 0.3, duration: 1, repeat: -1, yoyo: true, ease: 'power1.inOut' });
+
+      /* ---------- 釘選式深度滾動：360° 旋轉 × 分層爆發 × 數據飛入 ---------- */
+      var mm = gsap.matchMedia();
+      mm.add('(min-width: 1px)', function () {
+        var tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: '#pin-stage',
+            start: 'top top',
+            end: '+=2600',
+            pin: true,
+            scrub: 1,
+            anticipatePin: 1,
+            invalidateOnRefresh: true
+          }
+        });
+
+        tl.fromTo('#core-object',
+          { rotateY: -18, rotateX: 8, scale: 0.86 },
+          { rotateY: 342, rotateX: -6, scale: 1.02, ease: 'none', duration: 5 }, 0);
+
+        /* 分層爆發展開 */
+        tl.to('[data-layer="ring-a"]', { xPercent: -26, z: 60, opacity: 0.85, ease: 'power2.out', duration: 2 }, 1.2);
+        tl.to('[data-layer="ring-b"]', { xPercent: 28, z: 40, opacity: 0.85, ease: 'power2.out', duration: 2 }, 1.4);
+        tl.to('[data-layer="ring-c"]', { yPercent: -18, z: -60, opacity: 0.7, ease: 'power2.out', duration: 2 }, 1.6);
+        tl.to('[data-layer="panel-1"]', { x: -220, y: -110, z: 200, rotateY: 40, opacity: 1, ease: 'power2.out', duration: 2 }, 1.8);
+        tl.to('[data-layer="panel-2"]', { x: 230, y: -60, z: 160, rotateY: -160, ease: 'power2.out', duration: 2 }, 2.0);
+        tl.to('[data-layer="panel-3"]', { x: -60, y: 170, z: -140, rotateY: 110, ease: 'power2.out', duration: 2 }, 2.2);
+        tl.to('[data-layer="sphere"]', { scale: 1.18, ease: 'power2.out', duration: 2.2 }, 1.5);
+
+        /* 組件數據標籤依序飛入 */
+        gsap.utils.toArray('.data-label').forEach(function (label, i) {
+          tl.fromTo(label,
+            { opacity: 0, y: 28, scale: 0.94 },
+            { opacity: 1, y: 0, scale: 1, ease: 'power2.out', duration: 1.2 },
+            2.1 + i * 0.55);
+        });
+
+        return function () { tl.kill(); };
+      });
+
+      /* ---------- SVG 路徑動態繪製 ---------- */
+      gsap.utils.toArray('.traj-path').forEach(function (path, i) {
+        if (typeof path.getTotalLength !== 'function') return; /* 舊環境優雅降級 */
+        var len = path.getTotalLength();
+        path.style.strokeDasharray = len;
+        path.style.strokeDashoffset = len;
+        gsap.to(path, {
+          strokeDashoffset: 0,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '#trajectory-svg',
+            start: 'top 78%',
+            end: 'bottom 35%',
+            scrub: 0.8
+          },
+          delay: i * 0.1
+        });
+      });
+      gsap.utils.toArray('.traj-node').forEach(function (node, i) {
+        gsap.from(node, {
+          scale: 0, opacity: 0, transformOrigin: 'center', ease: 'back.out(2)',
+          scrollTrigger: { trigger: '#trajectory-svg', start: 'top 60%', toggleActions: 'play none none reverse' },
+          delay: 0.25 + i * 0.35,
+          duration: 0.6
+        });
+      });
+
+      /* ---------- 文字遮罩擦除（Text Scrub Reveal） ---------- */
+      gsap.utils.toArray('.scrub-fill').forEach(function (fill, i) {
+        gsap.to(fill, {
+          clipPath: 'inset(0 0% 0 0)',
+          ease: 'none',
+          scrollTrigger: {
+            trigger: fill.closest('.scrub-line') || fill,
+            start: 'top 82%',
+            end: 'top 38%',
+            scrub: 0.6
+          }
+        });
+      });
+
+      /* ---------- 數字計數 ---------- */
+      gsap.utils.toArray('.data-count').forEach(function (el) {
+        var target = parseFloat(el.dataset.target) || 0;
+        var obj = { v: 0 };
+        gsap.to(obj, {
+          v: target,
+          duration: 1.6,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' },
+          onUpdate: function () { el.textContent = Math.round(obj.v); }
+        });
+      });
+
+      /* ---------- 章節進度儀表板 ---------- */
+      var depthValue = document.getElementById('depth-value');
+      var depthBar = document.getElementById('depth-bar');
+      var chapterEls = gsap.utils.toArray('[data-chapter]');
+      var setDepth = gsap.quickSetter(depthBar, 'scaleY');
+      if (depthValue && depthBar) {
+        var onProgress = function (p) {
+          setDepth(p);
+          var pct = Math.round(p * 100);
+          if (depthValue.textContent !== String(pct).padStart(2, '0')) {
+            depthValue.textContent = String(pct).padStart(2, '0');
+          }
+          var chapter = Math.min(4, Math.floor(p * 4) + 1);
+          chapterEls.forEach(function (el) {
+            el.classList.toggle('text-white', Number(el.dataset.chapter) === chapter);
+            el.classList.toggle('text-flux-cyan', Number(el.dataset.chapter) === chapter);
+          });
+        };
+        if (engine && engine.onScrollProgress) {
+          window.MotionEngine.onScrollProgress(onProgress);
+        } else {
+          /* engine 缺失時的降級：直接以 ScrollTrigger 建立進度 */
+          ScrollTrigger.create({
+            trigger: document.body, start: 'top top', end: 'bottom bottom',
+            onUpdate: function (self) { onProgress(self.progress); }
+          });
+        }
+      }
+
+      /* 所有動畫建立後重算座標 */
+      ScrollTrigger.refresh();
+    })();
+  </script>
+</body>
+</html>

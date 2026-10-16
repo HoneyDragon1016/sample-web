@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VOLT.AGENCY 賽博感先鋒數位創意工作室 · 磁吸游標、橫向滾動視差展廊與動態排版實驗。">
+  <meta name="theme-color" content="#07060d">
+  <meta property="og:title" content="VOLT.AGENCY｜賽博感動態排版先鋒">
+  <meta property="og:description" content="Magnetic Cursor × Horizontal Scroll Strip × Kinetic Type 動效專題。">
+  <meta property="og:image" content="assets/images/kinetic-hero.jpg">
+  <title>VOLT.AGENCY｜動態排版與賽博感先鋒設計</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    window.tailwind = window.tailwind || {}; window.tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Syne', '"Noto Sans TC"', 'system-ui', 'sans-serif'],
+            sans: ['Inter', '"Noto Sans TC"', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            cyber: { DEFAULT: '#07060d', deep: '#0b0a16', mid: '#151226' },
+            neon: { pink: '#ff2d78', cyan: '#00e0ff', acid: '#d9ff3f' }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <style>
+    /* ---------- 自定義游標 ---------- */
+    .cursor-dot, .cursor-ring {
+      position: fixed; top: 0; left: 0; z-index: 200; pointer-events: none;
+      border-radius: 9999px; will-change: transform;
+    }
+    .cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: #fff; mix-blend-mode: difference; }
+    .cursor-ring {
+      width: 44px; height: 44px; margin: -22px 0 0 -22px;
+      border: 1.5px solid rgba(255, 255, 255, .9); mix-blend-mode: difference;
+      display: grid; place-items: center;
+      transition: width .35s cubic-bezier(.2,.7,.2,1), height .35s cubic-bezier(.2,.7,.2,1), margin .35s cubic-bezier(.2,.7,.2,1);
+    }
+    .cursor-ring.is-active { width: 84px; height: 84px; margin: -42px 0 0 -42px; background: rgba(255,255,255,.96); border-color: transparent; }
+    .cursor-label { font-size: 10px; font-weight: 700; letter-spacing: .18em; color: #07060d; opacity: 0; transition: opacity .25s ease; text-transform: uppercase; }
+    .cursor-ring.is-active .cursor-label { opacity: 1; }
+    html.has-custom-cursor, html.has-custom-cursor * { cursor: none !important; }
+
+    /* ---------- Kinetic Type ---------- */
+    .kinetic-char { display: inline-block; will-change: transform; }
+    .wave-char { display: inline-block; will-change: transform; transition: none; }
+
+    /* ---------- 橫向捲動帶 ---------- */
+    .h-track { display: flex; gap: 2.5rem; width: max-content; will-change: transform; }
+    .h-card { position: relative; width: min(78vw, 560px); flex: none; overflow: hidden; }
+    .h-card img { will-change: transform; }
+
+    /* ---------- 服務列表 hover 掃光 ---------- */
+    .svc-row { position: relative; overflow: hidden; }
+    .svc-row::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(255,45,120,.16), rgba(0,224,255,.10));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform .5s cubic-bezier(.2,.7,.2,1);
+    }
+    .svc-row:hover::before, .svc-row:focus-within::before { transform: scaleX(1); }
+  </style>
+</head>
+<body class="bg-cyber font-sans text-slate-200 antialiased">
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <!-- 自定義游標（桌面限定） -->
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"><span class="cursor-label"></span></div>
+
+  <!-- ============ Header ============ -->
+  <header data-header-scroll class="fixed inset-x-0 top-0 z-50 transition-all duration-300 [&.is-scrolled]:bg-cyber/80 [&.is-scrolled]:backdrop-blur-xl">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10" aria-label="主要導覽">
+      <a href="#top" class="flex items-center gap-2.5 font-display text-lg font-extrabold tracking-tight text-white" aria-label="VOLT.AGENCY 首頁">
+        <span class="grid h-8 w-8 place-items-center rounded-lg bg-neon-pink text-white shadow-[0_0_22px_rgba(255,45,120,.55)]" aria-hidden="true">V</span>
+        VOLT<span class="text-neon-cyan">.AGENCY</span>
+      </a>
+      <ul class="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[.28em] text-slate-400 md:flex">
+        <li><a href="#works" class="transition-colors hover:text-white">作品</a></li>
+        <li><a href="#services" class="transition-colors hover:text-white">服務</a></li>
+        <li><a href="#contact" class="transition-colors hover:text-white">合作</a></li>
+        <li><a href="/" class="transition-colors hover:text-white">總覽</a></li>
+      </ul>
+      <a href="#contact" data-magnetic data-cursor-label="GO" class="hidden rounded-full border border-neon-cyan/60 px-5 py-2 text-xs font-semibold uppercase tracking-[.25em] text-neon-cyan transition-all hover:bg-neon-cyan hover:text-cyber sm:inline-block">啟動專案</a>
+      <button type="button" class="grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-white md:hidden" data-nav-toggle aria-expanded="false" aria-controls="kinetic-menu">
+        <span class="sr-only">開啟選單</span>
+        <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+      </button>
+    </nav>
+    <div id="kinetic-menu" class="hidden border-t border-white/10 bg-cyber/95 px-6 py-5 backdrop-blur-xl md:hidden">
+      <ul class="flex flex-col gap-4 text-slate-200">
+        <li><a href="#works">作品</a></li>
+        <li><a href="#services">服務</a></li>
+        <li><a href="#contact">合作</a></li>
+        <li><a href="/">總覽</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ Hero：Kinetic Type ============ -->
+    <section id="top" class="relative overflow-hidden" aria-labelledby="hero-title">
+      <div class="absolute inset-0" aria-hidden="true">
+        <img src="assets/images/kinetic-hero.jpg" alt="" width="1600" height="900" loading="eager" class="h-full w-full object-cover opacity-35">
+        <div class="absolute inset-0 bg-gradient-to-b from-cyber/60 via-cyber/75 to-cyber"></div>
+      </div>
+      <div class="relative mx-auto max-w-7xl px-6 pb-20 pt-36 lg:px-10 lg:pb-28 lg:pt-44">
+        <p class="inline-flex items-center gap-2 rounded-full border border-neon-acid/40 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[.35em] text-neon-acid">
+          <span class="h-1.5 w-1.5 rounded-full bg-neon-acid"></span>
+          Digital Creative Studio · Est. 2019
+        </p>
+        <h1 id="hero-title" class="mt-8 font-display text-6xl font-extrabold leading-[0.92] tracking-tight text-white sm:text-7xl lg:text-[8.5rem]">
+          <span class="kinetic-line block" data-wave>MOTION</span>
+          <span class="kinetic-line block text-neon-pink" data-wave>IS A</span>
+          <span class="kinetic-line block" data-wave>LANGUAGE</span>
+        </h1>
+        <div class="mt-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <p class="max-w-xl text-base leading-loose text-slate-400">
+            我們是 VOLT——一間把「動態」當作母語的先鋒數位工作室。品牌、網站、互動裝置，
+            每一幀都經過物理與美學的雙重校準。
+          </p>
+          <div class="flex flex-wrap gap-4">
+            <a href="#works" data-magnetic data-cursor-label="EXPLORE" class="inline-flex items-center gap-2 rounded-full bg-neon-pink px-8 py-4 text-sm font-bold text-white transition-colors hover:bg-neon-cyan hover:text-cyber">
+              探索作品
+              <i data-lucide="arrow-down-right" class="h-4 w-4" aria-hidden="true"></i>
+            </a>
+            <a href="#contact" data-magnetic class="inline-flex items-center gap-2 rounded-full border border-white/20 px-8 py-4 text-sm font-bold text-white transition-colors hover:border-neon-acid hover:text-neon-acid">
+              談談你的案子
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kinetic Marquee -->
+      <div class="relative border-y border-white/10 py-6" aria-hidden="true">
+        <div class="flex w-max marquee-row-a" style="gap:3rem">
+          <span class="font-display text-4xl font-extrabold uppercase tracking-tight text-white/90 sm:text-5xl">Brand Systems ★ Motion Design ★ WebGL ★ Art Direction ★</span>
+          <span class="font-display text-4xl font-extrabold uppercase tracking-tight text-white/90 sm:text-5xl">Brand Systems ★ Motion Design ★ WebGL ★ Art Direction ★</span>
+        </div>
+        <div class="mt-3 flex w-max marquee-row-b opacity-40" style="gap:3rem">
+          <span class="font-display text-2xl font-bold uppercase tracking-widest text-neon-cyan">Kinetic Type — Scroll Craft — Micro Interaction — Sound Design —</span>
+          <span class="font-display text-2xl font-bold uppercase tracking-widest text-neon-cyan">Kinetic Type — Scroll Craft — Micro Interaction — Sound Design —</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 宣言：Stagger 進場 ============ -->
+    <section class="mx-auto max-w-7xl px-6 py-24 lg:px-10" aria-labelledby="statement-title">
+      <h2 id="statement-title" class="sr-only">工作室宣言</h2>
+      <div class="max-w-4xl space-y-3">
+        <p class="stmt-line text-3xl font-bold leading-snug text-white sm:text-5xl">我們相信，</p>
+        <p class="stmt-line text-3xl font-bold leading-snug text-white sm:text-5xl">好的介面會呼吸——</p>
+        <p class="stmt-line text-3xl font-bold leading-snug text-slate-500 sm:text-5xl">它在你靠近時回應，</p>
+        <p class="stmt-line text-3xl font-bold leading-snug text-slate-500 sm:text-5xl">在你滾動時敘事，</p>
+        <p class="stmt-line text-3xl font-bold leading-snug text-neon-pink sm:text-5xl">在你離開後仍被記得。</p>
+      </div>
+    </section>
+
+    <!-- ============ 橫向滾動視差展廊 ============ -->
+    <section id="works" class="relative overflow-hidden" aria-labelledby="works-title">
+      <div class="mx-auto max-w-7xl px-6 pb-10 lg:px-10">
+        <div class="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[.35em] text-neon-cyan">Selected Works</p>
+            <h2 id="works-title" class="mt-4 font-display text-4xl font-extrabold text-white sm:text-6xl">橫向展廊</h2>
+          </div>
+          <p class="max-w-sm text-sm leading-relaxed text-slate-400">
+            捲動至此將自動釘選，垂直滾動轉譯為水平位移；卡片影像疊加速度視差（Parallax Shift）。
+          </p>
+        </div>
+      </div>
+
+      <div id="h-pin" class="relative">
+        <div class="h-track px-6 py-6 lg:px-10">
+          <article class="h-card rounded-3xl border border-white/10 bg-cyber-deep" data-cursor-label="VIEW">
+            <div class="aspect-[4/3] overflow-hidden rounded-t-3xl">
+              <img src="assets/images/kinetic-hero.jpg" alt="霓虹聲浪音樂祭主視覺" width="800" height="600" loading="lazy" class="h-full w-full object-cover">
+            </div>
+            <div class="p-7">
+              <p class="text-xs uppercase tracking-[.3em] text-neon-pink">01 · Web / Motion</p>
+              <h3 class="mt-3 font-display text-2xl font-bold text-white">霓虹聲浪音樂祭</h3>
+              <p class="mt-2 text-sm text-slate-400">售票平台與動態主視覺，上線首週轉換率 +38%。</p>
+            </div>
+          </article>
+          <article class="h-card rounded-3xl border border-white/10 bg-cyber-deep" data-cursor-label="VIEW">
+            <div class="aspect-[4/3] overflow-hidden rounded-t-3xl">
+              <img src="assets/images/studio-hero.jpg" alt="Glitch Pop 品牌識別" width="800" height="600" loading="lazy" class="h-full w-full object-cover">
+            </div>
+            <div class="p-7">
+              <p class="text-xs uppercase tracking-[.3em] text-neon-cyan">02 · Branding</p>
+              <h3 class="mt-3 font-display text-2xl font-bold text-white">Glitch Pop 識別系統</h3>
+              <p class="mt-2 text-sm text-slate-400">可變式 Logo 與動態品牌手冊，涵蓋 12 種載體。</p>
+            </div>
+          </article>
+          <article class="h-card rounded-3xl border border-white/10 bg-cyber-deep" data-cursor-label="VIEW">
+            <div class="aspect-[4/3] overflow-hidden rounded-t-3xl">
+              <img src="assets/images/playground-hero.jpg" alt="流體實驗室互動裝置" width="800" height="600" loading="lazy" class="h-full w-full object-cover">
+            </div>
+            <div class="p-7">
+              <p class="text-xs uppercase tracking-[.3em] text-neon-acid">03 · Interactive</p>
+              <h3 class="mt-3 font-display text-2xl font-bold text-white">流體實驗室裝置</h3>
+              <p class="mt-2 text-sm text-slate-400">展場互動牆，即時粒子運算與體感追蹤。</p>
+            </div>
+          </article>
+          <article class="h-card rounded-3xl border border-white/10 bg-cyber-deep" data-cursor-label="VIEW">
+            <div class="aspect-[4/3] overflow-hidden rounded-t-3xl">
+              <img src="assets/images/product-hero.jpg" alt="Aether 電商動態敘事" width="800" height="600" loading="lazy" class="h-full w-full object-cover">
+            </div>
+            <div class="p-7">
+              <p class="text-xs uppercase tracking-[.3em] text-neon-pink">04 · E-commerce</p>
+              <h3 class="mt-3 font-display text-2xl font-bold text-white">Aether 發售敘事頁</h3>
+              <p class="mt-2 text-sm text-slate-400">捲動式產品解構，預購轉換率創下品牌紀錄。</p>
+            </div>
+          </article>
+          <article class="h-card rounded-3xl border border-white/10 bg-cyber-deep" data-cursor-label="VIEW">
+            <div class="aspect-[4/3] overflow-hidden rounded-t-3xl">
+              <img src="assets/images/spatial-hero.jpg" alt="軌道核心空間解構" width="800" height="600" loading="lazy" class="h-full w-full object-cover">
+            </div>
+            <div class="p-7">
+              <p class="text-xs uppercase tracking-[.3em] text-neon-cyan">05 · Scroll Story</p>
+              <h3 class="mt-3 font-display text-2xl font-bold text-white">軌道核心解構</h3>
+              <p class="mt-2 text-sm text-slate-400">釘選式深度滾動 × SVG 路徑繪製的太空敘事。</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 服務列表 ============ -->
+    <section id="services" class="mx-auto max-w-7xl px-6 py-28 lg:px-10" aria-labelledby="svc-title">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold uppercase tracking-[.35em] text-neon-acid">Capabilities</p>
+        <h2 id="svc-title" class="mt-4 font-display text-4xl font-extrabold text-white sm:text-6xl">我們提供的火力</h2>
+      </div>
+      <ul class="mt-12 divide-y divide-white/10 border-y border-white/10">
+        <li class="svc-row group grid grid-cols-[auto_1fr_auto] items-center gap-6 px-2 py-8" data-magnetic-lite>
+          <span class="font-display text-xl text-neon-pink">01</span>
+          <div>
+            <h3 class="font-display text-2xl font-bold text-white transition-transform duration-500 group-hover:translate-x-3 sm:text-3xl">品牌動態識別</h3>
+            <p class="mt-1 text-sm text-slate-400">可變式標誌、動態手冊、跨載體一致的視覺語言。</p>
+          </div>
+          <i data-lucide="arrow-up-right" class="h-6 w-6 text-slate-500 transition-all duration-500 group-hover:-translate-y-1 group-hover:text-neon-pink" aria-hidden="true"></i>
+        </li>
+        <li class="svc-row group grid grid-cols-[auto_1fr_auto] items-center gap-6 px-2 py-8">
+          <span class="font-display text-xl text-neon-cyan">02</span>
+          <div>
+            <h3 class="font-display text-2xl font-bold text-white transition-transform duration-500 group-hover:translate-x-3 sm:text-3xl">沉浸式捲動體驗</h3>
+            <p class="mt-1 text-sm text-slate-400">GSAP ScrollTrigger 敘事、Pinning 序列與物理視差。</p>
+          </div>
+          <i data-lucide="arrow-up-right" class="h-6 w-6 text-slate-500 transition-all duration-500 group-hover:-translate-y-1 group-hover:text-neon-cyan" aria-hidden="true"></i>
+        </li>
+        <li class="svc-row group grid grid-cols-[auto_1fr_auto] items-center gap-6 px-2 py-8">
+          <span class="font-display text-xl text-neon-acid">03</span>
+          <div>
+            <h3 class="font-display text-2xl font-bold text-white transition-transform duration-500 group-hover:translate-x-3 sm:text-3xl">WebGL 互動裝置</h3>
+            <p class="mt-1 text-sm text-slate-400">粒子場、流體模擬、體感與空間互動。</p>
+          </div>
+          <i data-lucide="arrow-up-right" class="h-6 w-6 text-slate-500 transition-all duration-500 group-hover:-translate-y-1 group-hover:text-neon-acid" aria-hidden="true"></i>
+        </li>
+        <li class="svc-row group grid grid-cols-[auto_1fr_auto] items-center gap-6 px-2 py-8">
+          <span class="font-display text-xl text-white">04</span>
+          <div>
+            <h3 class="font-display text-2xl font-bold text-white transition-transform duration-500 group-hover:translate-x-3 sm:text-3xl">聲音與多感官設計</h3>
+            <p class="mt-1 text-sm text-slate-400">UI 微聲效、空間音訊與觸覺回饋整合。</p>
+          </div>
+          <i data-lucide="arrow-up-right" class="h-6 w-6 text-slate-500 transition-all duration-500 group-hover:-translate-y-1 group-hover:text-white" aria-hidden="true"></i>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section id="contact" class="relative overflow-hidden border-t border-white/10 py-28" aria-labelledby="cta-title">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,45,120,.16),transparent_55%),radial-gradient(circle_at_75%_60%,rgba(0,224,255,.14),transparent_55%)]" aria-hidden="true"></div>
+      <div class="relative mx-auto max-w-5xl px-6 text-center lg:px-10">
+        <p class="text-xs font-semibold uppercase tracking-[.4em] text-neon-acid">Let's Create</p>
+        <h2 id="cta-title" class="mt-6 font-display text-5xl font-extrabold leading-tight text-white sm:text-7xl">
+          準備好讓品牌<br><span class="text-neon-pink">動起來</span>了嗎？
+        </h2>
+        <p class="mx-auto mt-6 max-w-xl text-base leading-loose text-slate-400">
+          告訴我們你的野心，我們負責把它變成 60fps 的現實。
+        </p>
+        <a href="mailto:hello@volt.agency" data-magnetic data-cursor-label="GO" class="mt-10 inline-flex items-center gap-3 rounded-full bg-white px-10 py-5 text-base font-bold text-cyber transition-colors hover:bg-neon-acid">
+          hello@volt.agency
+          <i data-lucide="send" class="h-5 w-5" aria-hidden="true"></i>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-white/10">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-slate-500 sm:flex-row lg:px-10">
+      <p>© <span data-year>2026</span> VOLT.AGENCY · 賽博動態排版示範（Lenis × GSAP ScrollTrigger）</p>
+      <a href="/" class="transition-colors hover:text-neon-cyan">返回總覽</a>
+    </div>
+  </footer>
+
+  <!-- 動效引擎：GSAP 3 + ScrollTrigger + Lenis（CDN，零配置） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
+  <script src="assets/js/motion-engine.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/site.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var engine = window.MotionEngine ? window.MotionEngine.init({ anchorOffset: 88 }) : null;
+      if (!window.gsap || !window.ScrollTrigger) return;
+      var gsap = window.gsap;
+      var reduced = engine ? engine.reducedMotion : false;
+      var fine = window.matchMedia('(pointer: fine)').matches;
+
+      /* ---------- Kinetic Marquee（無縫循環，transform 驅動） ---------- */
+      if (!reduced) {
+        gsap.to('.marquee-row-a', { xPercent: -50, duration: 22, ease: 'none', repeat: -1 });
+        gsap.to('.marquee-row-b', { xPercent: -50, duration: 28, ease: 'none', repeat: -1 });
+      }
+
+      /* ---------- 字元拆分與波浪抖動 ---------- */
+      document.querySelectorAll('[data-wave]').forEach(function (line) {
+        var text = line.textContent;
+        line.setAttribute('aria-label', text);
+        line.textContent = '';
+        text.split('').forEach(function (ch) {
+          var span = document.createElement('span');
+          span.className = 'wave-char';
+          span.textContent = ch === ' ' ? '\u00A0' : ch;
+          line.appendChild(span);
+        });
+      });
+
+      if (!reduced) {
+        gsap.from('.wave-char', {
+          yPercent: 120, rotate: 8, opacity: 0,
+          duration: 1, ease: 'power4.out', stagger: { each: 0.028, from: 'center' }, delay: 0.2
+        });
+
+        document.querySelectorAll('[data-wave]').forEach(function (line) {
+          var chars = line.querySelectorAll('.wave-char');
+          line.addEventListener('mouseenter', function () {
+            gsap.fromTo(chars,
+              { y: 0 },
+              { y: -18, duration: 0.22, ease: 'power2.out', stagger: { each: 0.018, from: 'start' },
+                onComplete: function () {
+                  gsap.to(chars, { y: 0, duration: 0.55, ease: 'elastic.out(1, 0.38)', stagger: { each: 0.018, from: 'start' } });
+                }
+              });
+          });
+        });
+      }
+
+      /* ---------- 宣言 Stagger Scroll 進場 ---------- */
+      gsap.from('.stmt-line', {
+        y: 60, opacity: 0, duration: 0.9, ease: 'power3.out', stagger: 0.14,
+        scrollTrigger: { trigger: '.stmt-line', start: 'top 82%', toggleActions: 'play none none reverse' }
+      });
+
+      /* ---------- 橫向滾動視差展廊（Pin + Parallax Shift） ---------- */
+      var track = document.querySelector('.h-track');
+      var pin = document.getElementById('h-pin');
+      if (track && pin) {
+        var getScrollLen = function () { return Math.max(0, track.scrollWidth - window.innerWidth + 80); };
+
+        var stripTween = gsap.to(track, {
+          x: function () { return -getScrollLen(); },
+          ease: 'none',
+          scrollTrigger: {
+            trigger: pin,
+            start: 'top top',
+            end: function () { return '+=' + getScrollLen(); },
+            pin: true,
+            scrub: 1,
+            anticipatePin: 1,
+            invalidateOnRefresh: true
+          }
+        });
+
+        /* 卡片影像速度視差：以 containerAnimation 附加次級 ScrollTrigger */
+        gsap.utils.toArray('.h-card img').forEach(function (img, i) {
+          var depth = i % 2 === 0 ? 60 : 34;
+          gsap.fromTo(img,
+            { x: -depth, scale: 1.14 },
+            {
+              x: depth, ease: 'none',
+              scrollTrigger: {
+                trigger: img.closest('.h-card'),
+                containerAnimation: stripTween,
+                start: 'left right',
+                end: 'right left',
+                scrub: true
+              }
+            });
+        });
+      }
+
+      /* ---------- 磁吸式自定義游標（僅精細指標裝置） ---------- */
+      if (fine && !reduced) {
+        var dot = document.querySelector('.cursor-dot');
+        var ring = document.querySelector('.cursor-ring');
+        var label = ring ? ring.querySelector('.cursor-label') : null;
+        if (dot && ring && label) {
+          document.documentElement.classList.add('has-custom-cursor');
+
+          /* 跟隨延遲：外環使用較長 duration 形成阻尼感 */
+          var dotX = gsap.quickTo(dot, 'x', { duration: 0.12, ease: 'power2.out' });
+          var dotY = gsap.quickTo(dot, 'y', { duration: 0.12, ease: 'power2.out' });
+          var ringX = gsap.quickTo(ring, 'x', { duration: 0.42, ease: 'power3.out' });
+          var ringY = gsap.quickTo(ring, 'y', { duration: 0.42, ease: 'power3.out' });
+
+          window.addEventListener('mousemove', function (e) {
+            dotX(e.clientX); dotY(e.clientY);
+            ringX(e.clientX); ringY(e.clientY);
+          }, { passive: true });
+
+          /* 滑過元素：游標形變 + 浮現提示字 */
+          document.querySelectorAll('[data-cursor-label], a, button').forEach(function (el) {
+            el.addEventListener('mouseenter', function () {
+              label.textContent = el.dataset.cursorLabel || '';
+              ring.classList.add('is-active');
+            });
+            el.addEventListener('mouseleave', function () {
+              ring.classList.remove('is-active');
+              label.textContent = '';
+            });
+          });
+        }
+
+        /* ---------- 磁吸位移（彈性阻尼） ---------- */
+        document.querySelectorAll('[data-magnetic]').forEach(function (el) {
+          var xTo = gsap.quickTo(el, 'x', { duration: 0.55, ease: 'power3.out' });
+          var yTo = gsap.quickTo(el, 'y', { duration: 0.55, ease: 'power3.out' });
+
+          el.addEventListener('mousemove', function (e) {
+            var r = el.getBoundingClientRect();
+            xTo((e.clientX - (r.left + r.width / 2)) * 0.32);
+            yTo((e.clientY - (r.top + r.height / 2)) * 0.32);
+          });
+          el.addEventListener('mouseleave', function () {
+            gsap.to(el, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.32)' });
+          });
+        });
+      }
+
+      ScrollTrigger.refresh();
+    })();
+  </script>
+</body>
+</html>
