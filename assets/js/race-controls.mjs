@@ -3,7 +3,8 @@ export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 export const DEFAULT_SETTINGS = Object.freeze({
   sensitivity: 1,
-  volume: 0.35,
+  volume: 0.6,
+  difficulty: 'pro',
   view: 'cockpit',
   muted: false,
 });
@@ -16,6 +17,7 @@ export function sanitizeSettings(value) {
     sensitivity: numberOr(settings.sensitivity, DEFAULT_SETTINGS.sensitivity, 0.5, 1.5),
     volume: numberOr(settings.volume, DEFAULT_SETTINGS.volume, 0, 1),
     view: settings.view === 'chase' ? 'chase' : 'cockpit',
+    difficulty: ['rookie', 'pro', 'elite'].includes(settings.difficulty) ? settings.difficulty : 'pro',
     muted: settings.muted === true,
   };
 }
@@ -175,3 +177,15 @@ export function forwardSpeedAfterForces(speed, throttle, brake, onTrack, dt, con
   speed = clamp(speed, -7, config.topSpeed);
   return { speed, acceleration: dt > 0 ? (speed - previous) / dt : 0 };
 }
+
+/** Both racers use completed start-line crossings plus fractional track progress.
+ * Call after incrementing crossings on a wrap, including the finish crossing. */
+export function raceProgress(crossings, sampleIndex, sampleCount) {
+  return crossings + sampleIndex / sampleCount;
+}
+
+export const AI_DIFFICULTY = Object.freeze({
+  rookie: Object.freeze({ speed: 0.94, accel: 12 }),
+  pro: Object.freeze({ speed: 1.07, accel: 16 }),
+  elite: Object.freeze({ speed: 1.18, accel: 20 }),
+});
