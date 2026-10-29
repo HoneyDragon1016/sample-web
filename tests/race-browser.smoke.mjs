@@ -50,7 +50,10 @@ try {
   await instrument(page);
   await ready(page);
   assert.equal(await page.locator('#start-sensitivity').inputValue(), '100');
-  assert.equal(await page.locator('#start-volume').inputValue(), '35');
+  assert.equal(await page.locator('#start-volume').inputValue(), '70', 'engine audio must default loud (PR9 regression)');
+  assert.equal(await page.evaluate(() => __raceTestGame.settings.difficulty), 'pro', 'default difficulty');
+  assert.equal(await page.locator('#screen-start [data-difficulty="pro"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('#screen-start [data-difficulty="pro"] .difficulty-row em').isVisible(), true);
 
   // Both quality selections update the renderer, mirror and scenery without a reload.
   await page.locator('#screen-start [data-quality="high"]').click();
@@ -68,11 +71,59 @@ try {
   assert.equal(await page.locator('#pause-sensitivity').inputValue(), '125');
   await page.locator('#screen-start [data-view="chase"]').click();
   assert.equal(await page.locator('#screen-start [data-view="chase"]').getAttribute('aria-pressed'), 'true');
+
+  // Difficulty changes on the start screen apply immediately (grid size + AI pace).
+  await page.locator('#screen-start [data-difficulty="legend"]').click();
+  const legend = await page.evaluate(() => ({
+    difficulty: __raceTestGame.settings.difficulty,
+    opponents: __raceTestGame.difficulty.opponents,
+    meta: document.querySelector('#screen-start [data-difficulty-meta]').textContent,
+  }));
+  assert.equal(legend.difficulty, 'legend');
+  assert.equal(legend.opponents, 9);
+  assert.ok(/下一場生效/.test(legend.meta) === false, `start-screen meta must not be queued: ${legend.meta}`);
+  assert.equal(await page.locator('#screen-start [data-difficulty="legend"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('#screen-pause [data-difficulty="legend"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('#screen-start [data-difficulty="pro"]').getAttribute('aria-pressed'), 'false');
   await screenshot(page, 'race-start.png');
   await page.locator('#start-btn').click();
   await page.waitForSelector('#hud:not(.hidden)');
-  await page.evaluate(() => { __raceTestGame.countdownT = 2.99; });
+  assert.equal(await page.evaluate(() => __raceTestGame.state), 'countdown');
+  // 5 顆發車燈依 0.62s 間隔逐一亮起，全亮後 0.58s 熄燈（= 3.68s）
+  // 在同一個 evaluate 內取樣，避免 rAF 在斷言之間把倒數跑完
+  const lights = await page.evaluate(() => {
+    const g = __raceTestGame;
+    const lit = () => document.querySelectorAll('#start-lights .light-led.on').length;
+    const at = (t) => { g.countdownT = t; g.updateStartLights(); return { lit: lit(), out: g.lightsOut, state: g.state }; };
+    return {
+      at0: at(0.10), at1: at(0.70), at4: at(2.60), at5: at(3.30),
+      visible: !document.querySelector('#start-lights').classList.contains('hidden'),
+      leds: document.querySelectorAll('#start-lights .light-led').length,
+    };
+  });
+  assert.equal(lights.leds, 5, 'five start lights');
+  assert.equal(lights.visible, true);
+  assert.deepEqual([lights.at0.lit, lights.at1.lit, lights.at4.lit, lights.at5.lit], [0, 1, 4, 5]);
+  assert.equal(lights.at5.state, 'countdown', 'lights must still be on before lights-out');
+  // 玩家從最後一格發車：名次必須等於對手持數 + 1，而不是固定的 P4
+  const grid = await page.evaluate(() => ({
+    ai: __raceTestGame.activeAi.length,
+    position: __raceTestGame.computePosition(),
+    text: document.querySelector('#hud-position').textContent,
+    total: document.querySelector('#hud-pos-total').textContent,
+    towerRows: document.querySelectorAll('#hud-tower .tower-row').length,
+    leaderGap: document.querySelector('#hud-gap-ahead').textContent,
+  }));
+  assert.equal(grid.ai, 9);
+  assert.equal(grid.position, 10, `grid position ${JSON.stringify(grid)}`);
+  assert.equal(grid.text, 'P10');
+  assert.equal(grid.total, '10');
+  assert.equal(grid.towerRows, 10);
+  assert.ok(grid.leaderGap.length > 0);
+  await page.evaluate(() => { __raceTestGame.countdownT = 3.69; });
   await page.waitForFunction(() => __raceTestGame.state === 'racing', null, { timeout: 30000 });
+  assert.equal(await page.locator('#start-lights').getAttribute('class').then((c) => c.includes('out')), true);
+  assert.equal(await page.evaluate(() => document.querySelectorAll('#start-lights .light-led.on').length), 0);
   const neutral = await page.evaluate(() => ({ throttle: __raceTestGame.input.throttle, brake: __raceTestGame.input.brake, speed: __raceTestGame.player.fSpeed, chaseVisible: __raceTestGame.playerCar.visible, cockpitVisible: __raceTestGame.cockpit.visible, volume: __raceTestGame.audio.volume }));
   assert.equal(neutral.throttle, 0);
   assert.equal(neutral.brake, 0);
@@ -86,10 +137,10 @@ try {
   await page.keyboard.down('w');
   const accelerating = await page.evaluate(() => {
     const g = __raceTestGame, p = g.player;
-    g.trackCollision = () => {}; g.ai = [];
+    g.trackCollision = () => {}; g.activeAi = [];
     p.pos.set(0, 0, 0); p.heading = 0; p.vel.set(0, 0); p.fSpeed = 0; p.speed = 0; p.gear = 1; p.onTrack = true;
     g.input.poll(1 / 60);
-    for (let i = 0; i < 720; i++) g.physicsStep(1 / 60);
+    for (let i = 0; i < 720; i++) g.physicsStep(1 / 60, false);
     return { throttle: g.input.throttle, brake: g.input.brake, speed: p.fSpeed, gear: p.gear };
   });
   assert.equal(accelerating.throttle, 1);
@@ -107,7 +158,7 @@ try {
     const result = await page.evaluate(() => {
       const g = __raceTestGame;
       g.input.poll(0.6);
-      for (let i = 0; i < 20; i++) g.physicsStep(1 / 60);
+      for (let i = 0; i < 20; i++) g.physicsStep(1 / 60, false);
       return { heading: g.player.heading, x: g.player.pos.x };
     });
     await page.keyboard.up(key);
@@ -147,7 +198,7 @@ try {
   await page.waitForSelector('#hud:not(.hidden)');
   assert.equal(await page.locator('#mute-btn').getAttribute('aria-pressed'), 'true');
   await page.locator('#mute-btn').click();
-  assert.equal(await page.evaluate(() => __raceTestGame.settings.volume), 0.35);
+  assert.equal(await page.evaluate(() => __raceTestGame.settings.volume), 0.7);
   await page.keyboard.press('Escape');
   await changeRange(page, '#pause-volume', 10);
   await page.keyboard.press('Escape');
@@ -160,8 +211,78 @@ try {
   assert.equal(await page.locator('#start-volume').inputValue(), '10');
   assert.equal(await page.locator('#screen-start [data-view="chase"]').getAttribute('aria-pressed'), 'true');
   assert.equal(await page.evaluate(() => __raceTestGame.settings.muted), true);
+  assert.equal(await page.evaluate(() => __raceTestGame.settings.difficulty), 'legend', 'difficulty must persist');
+  assert.equal(await page.locator('#screen-start [data-difficulty="legend"]').getAttribute('aria-pressed'), 'true');
+
+  // Mid-race difficulty changes are queued for the next race (never applied live).
+  await page.locator('#screen-start [data-difficulty="elite"]').click();
+  await page.locator('#start-btn').click();
+  await page.waitForSelector('#hud:not(.hidden)');
+  await page.evaluate(() => { __raceTestGame.countdownT = 3.7; });
+  await page.waitForFunction(() => __raceTestGame.state === 'racing', null, { timeout: 30000 });
+  assert.equal(await page.evaluate(() => __raceTestGame.activeAi.length), 7, 'elite field must be seven opponents');
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('#screen-pause:not(.hidden)');
+  await page.locator('#screen-pause [data-difficulty="rookie"]').click();
+  const queued = await page.evaluate(() => ({
+    pending: __raceTestGame.pendingDifficulty,
+    live: __raceTestGame.difficulty.id,
+    field: __raceTestGame.activeAi.length,
+    meta: document.querySelector('#screen-pause [data-difficulty-meta]').textContent,
+  }));
+  assert.equal(queued.pending, 'rookie');
+  assert.equal(queued.live, 'elite', 'live field must stay elite until the next race');
+  assert.equal(queued.field, 7);
+  assert.ok(/下一場生效/.test(queued.meta), `queued meta must say so: ${queued.meta}`);
+
+  // ---- 搶跑罰則：暫停狀態下直接驗證偵測邏輯，避免 frame loop 干擾 ----
+  const jump = await page.evaluate(() => {
+    const g = __raceTestGame, p = g.player;
+    g.jumpStart = false; g.lightsOut = false; g.penaltyMs = 0; p.speed = 4;
+    g.detectJumpStart();
+    const caught = { jumpStart: g.jumpStart, penaltyMs: g.penaltyMs };
+    g.jumpStart = false; g.penaltyMs = 0; p.speed = 0; g.lightsOut = true;
+    return caught;
+  });
+  assert.equal(jump.jumpStart, true);
+  assert.equal(jump.penaltyMs, 3000);
+
+  await page.locator('#resume-btn').click();
+  await page.waitForSelector('#hud:not(.hidden)');
+
+  // ---- 結算分類表（回歸：過去結算永遠顯示 P4）----
+  const finish = await page.evaluate(() => {
+    const g = __raceTestGame, p = g.player, S = g.track.S;
+    // 玩家率先衝線，AI 仍在場上
+    p.crossings = 4; p.laps = 3; p.nearestIdx = 6; p.progress = 4 + 6 / S; p.speed = 72; p.finished = false;
+    g.raceTime = 96000; g.lapTimes = [32000, 31800, 32200]; g.bestLap = 31800;
+    g.activeAi.forEach((car, i) => { car.crossings = 3; car.laps = 2; car.progress = 3.985 - i * 0.004; car.finished = false; car.speed = 70; });
+    g.finishRace();
+    const rows = [...document.querySelectorAll('#finish-stats .result-row')];
+    return {
+      state: g.state,
+      field: g.activeAi.length,
+      rowCount: rows.length,
+      youRow: document.querySelector('#finish-stats .result-row.is-you')?.textContent ?? '',
+      firstRow: rows[0]?.textContent ?? '',
+      headline: document.querySelector('#finish-stats .stat-row.big strong')?.textContent ?? '',
+      gridRow: document.querySelectorAll('#finish-stats .stat-row')[1]?.textContent ?? '',
+      classification: !!document.querySelector('#finish-stats .classification'),
+      screenVisible: !document.querySelector('#screen-finish').classList.contains('hidden'),
+    };
+  });
+  assert.equal(finish.state, 'finished');
+  assert.equal(finish.screenVisible, true);
+  assert.equal(finish.classification, true);
+  assert.equal(finish.rowCount, finish.field + 1, `classification rows: ${finish.rowCount}`);
+  assert.ok(finish.youRow.startsWith('P1'), `the car that crosses first must win: ${finish.youRow}`);
+  assert.equal(finish.firstRow, finish.youRow, 'player must head the classification');
+  assert.equal(finish.headline, `P1 / ${finish.field + 1}`);
+  assert.ok(/WINNER/.test(finish.youRow), finish.youRow);
+  assert.ok(new RegExp(`P${finish.field + 1}`).test(finish.gridRow), `grid row must show the back-of-grid start: ${finish.gridRow}`);
+  await screenshot(page, 'race-finish.png');
   await context.close();
-  console.log('Desktop: keyboard, pad neutrality, automatic gears, cameras, audio, pause, quality and persistence passed.');
+  console.log('Desktop: keyboard, pad neutrality, automatic gears, cameras, audio, difficulty, start lights, classification and persistence passed.');
   // Re-launch between contexts, including on constrained single-process Chromium.
   await browser.close();
   browser = await launch();

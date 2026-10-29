@@ -4,41 +4,75 @@
  * 雙視角 3D 賽車體驗（WebGL / Three.js r160 / 程序化生成）
  *
  * 技術重點：
- *  - 程序化賽道：極座標閉合樣條（CatmullRomCurve3）→ 柏油帶狀幾何、路緣石、護欄、看台、廣告板
+ *  - 程序化賽道：極座標閉合向心樣條（自寫弧長參數化）→ 柏油帶狀幾何、路緣石、護欄、看台、廣告板
+ *  - 賽車線求解：Laplacian 鬆弛 + 彎道餘弦剖面，產生 entry-outside / apex-inside / exit-outside 路線
  *  - 鏡頭：駕駛艙與第三人稱追車視角、玩家車模型、方向盤與後視鏡
- *  - 街機物理：可調轉向、自動排檔、油門／煞車／漂移、草地減速、護欄碰撞
- *  - AI 對手：沿樣條行駛、依曲率預先計算彎道極速、即時名次計算
- *  - 程序化音效：較柔和的 Web Audio 引擎、可調音量、胎噪、風噪與碰撞
- *  - 後製特效：單一 Pass 自訂 Shader（徑向速度模糊、色差、暗角、碰撞紅閃、膠片顆粒）
- *  - 效能：InstancedMesh 大量物件、低解析度鏡面 RT、像素比上限、能見度自動暫停
+ *  - 街機物理：可調轉向、自動排檔、油門／煞車／漂移、草地減速、護欄碰撞、尾流與 DRS
+ *  - AI 對手：賽車線導航 + forward/backward 剎車可行性剖線 + 避車／超車／失誤模型 + 四級難度
+ *  - 名次系統：完賽時間 → 即時中心線投影進度的正式計時排序，含間距與完賽時間差
+ *  - 程序化音效：多層引擎聲（排氣脈動／進氣／渦輪／傳動）、回火、多普勒對手車、可調音量
+ *  - 後製特效：Bloom 明亮通道 + 徑向速度模糊、色差、暗角、碰撞紅閃、膠片顆粒
+ *  - 效能：InstancedMesh 大量物件、低解析度鏡面／Bloom RT、像素比上限、能見度自動暫停
  *  - 無障礙：prefers-reduced-motion 停用鏡頭晃動與顆粒；鍵盤可完整操作；觸控 UI 自動顯示
  *
  * 相依：three.module.min.js（已於本儲存庫內 vendor，無外部 CDN 相依）
+ *      race-sim.mjs / race-controls.mjs（純邏輯，可於 Node 直接單元測試）
  */
 import * as THREE from '../vendor/three.module.min.js';
 import {
-  DrivingInput, DEFAULT_SETTINGS, sanitizeSettings, steeringYawRate,
-  selectAutomaticGear, forwardSpeedAfterForces,
+  DrivingInput, DEFAULT_SETTINGS, DIFFICULTIES, resolveDifficulty, sanitizeSettings,
+  selectAutomaticGear, masterGainForVolume,
 } from './race-controls.mjs';
+import {
+  TRACK, AI_LAT_ACCEL, buildTrackData, buildRacingLine, pathGeometry, buildSpeedProfile,
+  buildPlayerProfile, vehicleStep, aiStep, raceStandings, gapSeconds, formatGap, slipstreamAmount,
+  detectLapCrossing, trackProgress, crossingsToFinish,
+} from './race-sim.mjs';
 
 /* ================================================================
  * 0. 常數與工具
  * ============================================================== */
 const CFG = {
-  trackHalfWidth: 10,          // 賽道半寬（公尺）
-  trackSamples: 1000,          // 賽道取樣數
-  barrierOffset: 2.4,          // 護欄距賽道邊緣
+  trackHalfWidth: TRACK.halfWidth,   // 賽道半寬（公尺）
+  trackSamples: TRACK.samples,       // 賽道取樣數
+  barrierOffset: TRACK.barrierOffset,
   totalLaps: 3,
-  topSpeed: 88,                // 玩家極速 m/s（≈317 km/h）
+  topSpeed: 92,                // 玩家極速 m/s（≈331 km/h）
   engineAccel: 16.5,           // 引擎加速度基值 m/s²
   brakeAccel: 28,              // 煞車減速度 m/s²
-  rollResist: 0.7,             // 滚动阻力
+  rollResist: 0.7,             // 滾動阻力
   grassDecel: 15,              // 草地減速
+  grip: 8.5,                   // 橫向抓地力衰減率（越大越黏）
+  yawAuthority: 1.75,          // 轉向 authority 基值（與 race-controls 同步）
   idleRpm: 1300,
   redlineRpm: 12500,
-  gears: [0, 14, 24, 36, 49, 62, 74, 83, 89], // 各檔位速域（m/s）
-  aiColors: [0xff4c38, 0x39c6ff, 0xf5a623],
+  gears: [0, 15, 25, 38, 51, 64, 76, 85, 93], // 各檔位速域（m/s）
+  aiTopSpeed: 92,              // AI 極速上限（與玩家相同，靠尾流才超得動）
+  aiLatAccel: AI_LAT_ACCEL,    // AI 參考側向加速度預算（經整圈校準）
+  maxOpponents: 9,             // 一次建置的最大對手數（難度決定實際出場數）
+  slipstreamDrag: 0.055,       // 完整尾流可減少 5.5% 空氣阻力
+  drsDrag: 0.022,              // DRS 於直路再減少 2.2%
+  jumpStartPenaltyMs: 3000,    // 搶跑罰秒
 };
+
+/** 對手車手（虛構展示用）：代號、全名與塗裝色 */
+const DRIVERS = [
+  { code: 'KES', name: 'V. Kessler', color: 0xff4c38 },
+  { code: 'NAK', name: 'A. Nakamura', color: 0x39c6ff },
+  { code: 'MOR', name: 'L. Moreau', color: 0xf5a623 },
+  { code: 'OKO', name: 'R. Okonkwo', color: 0xb06bff },
+  { code: 'DUA', name: 'M. Duarte', color: 0xff5fa2 },
+  { code: 'LIN', name: 'S. Lindqvist', color: 0x2fe3c0 },
+  { code: 'BIA', name: 'D. Bianchi', color: 0xffd23d },
+  { code: 'ADE', name: 'K. Adeyemi', color: 0x4f7dff },
+  { code: 'VOL', name: 'T. Volkov', color: 0xc9d2c8 },
+];
+const PLAYER = { code: 'YOU', name: 'PLAYER', color: 0xd8ff3e };
+
+/* F1 風格發車燈：五盞依序亮起，全滅即起跑 */
+const START_LIGHT_COUNT = 5;
+const START_LIGHT_INTERVAL = 0.62;
+const START_LIGHTS_OUT_AT = START_LIGHT_COUNT * START_LIGHT_INTERVAL + 0.58;
 
 const TAU = Math.PI * 2;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -195,6 +229,24 @@ function billboardTexture(text, accent) {
   return tex;
 }
 
+function makeNameTag(code, color) {
+  const c = makeCanvas(256, 64);
+  const g = c.getContext('2d');
+  g.fillStyle = 'rgba(8,11,12,.78)';
+  g.fillRect(0, 0, 256, 64);
+  g.fillStyle = '#' + new THREE.Color(color).getHexString();
+  g.fillRect(0, 0, 10, 64);
+  g.fillStyle = '#f1f5eb';
+  g.font = '900 40px "Barlow Condensed", Arial, sans-serif';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText(code, 138, 34);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.92 });
+  return new THREE.Sprite(mat);
+}
+
 function gantryTexture() {
   const c = makeCanvas(1024, 128);
   const g = c.getContext('2d');
@@ -237,58 +289,23 @@ function cloudTexture() {
 }
 
 /* ================================================================
- * 1. 賽道生成（極座標閉合樣條）
+ * 1. 賽道生成
+ *    中心線／曲率／賽車線／極速剖線全部由 race-sim.mjs 提供，
+ *    遊戲與 Node 測試共用同一份幾何與物理，避免「測試通過但遊戲不同」。
  * ============================================================== */
-function buildTrackData() {
-  // 極座標半徑函數：多個正弦疊加，保證星形封閉不自我交疊
-  const radiusAt = (th) =>
-    380 + 72 * Math.sin(2 * th + 0.6) + 46 * Math.sin(3 * th + 1.7) + 24 * Math.sin(5 * th + 0.4);
-
-  const ctrl = [];
-  const N = 60;
-  for (let i = 0; i < N; i++) {
-    const th = (i / N) * TAU;
-    const r = radiusAt(th);
-    ctrl.push(new THREE.Vector3(Math.cos(th) * r * 1.25, 0, Math.sin(th) * r * 0.95));
-  }
-  const curve = new THREE.CatmullRomCurve3(ctrl, true, 'centripetal', 0.5);
-
-  const S = CFG.trackSamples;
-  const points = [], tangents = [], rights = [], yaws = [];
-  for (let i = 0; i < S; i++) {
-    const t = i / S;
-    points.push(curve.getPointAt(t));
-    const tg = curve.getTangentAt(t).normalize();
-    tangents.push(tg);
-    rights.push(new THREE.Vector3(-tg.z, 0, tg.x).normalize()); // u × t（右手側）
-    yaws.push(Math.atan2(tg.x, tg.z));
-  }
-  const totalLength = curve.getLength();
-  const segLen = totalLength / S;
-
-  // 曲率（相鄰切線夾角 / 段長）
-  const curvature = new Float32Array(S);
-  for (let i = 0; i < S; i++) {
-    const a = tangents[i], b = tangents[(i + 1) % S];
-    const dot = clamp(a.dot(b), -1, 1);
-    curvature[i] = Math.acos(dot) / segLen;
-  }
-
-  // 彎道極速曲線：v = sqrt(aLat / k)，再做剎車可行性的反向平滑
-  const LAT_MAX = 13.5; // m/s²
-  const speedLimit = new Float32Array(S);
-  for (let i = 0; i < S; i++) {
-    speedLimit[i] = clamp(Math.sqrt(LAT_MAX / Math.max(curvature[i], 1e-4)), 16, 92);
-  }
-  for (let pass = 0; pass < 2; pass++) {
-    for (let k = 0; k < S; k++) {
-      const i = (S - 1 - k);
-      const next = speedLimit[(i + 1) % S];
-      speedLimit[i] = Math.min(speedLimit[i], Math.sqrt(next * next + 2 * 9 * segLen));
-    }
-  }
-
-  return { curve, points, tangents, rights, yaws, curvature, speedLimit, totalLength, segLen, S, radiusAt };
+function buildRaceTrack() {
+  const track = buildTrackData({ samples: CFG.trackSamples, halfWidth: CFG.trackHalfWidth });
+  track.racingLine = buildRacingLine(track);
+  const geo = pathGeometry(track, track.racingLine);
+  track.lineGeometry = geo;
+  track.pathScale = geo.scale;                       // AI 進度推進的路徑長度補償
+  // AI 參考剖線：pace 1.00 的整圈表現 ≈ 理想駕駛模擬的極限圈速
+  track.aiProfile = buildSpeedProfile(geo.curvature, geo.ds, {
+    latAccel: CFG.aiLatAccel, topSpeed: CFG.aiTopSpeed, brakeDecel: 22, accel: 13,
+  });
+  // 玩家理論剖線：僅供 AI 難度校準與除錯比對，不直接限制玩家
+  track.playerProfile = buildPlayerProfile(track, { topSpeed: CFG.topSpeed, line: track.racingLine });
+  return track;
 }
 
 /* 帶狀幾何（賽道 / 路緣石）：filter 可篩選僅在彎道產生（路緣石用） */
@@ -327,14 +344,24 @@ function ribbonGeometry(track, uMin, uMax, filter) {
 }
 
 /* ================================================================
- * 2. 音效引擎（Web Audio 程序化合成）
+ * 2. 音效引擎（Web Audio 程序化合成，零音訊檔案）
+ * ------------------------------------------------------------------
+ * PR#9 為了「柔和」把 master 從 0.85 降到 volume×0.6（預設 0.35 → 0.21），
+ * 同時把引擎層增益砍掉近一半，兩者相乘等於 -17 dB，實際聽感近乎無聲。
+ * 這裡重新做 gain staging：
+ *   1. 感知音量曲線 `masterGainForVolume()`（v^1.35 × 1.3）取代線性 ×0.6；
+ *   2. 引擎改為多層合成：排氣脈動（雙失準鋸齒）、低頻胸腔、進氣噪音、
+ *      渦輪高頻哨音、傳動齒輪音，全部經 tanh 軟飽和與低通；
+ *   3. 末端串接 compressor + soft-clip 雙重限制，即使全音量也不會削頂破音；
+ *   4. 新增對手車多普勒音效（依相對徑向速度改變音高、依方位立體聲定位）。
  * ============================================================== */
 class EngineAudio {
-  constructor(volume = 0.35, muted = false) {
+  constructor(volume = 0.7, muted = false) {
     this.ctx = null;
     this.ready = false;
-    this.volume = volume;
+    this.volume = clamp(volume, 0, 1);
     this.muted = muted;
+    this.rivalPhase = 0;
   }
 
   init() {
@@ -345,99 +372,169 @@ class EngineAudio {
     try { ctx = new AC(); } catch (_) { return; }
     this.ctx = ctx;
 
+    /* --- 主匯流排：音量 → 壓縮 → 軟截波 → 揚聲器 --- */
     this.master = ctx.createGain();
     this.master.gain.value = 0.0001;
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -20; comp.knee.value = 18; comp.ratio.value = 4;
-    this.master.connect(comp).connect(ctx.destination);
+    comp.threshold.value = -9; comp.knee.value = 6; comp.ratio.value = 12;
+    comp.attack.value = 0.004; comp.release.value = 0.18;
+    const limiter = ctx.createWaveShaper();
+    const limitCurve = new Float32Array(2048);
+    for (let i = 0; i < 2048; i++) {
+      const x = (i / 2047) * 2 - 1;
+      limitCurve[i] = Math.tanh(x * 1.05) * 0.92;   // 保證 |out| < 0.92，絕不削頂
+    }
+    limiter.curve = limitCurve;
+    limiter.oversample = '2x';
+    this.master.connect(comp).connect(limiter).connect(ctx.destination);
 
-    // --- 柔和的基音與少量泛音，避免原本尖銳刺耳的方波 ---
+    /* --- 共用噪音 buffer --- */
+    const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const nd = noiseBuf.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    this.noiseBuf = noiseBuf;
+    const noise = () => { const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true; src.start(); return src; };
+
+    /* --- 引擎：排氣脈動 + 低頻胸腔 + 進氣 + 渦輪 + 傳動 --- */
     this.engGain = ctx.createGain(); this.engGain.gain.value = 0;
     this.engFilter = ctx.createBiquadFilter();
-    this.engFilter.type = 'lowpass'; this.engFilter.frequency.value = 500; this.engFilter.Q.value = 0.6;
+    this.engFilter.type = 'lowpass'; this.engFilter.frequency.value = 900; this.engFilter.Q.value = 0.7;
     const shaper = ctx.createWaveShaper();
-    const curveArr = new Float32Array(1024);
-    for (let i = 0; i < 1024; i++) {
-      const x = (i / 1023) * 2 - 1;
-      curveArr[i] = Math.tanh(x * 1.25) * 0.65;
+    const curveArr = new Float32Array(2048);
+    for (let i = 0; i < 2048; i++) {
+      const x = (i / 2047) * 2 - 1;
+      curveArr[i] = Math.tanh(x * 2.1) * 0.78;      // 飽和產生奇次泛音＝排氣顆粒感
     }
-    shaper.curve = curveArr;
+    shaper.curve = curveArr; shaper.oversample = '2x';
     this.engFilter.connect(shaper).connect(this.engGain).connect(this.master);
 
     this.oscs = [];
     const defs = [
-      { type: 'triangle', mult: 1.0, gain: 0.55 },
-      { type: 'sine', mult: 0.5, gain: 0.28 },
-      { type: 'sawtooth', mult: 2.0, gain: 0.08 },
+      { type: 'sawtooth', mult: 1.0, gain: 0.46, detune: -6 },   // 排氣主脈動
+      { type: 'sawtooth', mult: 1.0, gain: 0.34, detune: 9 },    // 失準疊加 → V 型引擎節拍
+      { type: 'triangle', mult: 0.5, gain: 0.42, detune: 0 },    // 低頻胸腔
+      { type: 'square', mult: 2.0, gain: 0.075, detune: 3 },     // 氣門機構高頻
     ];
     for (const d of defs) {
       const o = ctx.createOscillator();
-      o.type = d.type; o.frequency.value = 60;
+      o.type = d.type; o.frequency.value = 60; o.detune.value = d.detune;
       const g = ctx.createGain(); g.gain.value = d.gain;
       o.connect(g).connect(this.engFilter);
       o.start();
       this.oscs.push({ osc: o, mult: d.mult });
     }
 
-    // --- 噪音源（共用 buffer） ---
-    const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-    const nd = noiseBuf.getChannelData(0);
-    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
-    this.noiseBuf = noiseBuf;
-
-    // 進氣噪音
+    // 進氣噪音（節氣門開啟時的吸氣嘶聲）
     this.intakeGain = ctx.createGain(); this.intakeGain.gain.value = 0;
-    const intakeF = ctx.createBiquadFilter();
-    intakeF.type = 'bandpass'; intakeF.frequency.value = 700; intakeF.Q.value = 0.9;
-    this.intakeFilter = intakeF;
-    const intakeSrc = ctx.createBufferSource();
-    intakeSrc.buffer = noiseBuf; intakeSrc.loop = true;
-    intakeSrc.connect(intakeF).connect(this.intakeGain).connect(this.master);
-    intakeSrc.start();
+    this.intakeFilter = ctx.createBiquadFilter();
+    this.intakeFilter.type = 'bandpass'; this.intakeFilter.frequency.value = 900; this.intakeFilter.Q.value = 0.85;
+    noise().connect(this.intakeFilter).connect(this.intakeGain).connect(this.master);
+
+    // 渦輪／排氣高頻哨音
+    this.turboGain = ctx.createGain(); this.turboGain.gain.value = 0;
+    this.turboOsc = ctx.createOscillator();
+    this.turboOsc.type = 'sine'; this.turboOsc.frequency.value = 900;
+    const turboFilter = ctx.createBiquadFilter();
+    turboFilter.type = 'bandpass'; turboFilter.frequency.value = 2600; turboFilter.Q.value = 3.5;
+    this.turboOsc.connect(turboFilter).connect(this.turboGain).connect(this.master);
+    this.turboOsc.start();
+
+    // 傳動／齒輪音（隨車速而非轉速）
+    this.transGain = ctx.createGain(); this.transGain.gain.value = 0;
+    this.transOsc = ctx.createOscillator();
+    this.transOsc.type = 'triangle'; this.transOsc.frequency.value = 120;
+    this.transOsc.connect(this.transGain).connect(this.master);
+    this.transOsc.start();
 
     // 風噪
     this.windGain = ctx.createGain(); this.windGain.gain.value = 0;
     const windF = ctx.createBiquadFilter();
-    windF.type = 'highpass'; windF.frequency.value = 900;
-    const windSrc = ctx.createBufferSource();
-    windSrc.buffer = noiseBuf; windSrc.loop = true;
-    windSrc.connect(windF).connect(this.windGain).connect(this.master);
-    windSrc.start();
+    windF.type = 'highpass'; windF.frequency.value = 780;
+    noise().connect(windF).connect(this.windGain).connect(this.master);
 
     // 胎噪尖叫
     this.screechGain = ctx.createGain(); this.screechGain.gain.value = 0;
     const scrF = ctx.createBiquadFilter();
-    scrF.type = 'bandpass'; scrF.frequency.value = 2350; scrF.Q.value = 7;
-    const scrSrc = ctx.createBufferSource();
-    scrSrc.buffer = noiseBuf; scrSrc.loop = true;
-    scrSrc.connect(scrF).connect(this.screechGain).connect(this.master);
-    scrSrc.start();
+    scrF.type = 'bandpass'; scrF.frequency.value = 2350; scrF.Q.value = 6.5;
+    noise().connect(scrF).connect(this.screechGain).connect(this.master);
+
+    // 草地／碎石輾壓聲
+    this.gravelGain = ctx.createGain(); this.gravelGain.gain.value = 0;
+    const grvF = ctx.createBiquadFilter();
+    grvF.type = 'lowpass'; grvF.frequency.value = 420; grvF.Q.value = 1.1;
+    noise().connect(grvF).connect(this.gravelGain).connect(this.master);
+
+    // 對手車（多普勒 + 立體聲定位）
+    this.rivalGain = ctx.createGain(); this.rivalGain.gain.value = 0;
+    this.rivalFilter = ctx.createBiquadFilter();
+    this.rivalFilter.type = 'lowpass'; this.rivalFilter.frequency.value = 700; this.rivalFilter.Q.value = 0.8;
+    this.rivalOsc = ctx.createOscillator();
+    this.rivalOsc.type = 'sawtooth'; this.rivalOsc.frequency.value = 90;
+    this.rivalPanner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    this.rivalOsc.connect(this.rivalFilter).connect(this.rivalGain);
+    if (this.rivalPanner) this.rivalGain.connect(this.rivalPanner).connect(this.master);
+    else this.rivalGain.connect(this.master);
+    this.rivalOsc.start();
 
     this.ready = true;
-    this.applyVolume(0.15);
+    this.applyVolume(0.2);
   }
 
   resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); }
   suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); }
   applyVolume(timeConstant = 0.08) {
-    if (this.ready) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume * 0.6, this.ctx.currentTime, timeConstant);
+    if (!this.ready) return;
+    const target = this.muted ? 0 : masterGainForVolume(this.volume);
+    this.master.gain.setTargetAtTime(target, this.ctx.currentTime, timeConstant);
   }
   setVolume(volume) { this.volume = clamp(volume, 0, 1); this.applyVolume(); }
   setMuted(muted) { this.muted = muted; this.applyVolume(); }
 
-  /** rpmNorm 0..1, throttle 0..1, speedNorm 0..1, slip 0..1, onTrack */
-  update(rpmNorm, throttle, speedNorm, slip, onTrack, dt) {
+  /**
+   * @param dt 秒
+   * @param telemetry {
+   *   rpmNorm 0..1, throttle 0..1, speedNorm 0..1, slip 0..1, onTrack,
+   *   limiter 0..1（轉速限制器作用量）, rival { level 0..1, pan -1..1, doppler } }
+   */
+  update(dt, telemetry = {}) {
     if (!this.ready || !this.ctx) return;
     const t = this.ctx.currentTime;
     const tau = Math.max(0.015, Math.min(dt, 0.1));
-    const f = 48 + rpmNorm * 220;
-    for (const o of this.oscs) o.osc.frequency.setTargetAtTime(f * o.mult, t, 0.03);
-    this.engFilter.frequency.setTargetAtTime(300 + rpmNorm * 1400 + throttle * 350, t, 0.08);
-    this.engGain.gain.setTargetAtTime(0.035 + throttle * 0.055 + rpmNorm * 0.015, t, tau);
-    this.intakeGain.gain.setTargetAtTime(throttle * rpmNorm * 0.014, t, 0.08);
-    this.intakeFilter.frequency.setTargetAtTime(600 + rpmNorm * 1000, t, 0.08);
-    this.windGain.gain.setTargetAtTime(speedNorm * speedNorm * 0.025, t, 0.15);
-    this.screechGain.gain.setTargetAtTime(onTrack ? slip * 0.035 : 0, t, 0.06);
+    const rpmNorm = telemetry.rpmNorm || 0;
+    const throttle = telemetry.throttle || 0;
+    const speedNorm = telemetry.speedNorm || 0;
+    const slip = telemetry.slip || 0;
+    const limiter = telemetry.limiter || 0;
+
+    // 排氣脈動頻率：怠速 42 Hz → 紅線 247 Hz（V8 四行程的排氣基頻量級）
+    const f = 42 + rpmNorm * 205;
+    const flutter = 1 - limiter * 0.45 * (Math.sin(t * 90) > 0 ? 1 : 0);   // 轉速限制器斷油抖動
+    for (const o of this.oscs) o.osc.frequency.setTargetAtTime(f * o.mult * flutter, t, 0.025);
+    this.engFilter.frequency.setTargetAtTime(420 + rpmNorm * 2600 + throttle * 900, t, 0.07);
+    this.engGain.gain.setTargetAtTime(
+      (0.30 + throttle * 0.34 + rpmNorm * 0.16) * flutter, t, tau);
+    this.intakeGain.gain.setTargetAtTime(throttle * (0.05 + rpmNorm * 0.09), t, 0.07);
+    this.intakeFilter.frequency.setTargetAtTime(700 + rpmNorm * 1800 + throttle * 500, t, 0.08);
+    this.turboOsc.frequency.setTargetAtTime(700 + rpmNorm * 3200, t, 0.06);
+    this.turboGain.gain.setTargetAtTime(throttle * rpmNorm * 0.055, t, 0.09);
+    this.transOsc.frequency.setTargetAtTime(110 + speedNorm * 640, t, 0.12);
+    this.transGain.gain.setTargetAtTime(0.006 + speedNorm * 0.016, t, 0.2);
+    this.windGain.gain.setTargetAtTime(speedNorm * speedNorm * 0.11, t, 0.15);
+    this.screechGain.gain.setTargetAtTime(telemetry.onTrack ? slip * slip * 0.20 : 0, t, 0.05);
+    this.gravelGain.gain.setTargetAtTime(telemetry.onTrack ? 0 : speedNorm * 0.22, t, 0.08);
+
+    // 對手車：多普勒音高 + 方位定位 + 距離衰減
+    const rival = telemetry.rival;
+    if (rival && rival.level > 0.001) {
+      const soundSpeed = 343;
+      const doppler = clamp(rival.doppler || 0, -90, 90);
+      this.rivalOsc.frequency.setTargetAtTime((78 + rpmNorm * 90) * (soundSpeed / (soundSpeed - doppler)), t, 0.06);
+      this.rivalFilter.frequency.setTargetAtTime(420 + rpmNorm * 1200, t, 0.1);
+      this.rivalGain.gain.setTargetAtTime(rival.level * 0.30, t, 0.09);
+      if (this.rivalPanner) this.rivalPanner.pan.setTargetAtTime(clamp(rival.pan || 0, -1, 1), t, 0.08);
+    } else {
+      this.rivalGain.gain.setTargetAtTime(0, t, 0.12);
+    }
   }
 
   blip(freq = 880, dur = 0.14, gain = 0.22) {
@@ -456,39 +553,63 @@ class EngineAudio {
   crash(intensity = 1) {
     if (!this.ready) return;
     const ctx = this.ctx, t = ctx.currentTime;
-    // 低頻撞擊
+    const level = clamp(intensity, 0, 1);
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = 'sine';
-    o.frequency.setValueAtTime(110, t);
-    o.frequency.exponentialRampToValueAtTime(38, t + 0.35);
-    g.gain.setValueAtTime(0.24 * intensity, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+    o.frequency.setValueAtTime(120, t);
+    o.frequency.exponentialRampToValueAtTime(34, t + 0.35);
+    g.gain.setValueAtTime(0.62 * level, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
     o.connect(g).connect(this.master);
-    o.start(t); o.stop(t + 0.45);
-    // 高頻碎屑噪音
+    o.start(t); o.stop(t + 0.46);
     const n = ctx.createBufferSource();
     n.buffer = this.noiseBuf;
     const nf = ctx.createBiquadFilter();
     nf.type = 'bandpass'; nf.frequency.value = 1600; nf.Q.value = 0.7;
     const ng = ctx.createGain();
-    ng.gain.setValueAtTime(0.12 * intensity, t);
-    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    ng.gain.setValueAtTime(0.34 * level, t);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
     n.connect(nf).connect(ng).connect(this.master);
-    n.start(t); n.stop(t + 0.35);
+    n.start(t); n.stop(t + 0.36);
   }
 
-  shiftBlip() {
+  /** 升檔／收油回火：短促的排氣爆音 */
+  backfire(level = 1) {
     if (!this.ready) return;
-    this.engGain.gain.setTargetAtTime(0.025, this.ctx.currentTime, 0.015);
-    this.engGain.gain.setTargetAtTime(0.055, this.ctx.currentTime + 0.06, 0.04);
+    const ctx = this.ctx, t = ctx.currentTime;
+    const n = ctx.createBufferSource();
+    n.buffer = this.noiseBuf;
+    n.playbackRate.value = 0.8 + Math.random() * 0.5;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 380 + Math.random() * 420; f.Q.value = 1.1;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.30 * clamp(level, 0, 1), t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+    n.connect(f).connect(g).connect(this.master);
+    n.start(t); n.stop(t + 0.16);
+  }
+
+  shiftBlip(upshift = true) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.engGain.gain.cancelScheduledValues(t);
+    this.engGain.gain.setTargetAtTime(0.16, t, 0.012);              // 換檔瞬間扭力中斷
+    this.engGain.gain.setTargetAtTime(0.62, t + 0.055, 0.045);      // 接合後回補
+    if (upshift) this.backfire(0.55);
+  }
+
+  /** 發車燈每亮一盞的機械聲 */
+  lightOn(final = false) {
+    this.blip(final ? 1180 : 520, final ? 0.34 : 0.1, final ? 0.4 : 0.2);
   }
 }
 
 /* ================================================================
  * 3. 玩家設定（儲存不可用時仍可遊玩）
  * ============================================================== */
-const SETTINGS_KEY = 'apex-gp-racer-settings-v1';
+const SETTINGS_KEY = 'apex-gp-racer-settings-v2';
 function loadSettings() {
   try { return sanitizeSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
   catch (_) { return { ...DEFAULT_SETTINGS }; }
@@ -522,18 +643,35 @@ class CockpitRacer {
     this.bestLap = Infinity;
     this.bannerDeadline = 0;
     this.pausedByVisibility = false;
+    this.difficulty = resolveDifficulty(this.settings.difficulty);
+    this.penaltyMs = 0;
+    this.jumpStart = false;
+    this.slipstream = 0;
+    this.drs = 0;
+    this.standings = [];
+    this.lastPosition = null;
+    this.leaderBoard = [];
 
-    // 玩家狀態
+    // 玩家狀態（pos/vel 為 THREE 向量，模擬核心使用同一組純數值欄位）
     this.player = {
       pos: new THREE.Vector3(), heading: 0,
       vel: new THREE.Vector2(0, 0),  // x/z 平面速度
       speed: 0, lSpeed: 0, fSpeed: 0,
       latG: 0, lonG: 0,
       rpm: CFG.idleRpm, gear: 1,
-      nearestIdx: 0, crossings: 0, lapStart: 0,
+      nearestIdx: 0, crossings: 0, lapStart: 0, laps: 0,
       onTrack: true, offT: 0,
-      progress: 0,
+      progress: 0, finished: false, finishTime: Infinity,
+      id: 'player', code: PLAYER.code, name: PLAYER.name, color: PLAYER.color,
     };
+    // AI 避車用的玩家代理物件（與 aiStep 的 traffic 契約一致）
+    this.playerTraffic = { t: 0, lateral: 0, speed: 0 };
+    this.playerSim = {
+      x: 0, z: 0, vx: 0, vz: 0, heading: 0, onTrack: true,
+      fSpeed: 0, lSpeed: 0, speed: 0, latG: 0, lonG: 0, yawRate: 0,
+    };
+    this.activeAi = [];
+    this.traffic = [];
     this.ai = [];
   }
 
@@ -587,6 +725,14 @@ class CockpitRacer {
       posBox: q('hud-pos-box'),
       qualityBtns: Array.from(document.querySelectorAll('[data-quality]')),
       raceClock: q('hud-raceclock'),
+      tower: q('hud-tower'),
+      gapAhead: q('hud-gap-ahead'), gapBehind: q('hud-gap-behind'),
+      boostChip: q('hud-boost'), boostChipLabel: q('hud-boost-label'),
+      startLights: q('start-lights'),
+      lightLeds: Array.from(document.querySelectorAll('#start-lights .light-led')),
+      difficultyButtons: Array.from(document.querySelectorAll('[data-difficulty]')),
+      difficultyMeta: Array.from(document.querySelectorAll('[data-difficulty-meta]')),
+      penaltyChip: q('hud-penalty'),
     };
     this.minimapCtx = this.dom.minimap.getContext('2d');
     this.gmeterCtx = this.dom.gMeter.getContext('2d');
@@ -625,6 +771,9 @@ class CockpitRacer {
     this.postMat = new THREE.ShaderMaterial({
       uniforms: {
         tDiffuse: { value: this.rt.texture },
+        tBloom: { value: null },
+        uBloom: { value: 0 },
+        uBloomTexel: { value: new THREE.Vector2(0.004, 0.004) },
         uTime: { value: 0 },
         uSpeed: { value: 0 },
         uHit: { value: 0 },
@@ -636,7 +785,8 @@ class CockpitRacer {
       `,
       fragmentShader: /* glsl */`
         uniform sampler2D tDiffuse;
-        uniform float uTime, uSpeed, uHit, uGrain;
+        uniform sampler2D tBloom;
+        uniform float uTime, uSpeed, uHit, uGrain, uBloom;
         varying vec2 vUv;
         void main(){
           vec2 uv = vUv;
@@ -654,6 +804,15 @@ class CockpitRacer {
             col.b += texture2D(tDiffuse, suv - dir * ab).b;
           }
           col /= 6.0;
+          if (uBloom > 0.001) {
+            // 4-tap 取樣讓 1/4 解析度的光暈更柔
+            vec2 bt = uBloomTexel * 1.5;
+            vec3 bl = texture2D(tBloom, uv + vec2( bt.x,  bt.y)).rgb
+                    + texture2D(tBloom, uv + vec2(-bt.x,  bt.y)).rgb
+                    + texture2D(tBloom, uv + vec2( bt.x, -bt.y)).rgb
+                    + texture2D(tBloom, uv + vec2(-bt.x, -bt.y)).rgb;
+            col += bl * 0.25 * uBloom;
+          }
           col *= smoothstep(1.02, 0.35, r * 1.08);              // 暗角
           col = mix(col, vec3(0.85, 0.06, 0.04), uHit * smoothstep(0.15, 0.85, r) * 0.9); // 碰撞紅閃
           float n = fract(sin(dot(uv * vec2(uTime * 41.0 + 7.0, uTime * 23.0 + 3.0), vec2(12.9898, 78.233))) * 43758.5453);
@@ -664,6 +823,48 @@ class CockpitRacer {
       depthTest: false, depthWrite: false,
     });
     this.postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.postMat));
+
+    // Bloom：1/4 解析度明亮通道 RT（高畫質才啟用）
+    this.bloomRT = new THREE.WebGLRenderTarget(Math.max(2, size.x >> 2), Math.max(2, size.y >> 2));
+    this.bloomRT.texture.colorSpace = THREE.SRGBColorSpace;
+    this.bloomScene = new THREE.Scene();
+    this.bloomMat = new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse: { value: this.rt.texture },
+        uTexel: { value: new THREE.Vector2(1 / Math.max(2, size.x >> 2), 1 / Math.max(2, size.y >> 2)) },
+        uThreshold: { value: 0.58 },
+      },
+      vertexShader: /* glsl */`
+        varying vec2 vUv;
+        void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+      `,
+      fragmentShader: /* glsl */`
+        uniform sampler2D tDiffuse;
+        uniform vec2 uTexel;
+        uniform float uThreshold;
+        varying vec2 vUv;
+        vec3 bright(vec2 uv){
+          vec3 c = texture2D(tDiffuse, uv).rgb;
+          // 軟門檻：保留高光與自發光，避免整張畫面泛白
+          float l = max(max(c.r, c.g), c.b);
+          return c * smoothstep(uThreshold, uThreshold + 0.35, l);
+        }
+        void main(){
+          vec3 sum = bright(vUv) * 0.28;
+          sum += bright(vUv + vec2( uTexel.x, 0.0)) * 0.12;
+          sum += bright(vUv + vec2(-uTexel.x, 0.0)) * 0.12;
+          sum += bright(vUv + vec2(0.0,  uTexel.y)) * 0.12;
+          sum += bright(vUv + vec2(0.0, -uTexel.y)) * 0.12;
+          sum += bright(vUv + uTexel) * 0.06;
+          sum += bright(vUv - uTexel) * 0.06;
+          sum += bright(vUv + vec2(uTexel.x, -uTexel.y)) * 0.06;
+          sum += bright(vUv + vec2(-uTexel.x, uTexel.y)) * 0.06;
+          gl_FragColor = vec4(sum, 1.0);
+        }
+      `,
+      depthTest: false, depthWrite: false,
+    });
+    this.bloomScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.bloomMat));
 
     // 後視鏡 RT
     this.mirrorRT = new THREE.WebGLRenderTarget(256, 64);
@@ -691,6 +892,12 @@ class CockpitRacer {
     this.renderer.setSize(innerWidth, innerHeight);
     const size = this.renderer.getDrawingBufferSize(new THREE.Vector2());
     this.rt.setSize(size.x, size.y);
+    if (this.bloomRT) {
+      const bw = Math.max(2, size.x >> 2), bh = Math.max(2, size.y >> 2);
+      this.bloomRT.setSize(bw, bh);
+      this.bloomMat.uniforms.uTexel.value.set(1 / bw, 1 / bh);
+      this.postMat.uniforms.uBloomTexel.value.set(1 / bw, 1 / bh);
+    }
   }
 
   /* ---------- 場景搭建（分段建置，回報進度） ---------- */
@@ -704,6 +911,7 @@ class CockpitRacer {
       ['組裝駕駛艙…', () => this.buildCockpit()],
       ['組裝玩家賽車…', () => this.buildPlayerCar()],
       ['部署對手賽車…', () => this.buildAI()],
+      ['建置胎煙與粒子系統…', () => this.buildTyreFx()],
       ['校準儀器與 HUD…', () => this.buildHudStatics()],
     ];
     for (let i = 0; i < steps.length; i++) {
@@ -716,7 +924,7 @@ class CockpitRacer {
   }
 
   buildTrack() {
-    this.track = buildTrackData();
+    this.track = buildRaceTrack();
   }
 
   buildTrackMeshes() {
@@ -1393,12 +1601,20 @@ class CockpitRacer {
   }
 
   /* ---------- AI 對手 ---------- */
+  /**
+   * 一次建置 CFG.maxOpponents 台對手車（難度只決定出場數量與 visible），
+   * 避免切換難度時重建幾何造成卡頓。每台車有車手身分、塗裝、名牌與煞車燈。
+   */
   buildAI() {
     const t = this.track;
-    this.ai = CFG.aiColors.map((color, k) => {
+    this.ai = [];
+    for (let k = 0; k < CFG.maxOpponents; k++) {
+      const driver = DRIVERS[k % DRIVERS.length];
       const group = new THREE.Group();
-      const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.45 });
+      const bodyMat = new THREE.MeshStandardMaterial({ color: driver.color, roughness: 0.32, metalness: 0.5 });
       const dark = new THREE.MeshStandardMaterial({ color: 0x14161a, roughness: 0.6 });
+      const carbon = new THREE.MeshStandardMaterial({ color: 0x1b1e22, roughness: 0.45, metalness: 0.55 });
+
       const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.42, 4.4), bodyMat);
       body.position.y = 0.42;
       group.add(body);
@@ -1409,12 +1625,26 @@ class CockpitRacer {
       const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.5, 1.1), dark);
       cabin.position.set(0, 0.82, 0.3);
       group.add(cabin);
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.045, 6, 14, Math.PI), carbon);
+      halo.rotation.set(Math.PI / 2, 0, 0);
+      halo.position.set(0, 1.02, 0.3);
+      group.add(halo);
       const wing = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 0.5), dark);
       wing.position.set(0, 0.95, 2.25);
       group.add(wing);
+      const wingStripe = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.02, 0.16), bodyMat);
+      wingStripe.position.set(0, 0.99, 2.25);
+      group.add(wingStripe);
       const fw = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.05, 0.5), dark);
       fw.position.set(0, 0.16, -3.4);
       group.add(fw);
+      const brakeLight = new THREE.Mesh(
+        new THREE.BoxGeometry(0.3, 0.14, 0.06),
+        new THREE.MeshStandardMaterial({ color: 0xb41f16, emissive: 0xff2a1a, emissiveIntensity: 0.4, roughness: 0.4 })
+      );
+      brakeLight.position.set(0, 0.86, 2.52);
+      group.add(brakeLight);
+
       const wheels = [];
       const tireMat = new THREE.MeshStandardMaterial({ color: 0x101113, roughness: 0.95 });
       for (const [wx, wz] of [[-0.85, -2.2], [0.85, -2.2], [-0.9, 1.6], [0.9, 1.6]]) {
@@ -1424,7 +1654,6 @@ class CockpitRacer {
         group.add(w);
         wheels.push(w);
       }
-      // 假陰影
       const shadow = new THREE.Mesh(
         new THREE.CircleGeometry(2.4, 20),
         new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3, depthWrite: false })
@@ -1432,23 +1661,57 @@ class CockpitRacer {
       shadow.rotation.x = -Math.PI / 2;
       shadow.position.y = 0.02;
       group.add(shadow);
+
+      // 車手名牌：Canvas 文字 Sprite，讓玩家在追車視角能辨識前車身分
+      const tag = makeNameTag(driver.code, driver.color);
+      tag.position.set(0, 2.05, 0.4);
+      tag.scale.set(3.2, 0.8, 1);
+      group.add(tag);
+
+      group.visible = false;
       this.scene.add(group);
 
-      const gridIdx = t.S - 24 + k * 6;
-      return {
-        group, wheels,
-        idx: gridIdx,
-        t: gridIdx / t.S,
-        crossings: 0,
-        speed: 0,
-        skill: 0.885 + k * 0.028,
-        weave: Math.random() * TAU,
-        lateral: (k % 2 === 0 ? 3.4 : -3.4),
-        progress: gridIdx / t.S,
-      };
-    });
+      this.ai.push({
+        id: `ai-${k}`, group, wheels, tag, brakeLight, driver,
+        idx: 0, t: 0, lateral: 0, targetLateral: 0,
+        crossings: 0, speed: 0, progress: 0,
+        finished: false, finishTime: Infinity, laps: 0,
+        launchDelay: 0, mistakeTimer: 0, mistakeScale: 1,
+        blocked: 0, braking: false, code: driver.code, name: driver.name, color: driver.color,
+      });
+    }
+    this.applyDifficulty(this.settings.difficulty, false);
   }
 
+  /** 依難度決定出場對手、發車格與 AI 參數 */
+  applyDifficulty(difficulty, reset = true) {
+    const level = resolveDifficulty(difficulty);
+    this.difficulty = level;
+    this.settings.difficulty = level.id;
+    const field = level.opponents;
+    this.ai.forEach((car, k) => {
+      car.active = k < field;
+      car.pace = level.pace * (field > 1 ? 1 + (k / (field - 1) - 0.5) * level.paceSpread : 1);
+      car.aggression = clamp(level.aggression * (0.86 + ((k * 37) % 29) / 100), 0.1, 1.2);
+      car.accel = level.accel;
+      car.brake = level.brake;
+      car.mistakeRate = level.mistakeRate;
+      car.reaction = level.reaction;
+      const profile = new Float32Array(this.track.S);
+      const base = this.track.aiProfile;
+      for (let i = 0; i < profile.length; i++) profile[i] = base[i] * car.pace;
+      car.profile = profile;
+      if (car.group) car.group.visible = car.active;
+    });
+    this.activeAi = this.ai.filter((car) => car.active);
+    if (this.dom.posTotal) this.dom.posTotal.textContent = String(field + 1);
+    this.syncDifficultyUI(level.id);
+    if (reset && this.state !== 'racing' && this.state !== 'countdown') this.resetRace();
+    saveSettings(this.settings);
+    this.buildStandingsBoard();
+  }
+
+  /* ---------- HUD 靜態 ---------- */
   /* ---------- HUD 靜態 ---------- */
   buildHudStatics() {
     // 小地圖路徑（正規化）
@@ -1470,8 +1733,17 @@ class CockpitRacer {
       pad + (pos.x - minX) * sc + ((W - pad * 2) - (maxX - minX) * sc) / 2,
       pad + (pos.z - minZ) * sc + ((H - pad * 2) - (maxZ - minZ) * sc) / 2,
     ];
+    // 小地圖上的賽車線提示
+    const line = this.track.racingLine;
+    this.minimapLine = this.track.points
+      .filter((_, i) => i % 8 === 0)
+      .map((c, n) => {
+        const i = n * 8;
+        const r = this.track.rights[i];
+        return this.minimapToCanvas({ x: c.x + r.x * line[i], z: c.z + r.z * line[i] });
+      });
     this.dom.lapTotal.textContent = String(CFG.totalLaps);
-    this.dom.posTotal.textContent = String(this.ai.length + 1);
+    this.dom.posTotal.textContent = String(this.activeAi.length + 1);
     if (IS_COARSE) this.dom.touchUi.classList.remove('hidden');
   }
 
@@ -1530,6 +1802,47 @@ class CockpitRacer {
 
   toggleView() { this.setView(this.settings.view === 'cockpit' ? 'chase' : 'cockpit'); }
 
+  /**
+   * 切換難度。發車前／完賽後立即重建發車格與對手參數；
+   * 比賽進行中（含暫停）只記錄選擇，於下一次發車生效，避免中途改變賽況。
+   */
+  setDifficulty(id) {
+    const level = resolveDifficulty(id);
+    const selected = level.id === (this.pendingDifficulty || this.difficulty.id);
+    if (selected) return;
+    const midRace = this.state === 'paused' || this.state === 'racing' || this.state === 'countdown';
+    this.settings.difficulty = level.id;
+    saveSettings(this.settings);
+    if (midRace) {
+      this.pendingDifficulty = level.id;
+      this.syncDifficultyUI(level.id, true);
+    } else {
+      this.pendingDifficulty = null;
+      this.applyDifficulty(level.id, false);
+      this.resetRace();
+    }
+    this.audio.blip(760, 0.1, 0.24);
+  }
+
+  syncDifficultyUI(id, pending = false) {
+    const level = resolveDifficulty(id);
+    for (const button of this.dom.difficultyButtons || []) {
+      button.setAttribute('aria-pressed', String(button.dataset.difficulty === level.id));
+    }
+    for (const meta of this.dom.difficultyMeta || []) {
+      meta.textContent = `${level.tag} · ${level.opponents} 位對手 · ${level.blurb}` + (pending ? '（下一場生效）' : '');
+    }
+  }
+
+  /** 套用排隊中的難度（下一次發車時） */
+  flushPendingDifficulty() {
+    if (!this.pendingDifficulty) return;
+    const id = this.pendingDifficulty;
+    this.pendingDifficulty = null;
+    this.applyDifficulty(id, false);
+    this.resetRace();
+  }
+
   /* ---------- UI 綁定 ---------- */
   bindUI() {
     const d = this.dom;
@@ -1538,6 +1851,10 @@ class CockpitRacer {
       button.setAttribute('aria-pressed', String(button.dataset.quality === this.quality));
     });
     d.viewBtns.forEach((button) => button.addEventListener('click', () => this.setView(button.dataset.view)));
+    d.difficultyButtons.forEach((button) => button.addEventListener('click', () => {
+      this.setDifficulty(button.dataset.difficulty);
+      button.blur();
+    }));
     d.sensitivityInputs.forEach((input) => input.addEventListener('input', () => {
       this.settings.sensitivity = clamp(Number(input.value) / 100, 0.5, 1.5);
       this.input.sensitivity = this.settings.sensitivity;
@@ -1656,13 +1973,32 @@ class CockpitRacer {
   }
 
   startCountdown() {
+    this.flushPendingDifficulty();
     this.state = 'countdown';
     this.input.setActive(true);
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     this.countdownT = 0;
+    this.lightsLit = 0;
+    this.lightsOut = false;
+    this.setStartLights(0, false);
     this.dom.hud.classList.remove('hidden');
     this.audio.init();
     this.audio.resume();
+  }
+
+  /**
+   * 發車格：pole 位於起跑線前，往後依序交錯左右排列，玩家固定排在最後一格。
+   * 這樣名次從 P(對手數+1) 開始，整場比賽都有超車目標。
+   */
+  buildGrid() {
+    const t = this.track;
+    const field = this.activeAi ? this.activeAi.length : 0;
+    const poleIdx = t.S - 12;
+    const slots = [];
+    for (let i = 0; i <= field; i++) {
+      slots.push({ idx: (poleIdx - i * 7 + t.S * 2) % t.S, lateral: i % 2 === 0 ? -3.3 : 3.3 });
+    }
+    return slots;
   }
 
   resetRace() {
@@ -1670,33 +2006,57 @@ class CockpitRacer {
     this.chaseSnap = true;
     const t = this.track;
     const p = this.player;
-    // 玩家發車位：起跑線後方（最後位 P4）、右側
-    const startIdx = t.S - 30;
-    const c = t.points[startIdx], r = t.rights[startIdx];
-    p.pos.set(c.x + r.x * 3.4, 0, c.z + r.z * 3.4);
-    p.heading = t.yaws[startIdx];
+    const grid = this.buildGrid();
+    const slot = grid[grid.length - 1];      // 玩家：最後一格
+    const c = t.points[slot.idx], r = t.rights[slot.idx];
+    p.pos.set(c.x + r.x * slot.lateral, 0, c.z + r.z * slot.lateral);
+    p.heading = t.yaws[slot.idx];
     p.vel.set(0, 0);
     p.speed = 0; p.fSpeed = 0; p.lSpeed = 0;
     p.rpm = CFG.idleRpm; p.gear = 1;
-    p.nearestIdx = startIdx;
-    p.crossings = 0; p.lapStart = 0;
+    p.nearestIdx = slot.idx;
+    p.crossings = 0; p.laps = 0; p.lapStart = 0;
+    p.finished = false; p.finishTime = Infinity;
     p.latG = 0; p.lonG = 0;
-    p.progress = startIdx / t.S;
+    p.offT = slot.lateral;
+    p.progress = slot.idx / t.S;
+    this.playerSim = {
+      x: p.pos.x, z: p.pos.z, vx: 0, vz: 0, heading: p.heading, onTrack: true,
+      fSpeed: 0, lSpeed: 0, speed: 0, latG: 0, lonG: 0, yawRate: 0,
+    };
     this.raceTime = 0;
     this.lapTimes = [];
     this.bestLap = Infinity;
-    this.shake = 0; this.hitFlash = 0;
+    this.penaltyMs = 0;
+    this.jumpStart = false;
+    this.slipstream = 0;
+    this.drs = 0;
+    this.drsActive = false;
+    this.lastPosition = null;
+    this.lightsLit = 0;
+    this.lightsOut = false;
+    this.countdownT = 0;
     this.lastCountSec = undefined;
+    this.shake = 0; this.hitFlash = 0;
 
-    this.ai.forEach((ai, k) => {
-      // AI 發車位：玩家前方、左右交錯
-      ai.idx = t.S - 24 + k * 6;
-      ai.t = ai.idx / t.S;
-      ai.crossings = 0;
-      ai.speed = 0;
-      ai.progress = ai.t;
+    this.ai.forEach((car, k) => {
+      const s2 = grid[k] || slot;
+      car.gridIdx = s2.idx;
+      car.t = s2.idx / t.S;
+      car.idx = s2.idx;
+      car.lateral = s2.lateral;
+      car.prevLateral = s2.lateral;
+      car.targetLateral = t.racingLine[s2.idx];
+      car.crossings = 0; car.laps = 0;
+      car.speed = 0;
+      car.progress = car.t;
+      car.finished = false; car.finishTime = Infinity;
+      car.launchDelay = 0;
+      car.mistakeTimer = 0; car.mistakeScale = 1;
+      car.blocked = 0; car.braking = false;
     });
     this.updateAiTransforms(true);
+    this.buildStandingsBoard();
     this.updateHud(true);
   }
 
@@ -1723,23 +2083,55 @@ class CockpitRacer {
     }
   }
 
+  /**
+   * 完賽結算：以 `raceStandings()` 產生正式名次（完賽時間優先，其次即時投影進度），
+   * 未完賽者以目前配速推算剩餘時間，輸出完整分類表與時間差。
+   */
   finishRace() {
     this.state = 'finished';
     this.input.setActive(false);
+    const p = this.player;
+    p.finished = true;
+    p.finishTime = this.raceTime + this.penaltyMs;
+    p.progress = trackProgress(p.crossings, p.nearestIdx, this.track.S);
+    const standings = this.computeStandings(true);
     const totalTime = this.lapTimes.reduce((a, b) => a + b, 0);
-    const pos = this.computePosition();
-    const rows = this.lapTimes.map((ms, i) =>
+    const playerRow = standings.find((row) => row.isPlayer);
+    const position = playerRow ? playerRow.position : standings.length;
+    const gridPosition = this.activeAi.length + 1;
+
+    const rows = standings.map((row) => {
+      const gap = row.position === 1 ? (row.isPlayer ? 'WINNER' : formatGap(0)) : row.gapText;
+      const time = row.finished
+        ? fmtTime(row.finishTime)
+        : fmtTime(row.projectedFinish);
+      return `<div class="result-row${row.isPlayer ? ' is-you' : ''}">` +
+        `<span class="rp">P${row.position}</span>` +
+        `<i class="rdot" style="background:#${new THREE.Color(row.color).getHexString()}"></i>` +
+        `<span class="rcode">${row.code}</span>` +
+        `<span class="rname">${row.isPlayer ? '你（PLAYER）' : row.name}</span>` +
+        `<span class="rtime">${row.finished || row.isPlayer ? time : `≈${time}`}</span>` +
+        `<span class="rgap">${gap}</span></div>`;
+    }).join('');
+
+    const lapRows = this.lapTimes.map((ms, i) =>
       `<div class="stat-row"><span>LAP ${i + 1}</span><strong>${fmtTime(ms)}</strong></div>`
     ).join('');
+
     this.dom.finishStats.innerHTML =
-      `<div class="stat-row big"><span>總時間</span><strong>${fmtTime(totalTime)}</strong></div>` +
+      `<div class="stat-row big"><span>最終名次</span><strong>P${position} / ${standings.length}</strong></div>` +
+      `<div class="stat-row"><span>發車位置</span><strong>P${gridPosition}${position < gridPosition ? ` ▲${gridPosition - position}` : position > gridPosition ? ` ▼${position - gridPosition}` : ''}</strong></div>` +
+      `<div class="stat-row"><span>總時間${this.penaltyMs ? '（含罰秒）' : ''}</span><strong>${fmtTime(totalTime + this.penaltyMs)}</strong></div>` +
+      (this.penaltyMs ? `<div class="stat-row penalty"><span>搶跑罰則</span><strong>+${(this.penaltyMs / 1000).toFixed(0)}s</strong></div>` : '') +
       `<div class="stat-row"><span>最佳單圈</span><strong>${fmtTime(this.bestLap)}</strong></div>` +
-      rows +
-      `<div class="stat-row big"><span>最終名次</span><strong>P${pos}</strong></div>`;
+      lapRows +
+      `<div class="classification"><span class="cls-head">CLASSIFICATION / 完賽分類</span>${rows}</div>`;
     this.showScreen('finish');
     this.dom.hud.classList.add('hidden');
-    this.audio.blip(1320, 0.5, 0.3);
-    setTimeout(() => { if (this.state === 'finished') this.audio.suspend(); }, 600);
+    this.setStartLights(0, true);
+    const podium = position <= 3;
+    this.audio.blip(podium ? 1320 : 880, 0.5, podium ? 0.4 : 0.28);
+    setTimeout(() => { if (this.state === 'finished') this.audio.suspend(); }, 700);
   }
 
   /* ---------- 主迴圈 ---------- */
@@ -1761,23 +2153,16 @@ class CockpitRacer {
 
     if (this.state === 'countdown') {
       this.countdownT += dt;
-      const secs = Math.floor(this.countdownT);
-      if (secs !== this.lastCountSec) {
-        this.lastCountSec = secs;
-        if (secs < 3) {
-          this.showBanner(String(3 - secs), 'GET READY', 900);
-          this.audio.blip(660, 0.16, 0.25);
-        } else if (secs === 3) {
-          this.showBanner('GO!', '', 900);
-          this.audio.blip(1320, 0.4, 0.3);
-          this.state = 'racing';
-          this.player.lapStart = 0;
-        }
+      this.updateStartLights();
+      // 離合器接合後即可催油門／蠕動（搶跑會被記罰）
+      if (this.countdownT > 0.35) {
+        this.physicsStep(dt, false);
+        this.detectJumpStart();
+      } else {
+        const p = this.player;
+        p.rpm = CFG.idleRpm + (3500 + Math.sin(this.countdownT * 9) * 2600) * this.input.throttle;
+        this.updateGearRpm(dt, true);
       }
-      // 暖胎：引擎拉轉
-      const p = this.player;
-      p.rpm = CFG.idleRpm + (3500 + Math.sin(this.countdownT * 9) * 2600) * this.input.throttle;
-      this.updateGearRpm(dt, true);
       this.updateCamera(dt);
       this.updateAudio(dt);
       this.updateHud();
@@ -1787,97 +2172,152 @@ class CockpitRacer {
 
     if (this.state === 'racing') {
       this.raceTime += dt * 1000;
-      this.physicsStep(dt);
+      this.physicsStep(dt, true);
       this.updateAI(dt);
       this.updateCamera(dt);
       this.updateAudio(dt);
       this.updateHud();
     } else if (this.state === 'finished') {
+      this.raceTime += dt * 1000;   // 持續計時，讓後方車輛也能取得真實完賽時間
+      this.updateAI(dt);
       this.updateCamera(dt, true);
+      this.updateTyreFx(dt);
     }
     this.render();
   }
 
+  /* ---------- 發車燈 ---------- */
+  updateStartLights() {
+    const lit = clamp(Math.floor(this.countdownT / START_LIGHT_INTERVAL), 0, START_LIGHT_COUNT);
+    if (lit !== this.lightsLit) {
+      this.lightsLit = lit;
+      this.setStartLights(lit, false);
+      this.audio.lightOn(false);
+    }
+    if (!this.lightsOut && this.countdownT >= START_LIGHTS_OUT_AT) {
+      this.lightsOut = true;
+      this.lightsLit = 0;
+      this.setStartLights(0, true);
+      this.audio.lightOn(true);
+      this.showBanner('GO!', 'LIGHTS OUT AND AWAY WE GO', 1000);
+      this.state = 'racing';
+      this.player.lapStart = 0;
+      this.raceTime = 0;
+      // 各車依難度的反應時間起步
+      const [lo, hi] = this.difficulty.reaction;
+      for (const car of this.activeAi) car.launchDelay = lo + Math.random() * Math.max(0, hi - lo);
+    }
+  }
+
+  setStartLights(lit, out) {
+    const d = this.dom;
+    if (!d.startLights) return;
+    d.startLights.classList.toggle('hidden', !(this.state === 'countdown' || (out && this.state === 'racing')));
+    d.startLights.classList.toggle('out', !!out);
+    for (let i = 0; i < d.lightLeds.length; i++) d.lightLeds[i].classList.toggle('on', i < lit && !out);
+  }
+
+  detectJumpStart() {
+    if (this.jumpStart || this.lightsOut) return;
+    if (this.player.speed > 1.4) {
+      this.jumpStart = true;
+      this.penaltyMs += CFG.jumpStartPenaltyMs;
+      this.showBanner('JUMP START', `+${CFG.jumpStartPenaltyMs / 1000}s PENALTY`, 2400);
+      this.audio.blip(220, 0.4, 0.3);
+    }
+  }
+
   /* ---------- 玩家物理 ---------- */
-  physicsStep(dt) {
+  physicsStep(dt, countProgress = true) {
     const p = this.player;
-    const inp = this.input;
-    const t = this.track;
+    const sim = this.playerSim;
+    sim.x = p.pos.x; sim.z = p.pos.z;
+    sim.vx = p.vel.x; sim.vz = p.vel.y;
+    sim.heading = p.heading; sim.onTrack = p.onTrack;
 
-    // 縱向：引擎 / 煞車 / 阻力
-    const fwd = { x: Math.sin(p.heading), z: Math.cos(p.heading) };
-    const right = { x: Math.cos(p.heading), z: -Math.sin(p.heading) };
-    let fSpeed = p.vel.x * fwd.x + p.vel.y * fwd.z;
-    let lSpeed = p.vel.x * right.x + p.vel.y * right.z;
+    const drag = this.computeDrag();
+    vehicleStep(sim, {
+      steer: this.input.steer,
+      throttle: this.input.throttle,
+      brake: this.input.brake,
+      handbrake: this.input.handbrake,
+      sensitivity: this.input.sensitivity,
+    }, CFG, dt, drag);
 
-    const throttle = inp.throttle;
-    const brake = inp.brake;
+    p.pos.x = sim.x; p.pos.z = sim.z;
+    p.vel.set(sim.vx, sim.vz);
+    p.heading = sim.heading;
+    p.fSpeed = sim.fSpeed; p.lSpeed = sim.lSpeed;
+    p.speed = sim.speed; p.latG = sim.latG; p.lonG = sim.lonG;
 
-    const longitudinal = forwardSpeedAfterForces(fSpeed, throttle, brake, p.onTrack, dt, CFG);
-    fSpeed = longitudinal.speed;
-    p.lonG = longitudinal.acceleration / 9.81;
+    // 賽道邊界與計圈
+    this.trackCollision(dt, countProgress);
 
-    // 車頭以 +Z 為基準，而螢幕右側是車體的 -X；修正左右符號。
-    const yawRate = steeringYawRate(inp.steer, inp.sensitivity, fSpeed, inp.handbrake);
-    p.heading += yawRate * dt;
-
-    // 離心力產生橫向速度，抓地力將其衰減
-    lSpeed -= yawRate * fSpeed * dt * 0.9;
-    const gripK = inp.handbrake ? 1.4 : p.onTrack ? 8.5 : 2.6;
-    lSpeed *= Math.exp(-gripK * dt);
-    p.lSpeed = lSpeed;
-    p.latG = (yawRate * fSpeed) / 9.81;
-
-    // 合成回世界座標
-    const newFwd = { x: Math.sin(p.heading), z: Math.cos(p.heading) };
-    const newRight = { x: Math.cos(p.heading), z: -Math.sin(p.heading) };
-    p.vel.set(
-      newFwd.x * fSpeed + newRight.x * lSpeed,
-      newFwd.z * fSpeed + newRight.z * lSpeed
-    );
-    p.pos.x += p.vel.x * dt;
-    p.pos.z += p.vel.y * dt;
-    p.fSpeed = fSpeed;
-    p.speed = Math.hypot(p.vel.x, p.vel.y);
-
-    // 賽道邊界偵測
-    this.trackCollision(dt);
-
-    // AI 碰撞
-    for (const ai of this.ai) {
-      const ax = ai.group.position.x - p.pos.x;
-      const az = ai.group.position.z - p.pos.z;
+    // 與對手車的碰撞（依相對速度決定能量交換）
+    for (const car of this.activeAi) {
+      const ax = car.group.position.x - p.pos.x;
+      const az = car.group.position.z - p.pos.z;
       const d2 = ax * ax + az * az;
-      if (d2 < 12.5 && d2 > 0.01) {
+      if (d2 < 13.5 && d2 > 0.01) {
         const d = Math.sqrt(d2);
-        const push = (3.6 - d) / d;
-        p.pos.x -= ax * push * 0.5;
-        p.pos.z -= az * push * 0.5;
-        p.speed *= 0.985;
-        p.vel.multiplyScalar(0.985);
-        if (this.crashCooldown <= 0) {
-          this.shake = Math.max(this.shake, 0.35);
-          this.audio.crash(0.35);
+        const nx = ax / d, nz = az / d;
+        const overlap = 3.7 - d;
+        p.pos.x -= nx * overlap * 0.55;
+        p.pos.z -= nz * overlap * 0.55;
+        car.lateral += (car.lateral > p.offT ? 1 : -1) * overlap * 0.16;
+        const rel = Math.abs(p.fSpeed - car.speed);
+        const loss = clamp(0.995 - rel * 0.0022, 0.9, 0.995);
+        p.vel.multiplyScalar(loss);
+        p.speed *= loss;
+        car.speed *= clamp(1 - rel * 0.004, 0.9, 1);
+        if (this.crashCooldown <= 0 && rel > 2.5) {
+          this.shake = Math.max(this.shake, clamp(rel / 26, 0.3, 0.8));
+          this.audio.crash(clamp(rel / 30, 0.2, 0.6));
           this.crashCooldown = 0.4;
         }
       }
     }
     this.crashCooldown -= dt;
 
-    // 碰撞可能改變速度，換檔依實際前進速度而非橫滑或倒車速度。
-    p.fSpeed = p.vel.x * newFwd.x + p.vel.y * newFwd.z;
+    // 碰撞可能改變速度，換檔依實際前進速度而非橫滑或倒車速度
+    const fwdX = Math.sin(p.heading), fwdZ = Math.cos(p.heading);
+    p.fSpeed = p.vel.x * fwdX + p.vel.z * fwdZ;
     p.speed = Math.hypot(p.vel.x, p.vel.y);
     this.updateGearRpm(dt);
+    this.updateTyreFx(dt);
   }
 
-  trackCollision(dt) {
+  /**
+   * 尾流與 DRS：貼在前車正後方可降低空氣阻力（提高極速與加速）；
+   * 低曲率直路且高速時 DRS 額外減阻。回傳傳給物理的 drag 係數（1 = 乾淨氣流）。
+   */
+  computeDrag() {
+    const t = this.track;
+    const p = this.player;
+    const pt = p.nearestIdx / t.S;
+    let best = 0;
+    for (const car of this.activeAi) {
+      let delta = car.t - pt;
+      delta -= Math.round(delta);
+      const dist = delta * t.totalLength;
+      if (dist <= 0.5 || dist > 34) continue;
+      best = Math.max(best, slipstreamAmount(dist, car.lateral - p.offT));
+    }
+    this.slipstream = best;
+    const curvature = t.curvature[p.nearestIdx] || 0;
+    this.drsActive = curvature < 0.0024 && p.fSpeed > 52;
+    this.drs = this.drsActive ? CFG.drsDrag : 0;
+    return clamp(1 - (best * CFG.slipstreamDrag + this.drs), 0.9, 1);
+  }
+
+  trackCollision(dt, countProgress = true) {
     const p = this.player;
     const t = this.track;
     const S = t.S;
 
     // 區域搜尋最近中心線取樣點
     let best = p.nearestIdx, bestD = Infinity;
-    for (let k = -34; k <= 34; k++) {
+    for (let k = -40; k <= 40; k++) {
       const i = (p.nearestIdx + k + S * 2) % S;
       const dx = t.points[i].x - p.pos.x;
       const dz = t.points[i].z - p.pos.z;
@@ -1909,6 +2349,7 @@ class CockpitRacer {
         this.hitFlash = 1;
         this.audio.crash(intensity);
         this.crashCooldown = 0.5;
+        this.spawnTyreFx(p.pos.x, p.pos.z, 1.4, 'spark');
         this.showBanner('💥 碰撞！', 'CHECK YOUR LINE', 1200);
       } else if (outward > 0) {
         // 輕微擦碰：滑過護欄
@@ -1918,27 +2359,34 @@ class CockpitRacer {
       }
     }
 
-    // 進度與跨圈偵測（以「越線次數」為準：起跑位於線後方，第一次越線＝計時開始）
-    p.progress = p.crossings + best / S;
-    if (prevIdx > S * 0.75 && best < S * 0.25 && p.speed > 4) {
+    /* 越線偵測：起跑格位於線後方，第一次越線＝計時開始 */
+    const crossed = detectLapCrossing(prevIdx, best, S, p.speed);
+    if (crossed && countProgress) {
       p.crossings++;
       const lapMs = this.raceTime - p.lapStart;
       p.lapStart = this.raceTime;
-      // 起跑後第一次越線僅開始計時；此後每次越線完成一圈（最短圈時門檻防誤判）
       if (p.crossings >= 2 && lapMs > 20000) {
+        p.laps = p.crossings - 1;
         this.lapTimes.push(lapMs);
         if (lapMs < this.bestLap) {
           this.bestLap = lapMs;
           this.showBanner('⚡ 最快單圈', fmtTime(lapMs), 2200);
         } else {
-          this.showBanner(`LAP ${p.crossings - 1} 完成`, fmtTime(lapMs), 1800);
+          this.showBanner(`LAP ${p.laps} 完成`, fmtTime(lapMs), 1800);
         }
-        this.audio.blip(990, 0.18, 0.25);
-        if (p.crossings - 1 >= CFG.totalLaps) {
-          this.finishRace();
-          return;
-        }
+        this.audio.blip(990, 0.18, 0.3);
       }
+    }
+    /*
+     * 名次進度必須在 crossings 更新「之後」計算。
+     * 舊版先算 progress 再 ++crossings，導致完賽當下玩家進度整整少一圈，
+     * 結算時永遠被判定在最後一名（P4）——這就是「不管排第幾都結算 P4」的成因。
+     */
+    p.progress = trackProgress(p.crossings, best, S);
+    p.laps = Math.max(p.laps || 0, p.crossings - 1);
+
+    if (countProgress && !p.finished && p.crossings >= crossingsToFinish(CFG.totalLaps)) {
+      this.finishRace();
     }
   }
 
@@ -1947,7 +2395,11 @@ class CockpitRacer {
     const gears = CFG.gears;
     const forwardSpeed = Math.max(0, p.fSpeed);
     const g = countdown ? 1 : selectAutomaticGear(forwardSpeed, p.gear, gears);
-    if (g !== p.gear && !countdown) this.audio.shiftBlip();
+    if (g !== p.gear && !countdown) {
+      const upshift = g > p.gear;
+      this.audio.shiftBlip(upshift);
+      if (upshift && this.input.throttle > 0.5) this.spawnTyreFx(p.pos.x, p.pos.z, 0.35);
+    }
     p.gear = g;
     const lo = gears[g - 1], hi = gears[g] || CFG.topSpeed + 6;
     const gearN = clamp((forwardSpeed - lo) / Math.max(hi - lo, 1), 0, 1);
@@ -1960,40 +2412,97 @@ class CockpitRacer {
   /* ---------- AI 更新 ---------- */
   updateAI(dt) {
     const t = this.track;
-    for (const ai of this.ai) {
-      const targetSpeed = t.speedLimit[ai.idx % t.S] * ai.skill;
-      // 起步加速
-      const maxAccel = 11;
-      if (ai.speed < targetSpeed) ai.speed = Math.min(ai.speed + maxAccel * dt, targetSpeed);
-      else ai.speed = Math.max(ai.speed - 9 * dt, targetSpeed);
-      ai.t += (ai.speed * dt) / t.totalLength;
-      if (ai.t >= 1) { ai.t -= 1; ai.crossings++; }
-      ai.idx = Math.floor(ai.t * t.S);
-      ai.weave += dt * 0.8;
-      ai.progress = ai.crossings + ai.t;
+    const p = this.player;
+    // 玩家以同一份「中心線投影 + 橫向偏移」表示，讓 AI 的避車邏輯一致
+    this.playerTraffic.t = p.nearestIdx / t.S;
+    this.playerTraffic.lateral = p.offT;
+    this.playerTraffic.speed = p.speed;
+    const traffic = this.traffic;
+    traffic.length = 0;
+    for (const car of this.activeAi) traffic.push(car);
+    traffic.push(this.playerTraffic);
+    for (const car of this.activeAi) {
+      const before = car.speed;
+      car.prevLateral = car.lateral;
+      aiStep(car, t, car.profile, t.racingLine, traffic, dt);
+      car.braking = car.speed < before - 0.02;
+      // 橫向變化率（每公尺），用於車身偏擺的可視化 yaw
+      car.dlDs = (car.lateral - car.prevLateral) / Math.max(car.speed * dt, 0.4);
+      if (!car.finished && car.crossings >= crossingsToFinish(CFG.totalLaps)) {
+        car.finished = true;
+        car.finishTime = this.raceTime;
+        car.laps = CFG.totalLaps;
+      } else {
+        car.laps = Math.max(0, car.crossings - 1);
+      }
     }
     this.updateAiTransforms();
   }
 
   updateAiTransforms(instant = false) {
     const t = this.track;
-    for (const ai of this.ai) {
-      const i = ai.idx % t.S;
+    for (const car of this.ai) {
+      if (!car.active) { car.group.visible = false; continue; }
+      car.group.visible = true;
+      const i = ((car.idx % t.S) + t.S) % t.S;
       const c = t.points[i], r = t.rights[i];
-      const lateral = instant ? ai.lateral : ai.lateral + Math.sin(ai.weave) * 1.6;
-      ai.group.position.set(c.x + r.x * lateral, 0, c.z + r.z * lateral);
-      ai.group.rotation.y = t.yaws[i] + Math.PI; // 模型車頭朝 -Z，需對齊樣條的前進方向
-      const spin = (ai.speed * 0.016) || 0;
-      for (const w of ai.wheels) w.rotation.x += spin;
+      car.group.position.set(c.x + r.x * car.lateral, 0, c.z + r.z * car.lateral);
+      // 依實際路徑方向計算 yaw：換道時車身會自然偏擺
+      const dl = instant ? 0 : (car.dlDs || 0);
+      const yaw = t.yaws[i] + Math.atan2(-clamp(dl, -0.6, 0.6), 1);
+      car.group.rotation.y = yaw + Math.PI; // 模型車頭朝 -Z，需對齊樣條的前進方向
+      const spin = (car.speed * 0.016) || 0;
+      for (const w of car.wheels) w.rotation.x += spin;
+      car.brakeLight.material.emissiveIntensity = car.braking ? 2.6 : 0.25;
+      car.brakeLight.material.color.setHex(car.braking ? 0xff3a24 : 0x8d1a10);
     }
   }
 
-  computePosition() {
+  /**
+   * 正式名次：以 race-sim 的 `raceStandings()` 排序，並計算時間差。
+   * @param projectFinish 結算時把未完賽車輛以現況配速推算完賽時間
+   */
+  computeStandings(projectFinish = false) {
+    const t = this.track;
     const p = this.player;
-    const entries = this.ai.map((ai) => ai.progress);
-    let pos = 1;
-    for (const e of entries) if (e > p.progress) pos++;
-    return pos;
+    const racers = [{
+      id: 'player', code: p.code, name: p.name, color: p.color, isPlayer: true,
+      progress: p.progress, laps: p.laps || 0, finished: p.finished,
+      finishTime: p.finished ? p.finishTime : Infinity, speed: p.speed,
+    }];
+    for (const car of this.activeAi) {
+      racers.push({
+        id: car.id, code: car.code, name: car.name, color: car.color, isPlayer: false,
+        progress: car.progress, laps: car.laps || 0, finished: car.finished,
+        finishTime: car.finished ? car.finishTime : Infinity, speed: car.speed,
+      });
+    }
+    const sorted = raceStandings(racers);
+    const leader = sorted[0];
+    sorted.forEach((row, i) => {
+      if (i === 0) { row.gapSeconds = 0; row.gapLaps = 0; row.gapText = 'LEADER'; return; }
+      const ahead = sorted[i - 1];
+      let seconds = gapSeconds(ahead, row, t.totalLength);
+      let laps = Math.max(0, Math.floor(ahead.progress - row.progress));
+      if (projectFinish && !row.finished) {
+        const remaining = Math.max(0, crossingsToFinish(CFG.totalLaps) - row.progress) * t.totalLength;
+        row.projectedFinish = this.raceTime + (remaining / Math.max(row.speed, 24)) * 1000;
+        if (leader.finished) seconds = (row.projectedFinish - leader.finishTime) / 1000;
+      }
+      row.gapSeconds = seconds;
+      row.gapLaps = laps;
+      row.gapText = formatGap(seconds, laps);
+    });
+    // 對領先者的時間差（供 HUD 顯示）
+    for (const row of sorted) {
+      row.toLeader = row.position === 1 ? 0 : gapSeconds(leader, row, t.totalLength);
+    }
+    return sorted;
+  }
+
+  computePosition() {
+    const row = this.computeStandings().find((entry) => entry.isPlayer);
+    return row ? row.position : this.activeAi.length + 1;
   }
 
   /* ---------- 相機 ---------- */
@@ -2085,7 +2594,43 @@ class CockpitRacer {
     const p = this.player;
     const rpmN = clamp((p.rpm - CFG.idleRpm) / (CFG.redlineRpm - CFG.idleRpm), 0, 1);
     const slip = clamp(Math.abs(p.lSpeed) / 13, 0, 1) * (this.input.handbrake ? 1.4 : 1);
-    this.audio.update(rpmN, this.input.throttle, clamp(p.speed / CFG.topSpeed, 0, 1), slip, p.onTrack, dt);
+    // 轉速限制器：油門全開且逼近紅線時斷油
+    const limiter = clamp((p.rpm - CFG.redlineRpm * 0.965) / (CFG.redlineRpm * 0.035), 0, 1)
+      * (this.input.throttle > 0.5 ? 1 : 0);
+    this.audio.update(dt, {
+      rpmNorm: rpmN,
+      throttle: this.input.throttle,
+      speedNorm: clamp(p.speed / CFG.topSpeed, 0, 1),
+      slip, onTrack: p.onTrack, limiter,
+      rival: this.nearestRivalAudio(),
+    });
+  }
+
+  /** 最近對手車的多普勒音效參數：音高由徑向相對速度決定，pan 由相機座標系方位決定 */
+  nearestRivalAudio() {
+    const p = this.player;
+    const t = this.track;
+    let best = null, bestD = Infinity;
+    for (const car of this.activeAi) {
+      const dx = car.group.position.x - p.pos.x;
+      const dz = car.group.position.z - p.pos.z;
+      const d = Math.hypot(dx, dz);
+      if (d < bestD) { bestD = d; best = { car, dx, dz, d }; }
+    }
+    if (!best || best.d > 150) return null;
+    const yaw = t.yaws[((best.car.idx % t.S) + t.S) % t.S];
+    const carVx = Math.sin(yaw) * best.car.speed, carVz = Math.cos(yaw) * best.car.speed;
+    const nx = best.dx / (best.d || 1), nz = best.dz / (best.d || 1);
+    const radial = (carVx - p.vel.x) * nx + (carVz - p.vel.y) * nz;  // <0 表示接近
+    const camYaw = this.camYaw || p.heading + Math.PI;
+    const rightX = Math.cos(camYaw), rightZ = -Math.sin(camYaw);
+    const pan = best.dx * rightX + best.dz * rightZ;
+    const proximity = Math.pow(clamp(1 - best.d / 150, 0, 1), 1.5);
+    return {
+      level: proximity * (0.45 + 0.55 * clamp(best.car.speed / CFG.topSpeed, 0, 1)),
+      pan: clamp(pan / (best.d || 1), -1, 1),
+      doppler: -radial,
+    };
   }
 
   /* ---------- HUD ---------- */
@@ -2099,15 +2644,47 @@ class CockpitRacer {
     d.rpmFill.style.width = `${rpmN * 100}%`;
     d.rpmFill.style.background = rpmN > 0.85 ? '#ff4c38' : rpmN > 0.65 ? '#ffd23d' : '#d8ff3e';
 
-    d.lapCur.textContent = String(clamp(p.crossings, 1, CFG.totalLaps));
+    d.lapCur.textContent = String(clamp((p.laps || 0) + 1, 1, CFG.totalLaps));
     d.lapTime.textContent = fmtTime(this.raceTime - p.lapStart);
     d.lastTime.textContent = this.lapTimes.length ? fmtTime(this.lapTimes[this.lapTimes.length - 1]) : '--:--.---';
     d.bestTime.textContent = fmtTime(this.bestLap);
     d.raceClock.textContent = fmtTime(this.raceTime);
 
-    const pos = this.computePosition();
+    // 名次與計時塔（正式計時排序：完賽時間優先，其次中心線投影進度）
+    const standings = this.computeStandings();
+    this.standings = standings;
+    const myRow = standings.find((row) => row.isPlayer);
+    const pos = myRow ? myRow.position : standings.length;
     d.position.textContent = `P${pos}`;
     d.posBox.dataset.pos = String(pos);
+    this.updateTower(standings);
+    if (d.gapAhead) d.gapAhead.textContent = myRow && myRow.position > 1 ? myRow.gapText : 'LEADER';
+    if (d.gapBehind) {
+      const behind = standings[pos];
+      d.gapBehind.textContent = behind ? formatGap(behind.gapSeconds) : '--';
+    }
+    if (this.state === 'racing' && this.lastPosition !== null && pos !== this.lastPosition) {
+      const gained = this.lastPosition - pos;
+      const neighbour = gained > 0 ? standings[pos - 1] : standings[pos + 1];
+      this.showBanner(`P${pos}`, gained > 0
+        ? `超車 ${neighbour ? neighbour.code : ''} ▲${gained}`
+        : `被超車 ${neighbour ? neighbour.code : ''} ▼${-gained}`, 1300);
+      this.audio.blip(gained > 0 ? 1180 : 330, 0.18, 0.32);
+    }
+    this.lastPosition = pos;
+
+    // 尾流 / DRS 指示
+    if (d.boostChip) {
+      const slip = this.slipstream > 0.28;
+      const drs = this.drsActive && this.state === 'racing';
+      d.boostChip.classList.toggle('hidden', !(slip || drs));
+      d.boostChipLabel.textContent = slip && drs ? 'DRS + SLIPSTREAM' : slip ? 'SLIPSTREAM' : 'DRS OPEN';
+      d.boostChip.dataset.kind = slip ? 'slip' : 'drs';
+    }
+    if (d.penaltyChip) {
+      d.penaltyChip.classList.toggle('hidden', this.penaltyMs <= 0);
+      d.penaltyChip.textContent = `+${(this.penaltyMs / 1000).toFixed(0)}s JUMP START`;
+    }
 
     // 換檔指示燈（DOM 燈條）
     for (let i = 0; i < d.shiftLeds.length; i++) {
@@ -2151,11 +2728,59 @@ class CockpitRacer {
     ctx.strokeStyle = 'rgba(216,255,62,.5)';
     ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(px, py, 7, 0, TAU); ctx.stroke();
-    // AI
-    for (const ai of this.ai) {
-      const [ax, ay] = this.minimapToCanvas(ai.group.position);
-      ctx.fillStyle = '#' + ai.group.children[0].material.color.getHexString();
+    // 賽車線（最佳路線提示）
+    if (this.minimapLine) {
+      ctx.strokeStyle = 'rgba(216,255,62,.26)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      this.minimapLine.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.closePath();
+      ctx.stroke();
+    }
+    // AI 對手
+    for (const car of this.activeAi) {
+      const [ax, ay] = this.minimapToCanvas(car.group.position);
+      ctx.fillStyle = '#' + new THREE.Color(car.color).getHexString();
       ctx.beginPath(); ctx.arc(ax, ay, 3.4, 0, TAU); ctx.fill();
+    }
+  }
+
+  /** 計時塔：完整名次、塗裝色、車手代號與時間差 */
+  updateTower(standings) {
+    if (!this.towerRows) return;
+    for (let i = 0; i < this.towerRows.length; i++) {
+      const row = this.towerRows[i];
+      const entry = standings[i];
+      if (!entry) { row.el.classList.add('hidden'); continue; }
+      row.el.classList.remove('hidden');
+      const you = entry.isPlayer;
+      row.el.classList.toggle('is-you', you);
+      row.el.classList.toggle('is-leader', i === 0);
+      row.pos.textContent = `P${entry.position}`;
+      row.code.textContent = you ? 'YOU' : entry.code;
+      row.dot.style.background = `#${new THREE.Color(entry.color).getHexString()}`;
+      row.gap.textContent = i === 0 ? 'LEADER' : formatGap(entry.gapSeconds, entry.gapLaps);
+    }
+  }
+
+  buildStandingsBoard() {
+    const d = this.dom;
+    if (!d.tower) return;
+    d.tower.innerHTML = '';
+    this.towerRows = [];
+    const count = this.activeAi.length + 1;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'tower-row';
+      el.innerHTML = '<span class="tp"></span><i class="tdot"></i><span class="tcode"></span><span class="tgap"></span>';
+      d.tower.appendChild(el);
+      this.towerRows.push({
+        el,
+        pos: el.querySelector('.tp'),
+        dot: el.querySelector('.tdot'),
+        code: el.querySelector('.tcode'),
+        gap: el.querySelector('.tgap'),
+      });
     }
   }
 
@@ -2175,6 +2800,135 @@ class CockpitRacer {
     const y = cy + clamp(-this.player.lonG / g, -1, 1) * R;
     ctx.fillStyle = '#d8ff3e';
     ctx.beginPath(); ctx.arc(x, y, 4, 0, TAU); ctx.fill();
+  }
+
+  /* ---------- 胎煙 / 塵土 / 火花粒子 ---------- */
+  /**
+   * 以單一 THREE.Points + 自訂 ShaderMaterial 實作粒子池：
+   * per-particle 大小／顏色／透明度透過 attribute 傳入 GPU，
+   * CPU 端只做 260 筆的歐拉積分，零幾何重建、零額外 Draw Call。
+   */
+  buildTyreFx() {
+    const COUNT = 260;
+    this.fxCount = COUNT;
+    this.fxCursor = 0;
+    this.fxLife = new Float32Array(COUNT);
+    this.fxMax = new Float32Array(COUNT);
+    this.fxVel = new Float32Array(COUNT * 3);
+    this.fxSize = new Float32Array(COUNT);
+    const positions = new Float32Array(COUNT * 3);
+    const colors = new Float32Array(COUNT * 3);
+    const alphas = new Float32Array(COUNT);
+    const sizes = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) positions[i * 3 + 1] = -999;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute('aAlpha', new THREE.BufferAttribute(alphas, 1));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e6);
+    const mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.NormalBlending,
+      uniforms: { uScale: { value: innerHeight * 0.5 } },
+      vertexShader: /* glsl */`
+        attribute vec3 aColor;
+        attribute float aAlpha;
+        attribute float aSize;
+        uniform float uScale;
+        varying vec3 vColor;
+        varying float vAlpha;
+        void main(){
+          vColor = aColor; vAlpha = aAlpha;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = aSize * uScale / max(0.001, -mv.z);
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: /* glsl */`
+        varying vec3 vColor;
+        varying float vAlpha;
+        void main(){
+          float d = length(gl_PointCoord - vec2(0.5));
+          float a = smoothstep(0.5, 0.08, d) * vAlpha;
+          if (a < 0.004) discard;
+          gl_FragColor = vec4(vColor, a);
+        }
+      `,
+    });
+    this.fxPoints = new THREE.Points(geo, mat);
+    this.fxPoints.frustumCulled = false;
+    this.scene.add(this.fxPoints);
+  }
+
+  spawnTyreFx(x, z, amount = 1, kind = 'smoke') {
+    if (!this.fxPoints || REDUCED_MOTION) return;
+    const geo = this.fxPoints.geometry;
+    const pos = geo.attributes.position.array;
+    const col = geo.attributes.aColor.array;
+    const alpha = geo.attributes.aAlpha.array;
+    const size = geo.attributes.aSize.array;
+    const n = Math.round((kind === 'spark' ? 9 : 4) * amount);
+    for (let k = 0; k < n; k++) {
+      const i = this.fxCursor;
+      this.fxCursor = (this.fxCursor + 1) % this.fxCount;
+      const jitterX = (Math.random() - 0.5) * 1.9;
+      const jitterZ = (Math.random() - 0.5) * 1.9;
+      pos[i * 3] = x + jitterX;
+      pos[i * 3 + 1] = kind === 'spark' ? 0.35 + Math.random() * 0.4 : 0.28 + Math.random() * 0.3;
+      pos[i * 3 + 2] = z + jitterZ;
+      this.fxVel[i * 3] = jitterX * (kind === 'spark' ? 5 : 1.1);
+      this.fxVel[i * 3 + 1] = kind === 'spark' ? 2.4 + Math.random() * 3 : 0.9 + Math.random() * 1.2;
+      this.fxVel[i * 3 + 2] = jitterZ * (kind === 'spark' ? 5 : 1.1);
+      this.fxMax[i] = kind === 'spark' ? 0.32 + Math.random() * 0.2 : 0.55 + Math.random() * 0.5;
+      this.fxLife[i] = this.fxMax[i];
+      this.fxSize[i] = kind === 'spark' ? 0.06 + Math.random() * 0.05 : 1.5 + Math.random() * 1.5;
+      if (kind === 'spark') { col[i * 3] = 1; col[i * 3 + 1] = 0.72 + Math.random() * 0.25; col[i * 3 + 2] = 0.24; }
+      else if (kind === 'dust') { col[i * 3] = 0.46; col[i * 3 + 1] = 0.40; col[i * 3 + 2] = 0.27; }
+      else { const g = 0.78 + Math.random() * 0.16; col[i * 3] = g; col[i * 3 + 1] = g; col[i * 3 + 2] = g * 0.98; }
+      alpha[i] = kind === 'spark' ? 0.95 : 0.42;
+      size[i] = this.fxSize[i];
+    }
+  }
+
+  updateTyreFx(dt) {
+    if (!this.fxPoints) return;
+    const p = this.player;
+    // 產生：漂移、打滑、草地與護欄火花
+    if (this.state === 'racing' || this.state === 'countdown') {
+      const slip = Math.abs(p.lSpeed);
+      const spin = this.input.throttle > 0.85 && p.fSpeed < 14 && p.fSpeed >= 0;
+      if (p.onTrack && (slip > 4.2 || spin)) {
+        this.spawnTyreFx(p.pos.x, p.pos.z, clamp((slip - 3) / 9 + (spin ? 0.7 : 0), 0.3, 1.6), 'smoke');
+      } else if (!p.onTrack && p.speed > 8) {
+        this.spawnTyreFx(p.pos.x, p.pos.z, clamp(p.speed / 42, 0.3, 1.2), 'dust');
+      }
+    }
+    const geo = this.fxPoints.geometry;
+    const pos = geo.attributes.position.array;
+    const alpha = geo.attributes.aAlpha.array;
+    const size = geo.attributes.aSize.array;
+    let live = 0;
+    for (let i = 0; i < this.fxCount; i++) {
+      if (this.fxLife[i] <= 0) { alpha[i] = 0; continue; }
+      this.fxLife[i] -= dt;
+      const k = i * 3;
+      this.fxVel[k + 1] -= 2.2 * dt;                       // 重力／消散
+      this.fxVel[k] *= 1 - 1.6 * dt;
+      this.fxVel[k + 2] *= 1 - 1.6 * dt;
+      pos[k] += this.fxVel[k] * dt;
+      pos[k + 1] += this.fxVel[k + 1] * dt;
+      pos[k + 2] += this.fxVel[k + 2] * dt;
+      if (pos[k + 1] < 0.05) { pos[k + 1] = 0.05; this.fxVel[k + 1] *= -0.18; }
+      const ratio = Math.max(0, this.fxLife[i] / this.fxMax[i]);
+      alpha[i] = ratio * ratio * (this.fxSize[i] < 0.2 ? 0.95 : 0.40);
+      size[i] = this.fxSize[i] * (1 + (1 - ratio) * 1.9);   // 煙霧擴散
+      live++;
+    }
+    geo.attributes.position.needsUpdate = true;
+    geo.attributes.aAlpha.needsUpdate = true;
+    geo.attributes.aSize.needsUpdate = true;
+    this.fxPoints.visible = live > 0;
+    this.fxPoints.material.uniforms.uScale.value = innerHeight * 0.5;
   }
 
   /* ---------- 渲染 ---------- */
@@ -2198,12 +2952,18 @@ class CockpitRacer {
     }
 
     if (highFx) {
+      this.renderer.setRenderTarget(this.rt);
+      this.renderer.render(this.scene, this.camera);
+      // 明亮通道 → 1/4 解析度 Bloom RT
+      this.bloomMat.uniforms.tDiffuse.value = this.rt.texture;
+      this.renderer.setRenderTarget(this.bloomRT);
+      this.renderer.render(this.bloomScene, this.postCam);
+      this.renderer.setRenderTarget(null);
+      this.postMat.uniforms.tBloom.value = this.bloomRT.texture;
+      this.postMat.uniforms.uBloom.value = REDUCED_MOTION ? 0.42 : 0.62;
       this.postMat.uniforms.uTime.value = performance.now() * 0.001;
       this.postMat.uniforms.uSpeed.value = REDUCED_MOTION ? 0 : clamp(this.player.speed / CFG.topSpeed, 0, 1) * (this.state === 'racing' ? 1 : 0.15);
       this.postMat.uniforms.uHit.value = REDUCED_MOTION ? 0 : this.hitFlash;
-      this.renderer.setRenderTarget(this.rt);
-      this.renderer.render(this.scene, this.camera);
-      this.renderer.setRenderTarget(null);
       this.renderer.render(this.postScene, this.postCam);
     } else {
       this.renderer.render(this.scene, this.camera);

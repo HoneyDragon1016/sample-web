@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DrivingInput, DEFAULT_SETTINGS, sanitizeSettings, signedDeadzone, pedalDeadzone,
+  DrivingInput, DEFAULT_SETTINGS, DEFAULT_DIFFICULTY, DIFFICULTIES,
+  resolveDifficulty, sanitizeSettings, signedDeadzone, pedalDeadzone,
   steeringYawRate, selectAutomaticGear, forwardSpeedAfterForces,
 } from '../assets/js/race-controls.mjs';
 
@@ -235,7 +236,14 @@ test('resistance never reverses a coasting car and reverse requires brake input'
 test('stored settings fall back safely and stay within supported bounds', () => {
   assert.deepEqual(sanitizeSettings(null), DEFAULT_SETTINGS);
   assert.deepEqual(sanitizeSettings({ sensitivity: 5, volume: -1, view: 'chase', muted: true }), {
-    sensitivity: 1.5, volume: 0, view: 'chase', muted: true,
+    sensitivity: 1.5, volume: 0, view: 'chase', muted: true, difficulty: DEFAULT_DIFFICULTY,
   });
   assert.deepEqual(sanitizeSettings({ sensitivity: NaN, volume: 'loud', view: 'bad', muted: 'true' }), DEFAULT_SETTINGS);
+  // 難度：未知值退回預設，已知值原樣保留，且絕不會漏掉這個欄位（缺欄位 = 舊存檔升級）
+  assert.equal(sanitizeSettings({ difficulty: 'impossible' }).difficulty, DEFAULT_DIFFICULTY);
+  assert.equal(sanitizeSettings({ difficulty: 'legend' }).difficulty, 'legend');
+  assert.equal(sanitizeSettings({ sensitivity: 1, volume: 0.5, view: 'cockpit', muted: false }).difficulty, DEFAULT_DIFFICULTY);
+  assert.equal(DEFAULT_SETTINGS.volume, 0.7, 'engine audio default must stay loud (PR9 regression)');
+  assert.deepEqual(DIFFICULTIES.map((level) => level.id), ['rookie', 'pro', 'elite', 'legend']);
+  assert.ok(DIFFICULTIES.every((level) => DIFFICULTIES.includes(resolveDifficulty(level.id))), 'every id must resolve to itself');
 });
