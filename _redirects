@@ -30,3 +30,7 @@
 /motion-lab             /InteractivePlayground01 301
 /playground             /InteractivePlayground01 301
 /InteractivePlayground  /InteractivePlayground01 301
+
+# Apex GP Race Day
+/race-day               /RaceDay01              301
+/apex-gp                /RaceDay01              301

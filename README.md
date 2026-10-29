@@ -8,7 +8,7 @@
 [![A11y](https://img.shields.io/badge/A11y-WCAG%20minded-2EA44F)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Static](https://img.shields.io/badge/Architecture-Pure%20Static-111827)](#技術架構)
 
-> 一套以純靜態技術打造的九款形象網站範例，推送至 Git 即可由 Cloudflare Pages 自動構建與發布，無需任何打包工具。
+> 一套以純靜態技術打造的十款形象網站範例，推送至 Git 即可由 Cloudflare Pages 自動構建與發布，無需任何打包工具。
 
 ---
 
@@ -16,7 +16,7 @@
 
 - [專案願景](#專案願景)
 - [視覺設計概念](#視覺設計概念)
-- [九款頁面特色對照總覽](#九款頁面特色對照總覽)
+- [十款頁面特色對照總覽](#十款頁面特色對照總覽)
 - [專案目錄架構](#專案目錄架構)
 - [技術架構](#技術架構)
 - [動態引擎架構指南](#動態引擎架構指南)
@@ -32,7 +32,7 @@
 
 ## 專案願景
 
-**讓形象網站回歸「內容與質感」本身。** 不需要複雜的框架、不需要後端伺服器，一個 Git 儲存庫即可交付九種截然不同的品牌氣質：
+**讓形象網站回歸「內容與質感」本身。** 不需要複雜的框架、不需要後端伺服器，一個 Git 儲存庫即可交付十種截然不同的品牌氣質：
 
 | 場景 | 氣質關鍵字 | 對應頁面 |
 | --- | --- | --- |
@@ -45,6 +45,7 @@
 | 科技敘事、產品解構、深度專題 | 電影感、捲動敘事、空間感 | `SpatialStory01.html` |
 | 先鋒數位創意工作室 | 賽博、動態排版、強烈互動 | `KineticAgency01.html` |
 | 微互動展示、互動實驗、產品手感 | 流體、物理、多感官回饋 | `InteractivePlayground01.html` |
+| 賽車品牌、賽道活動、車隊介紹 | 競速、數據、霓虹酸綠 | `RaceDay01.html` |
 
 ## 視覺設計概念
 
@@ -57,12 +58,13 @@
 - **Spatial · Deep Scroll Story**：深空黑（`#05060a`）與青/橘能量光暈；釘選式 360° 解構、SVG 路徑繪製、文字遮罩擦除與深度儀表板。
 - **Kinetic · Cyber Neon**：賽博黑（`#07060d`）搭霓虹粉（`#ff2d78`）、電光藍（`#00e0ff`）與酸性綠（`#d9ff3f`）；磁吸游標、橫向展廊與 Kinetic Type。
 - **Lab · Fluid Playground**：實驗室黑（`#06060c`）與紫/粉/青流體光暈；3D 傾斜流光、Canvas 粒子場、物理拖曳與 Web Audio 微聲效。
+- **Race · Apex GP**：柏油黑（`#080b0c`）、霓虹酸綠（`#d8ff3e`）與賽道光影；互動賽道切換、SVG 路線圖、遙測數值模擬與車手名單。
 
-## 九款頁面特色對照總覽
+## 十款頁面特色對照總覽
 
 | # | 頁面 | 分類 | 動效技術 | 關鍵區塊 |
 | --- | --- | --- | --- | --- |
-| 0 | [`index.html`](index.html) | — | Vanilla JS Filter | 風格矩陣 Hub：分類篩選器、9 款預覽卡片、技術標籤與直達按鈕 |
+| 0 | [`index.html`](index.html) | — | Vanilla JS Filter | 風格矩陣 Hub：分類篩選器、10 款預覽卡片、技術標籤與直達按鈕 |
 | 1 | [`business-style-01.html`](business-style-01.html) | 商業形象 | CSS Transition | Sticky 導航、Hero 與動態數據、服務卡片（Hover 狀態）、案例數據、客戶商標跑馬燈、評價、即時驗證表單、企業頁尾 |
 | 2 | [`lifestyle-01.html`](lifestyle-01.html) | 品牌生活 | CSS + Lightbox | 極簡 Header、個人介紹與理念引言、精選日誌（閱讀時長與標籤）、靈感相簿（燈箱 + 鍵盤操作）、電子報訂閱、極簡頁尾 |
 | 3 | [`elegant-style.html`](elegant-style.html) | 奢華體驗 | Parallax + Modal | 全螢幕沉浸 Hero（視差）、策展路線分頁（Tabs）、典藏精品卡片與 Modal 詳情、匠人傳承時間軸、貴賓預約表單 |
@@ -72,6 +74,7 @@
 | 7 | [`SpatialStory01.html`](SpatialStory01.html) | 動效互動 | **Lenis + GSAP Pin & Scrub** | 釘選式 360° 空間解構（分層爆發 + 數據飛入）、SVG 路徑動態繪製、文字遮罩擦除、章節深度儀表板 |
 | 8 | [`KineticAgency01.html`](KineticAgency01.html) | 動效互動 | **Lenis + GSAP + Magnetic Cursor** | 磁吸自定義游標（延遲外環 + 差值反色 + 提示字）、橫向滾動視差展廊（containerAnimation）、字元波浪抖動、Kinetic Marquee |
 | 9 | [`InteractivePlayground01.html`](InteractivePlayground01.html) | 動效互動 | **Lenis + GSAP + Canvas + Web Audio** | 3D 傾斜流光卡（Specular Glare）、Canvas 粒子場（點擊衝擊波）、慣性物理拖曳（邊界回彈）、Web Audio 微晶片聲效 |
+| 10 | [`RaceDay01.html`](RaceDay01.html) | 賽車體驗 | **Vanilla JS + SVG** | 賽道即時切換、賽事數據儀表板、可啟停遙測模擬、車手陣容與響應式賽車 Hero |
 
 ## 專案目錄架構
 
@@ -87,6 +90,7 @@ sample-web/
 ├── SpatialStory01.html         # 風格 7：沉浸式滾動敘事與空間解構（動效）
 ├── KineticAgency01.html        # 風格 8：動態排版與賽博感先鋒設計（動效）
 ├── InteractivePlayground01.html # 風格 9：微互動實驗室與流體物理場（動效）
+├── RaceDay01.html              # 風格 10：APEX GP 賽道日與互動賽車遙測
 ├── 404.html                    # 自訂 404 頁（Cloudflare Pages 自動使用）
 ├── _redirects                  # 大小寫別名與乾淨網址的 301 重新導向
 ├── README.md                   # 專案文件
@@ -108,7 +112,8 @@ sample-web/
         ├── culinary-hero.jpg     # CulinaryExperience01 餐廳氛圍
         ├── spatial-hero.jpg      # SpatialStory01 機械核心主視覺
         ├── kinetic-hero.jpg      # KineticAgency01 賽博排版視覺
-        └── playground-hero.jpg   # InteractivePlayground01 流體粒子視覺
+        ├── playground-hero.jpg   # InteractivePlayground01 流體粒子視覺
+        └── apex-hero.jpg         # RaceDay01 賽車主視覺
 ```
 
 ## 技術架構
