@@ -47,7 +47,7 @@
 | 先鋒數位創意工作室 | 賽博、動態排版、強烈互動 | `KineticAgency01.html` |
 | 微互動展示、互動實驗、產品手感 | 流體、物理、多感官回饋 | `InteractivePlayground01.html` |
 | 賽車品牌、賽道活動、車隊介紹 | 競速、數據、霓虹酸綠 | `RaceDay01.html` |
-| 第一人稱 3D 賽車遊戲、沉浸式競速 | 駕駛艙、WebGL、即時渲染 | `RaceCockpit01.html` |
+| 雙視角 3D 賽車遊戲、沉浸式競速 | 駕駛艙、追車視角、WebGL、即時渲染 | `RaceCockpit01.html` |
 
 ## 視覺設計概念
 
@@ -61,7 +61,7 @@
 - **Kinetic · Cyber Neon**：賽博黑（`#07060d`）搭霓虹粉（`#ff2d78`）、電光藍（`#00e0ff`）與酸性綠（`#d9ff3f`）；磁吸游標、橫向展廊與 Kinetic Type。
 - **Lab · Fluid Playground**：實驗室黑（`#06060c`）與紫/粉/青流體光暈；3D 傾斜流光、Canvas 粒子場、物理拖曳與 Web Audio 微聲效。
 - **Race · Apex GP**：柏油黑（`#080b0c`）、霓虹酸綠（`#d8ff3e`）與賽道光影；互動賽道切換、SVG 路線圖、遙測數值模擬與車手名單。
-- **Cockpit Racer · 第一人稱駕駛艙**：延續 Apex GP 酸綠識別；黃金時刻天空、程序化賽道地景、碳纖維駕駛艙與電影級後製（徑向速度模糊、色差、暗角、膠片顆粒）。
+- **Cockpit Racer · 雙視角競速**：延續 Apex GP 酸綠識別；駕駛艙與第三人稱追車視角、黃金時刻天空、程序化賽道地景與後製特效。
 
 ## 十一款頁面特色對照總覽
 
@@ -78,7 +78,7 @@
 | 8 | [`KineticAgency01.html`](KineticAgency01.html) | 動效互動 | **Lenis + GSAP + Magnetic Cursor** | 磁吸自定義游標（延遲外環 + 差值反色 + 提示字）、橫向滾動視差展廊（containerAnimation）、字元波浪抖動、Kinetic Marquee |
 | 9 | [`InteractivePlayground01.html`](InteractivePlayground01.html) | 動效互動 | **Lenis + GSAP + Canvas + Web Audio** | 3D 傾斜流光卡（Specular Glare）、Canvas 粒子場（點擊衝擊波）、慣性物理拖曳（邊界回彈）、Web Audio 微晶片聲效 |
 | 10 | [`RaceDay01.html`](RaceDay01.html) | 賽車體驗 | **Vanilla JS + SVG** | 賽道即時切換、賽事數據儀表板、可啟停遙測模擬、車手陣容與響應式賽車 Hero |
-| 11 | [`RaceCockpit01.html`](RaceCockpit01.html) | 賽車體驗（可玩 3D 遊戲） | **Three.js / WebGL2 + Web Audio + 自訂後製 Shader** | 第一人稱駕駛艙（Halo 安全環、聯動方向盤與換檔燈、雙後視鏡即時反射）、程序化賽道與地景、街機物理與漂移、3 台 AI 對手、圈速計時與小地圖、合成引擎聲浪 |
+| 11 | [`RaceCockpit01.html`](RaceCockpit01.html) | 賽車體驗（可玩 3D 遊戲） | **Three.js / WebGL2 + Web Audio + 自訂後製 Shader** | 駕駛艙與第三人稱追車視角、可調轉向與音量、程序化賽道、街機物理與自排、3 台 AI 對手、圈速計時與小地圖 |
 
 ## 專案目錄架構
 
@@ -95,17 +95,19 @@ sample-web/
 ├── KineticAgency01.html        # 風格 8：動態排版與賽博感先鋒設計（動效）
 ├── InteractivePlayground01.html # 風格 9：微互動實驗室與流體物理場（動效）
 ├── RaceDay01.html              # 風格 10：APEX GP 賽道日與互動賽車遙測
-├── RaceCockpit01.html          # 風格 11：APEX GP 第一人稱駕駛艙 3D 賽車（可玩遊戲）
+├── RaceCockpit01.html          # 風格 11：APEX GP 雙視角 3D 賽車（可玩遊戲）
 ├── 404.html                    # 自訂 404 頁（Cloudflare Pages 自動使用）
 ├── _redirects                  # 大小寫別名與乾淨網址的 301 重新導向
 ├── README.md                   # 專案文件
+├── tests/                      # 控制單元測試與選用瀏覽器煙霧測試
 └── assets/
     ├── css/
     │   └── site.css            # 共用設計 Token、玻璃擬態、動態與無障礙樣式
     ├── js/
     │   ├── site.js             # 共用互動：選單、Reveal、表單驗證、Lightbox、Dialog、Tabs、Parallax
     │   ├── motion-engine.js    # 動態引擎：Lenis × GSAP ScrollTrigger 同步核心（動效頁共用）
-    │   └── race-cockpit.js     # Cockpit Racer：第一人稱 3D 賽車遊戲引擎（ES Module）
+    │   ├── race-cockpit.js     # Cockpit Racer：3D 賽車遊戲引擎（ES Module）
+    │   └── race-controls.mjs   # 共用控制、手把死區與自排邏輯（可獨立測試）
     ├── vendor/
     │   └── three.module.min.js # Three.js r160（本地 vendor、MIT 授權，無外部 CDN 相依）
     └── images/                 # 原創 AI 生成圖與 SVG 作品（無版權疑慮）
@@ -135,7 +137,7 @@ sample-web/
 | 圖示 | Lucide Icons（UMD CDN，版本鎖定 `0.460.0`） | 以 `data-lucide` 屬性宣告 |
 | 互動 | 原生 ES6+（無套件） | IntersectionObserver、`<dialog>`、WAI-ARIA Tabs 模式 |
 | 動效引擎（動效頁） | Lenis 1.x + GSAP 3.12.5 + ScrollTrigger | 平滑滾動與捲動觸發動畫，以 `motion-engine.js` 統一同步，見[動態引擎架構指南](#動態引擎架構指南) |
-| 3D 遊戲引擎（Cockpit Racer） | Three.js r160（本地 vendor）+ Web Audio + WebGL2 | 第一人稱駕駛艙賽車遊戲，見 [Cockpit Racer 3D 遊戲架構指南](#cockpit-racer-3d-遊戲架構指南) |
+| 3D 遊戲引擎（Cockpit Racer） | Three.js r160（本地 vendor）+ Web Audio + WebGL2 | 雙視角賽車遊戲，見 [Cockpit Racer 3D 遊戲架構指南](#cockpit-racer-3d-遊戲架構指南) |
 | 部署 | Cloudflare Pages | 無構建指令，直接發布根目錄 |
 
 ## 動態引擎架構指南
@@ -204,7 +206,7 @@ gsap.ticker.lagSmoothing(0);
 ## Cockpit Racer 3D 遊戲架構指南
 
 > 適用頁面：`RaceCockpit01.html`（引擎：`assets/js/race-cockpit.js`）
-> 一個在瀏覽器即時渲染、可直接遊玩的第一人稱賽車遊戲，維持純靜態部署（無構建步驟）。
+> 一個在瀏覽器即時渲染、可直接遊玩的街機賽車遊戲，提供駕駛艙與第三人稱追車視角，維持純靜態部署（無構建步驟）。
 
 ### 技術棧選型
 
@@ -214,31 +216,34 @@ gsap.ticker.lagSmoothing(0);
 | 賽道生成 | 極座標閉合 CatmullRom 樣條 | 半徑函數疊加多個正弦項，保證封閉且不自我交疊；取樣 1000 點建立中心線、切線、法線與曲率 |
 | 賽道幾何 | 自訂帶狀 BufferGeometry | 柏油路面、路緣石（僅彎道）、起跑線；紋理全部以 Canvas 程序化生成，零圖片請求 |
 | 場景物件 | InstancedMesh | 護欄、輪胎堆、樹木以實例化繪製，單一 Draw Call 容納數百物件 |
-| 街機物理 | 自寫 2D 平面模型 | 油門／煞車／轉向Authority 隨速衰減、橫向抓地力指數衰減（手煞車低抓地＝漂移）、草地減速、護欄碰撞消能 |
+| 街機物理與自排 | 自寫 2D 平面模型 | 修正轉向座標、可調轉向靈敏度、隨速轉向衰減、漂移與碰撞；自排依前進速度換檔並以遲滯避免臨界點抖動 |
+| 鏡頭 | 駕駛艙 / 第三人稱追車 | 同一輛車的兩種視角；追車鏡頭以時間無關阻尼跟隨，切換／重置時立即重新定位 |
 | AI 對手 | 樣條導航 + 曲率預覽 | 建置期以 `v = √(aLat/k)` 加剎車可行性反向平滑，預先計算全場彎道極速；即時名次以「越線次數 + 取樣進度」排序 |
-| 音效 | Web Audio 程序化合成 | 三振盪器引擎聲（轉速联动音高與濾波）、噪音進氣／風噪／胎噪、碰撞合成；無任何音訊檔案 |
+| 音效 | Web Audio 程序化合成 | 柔和基音與泛音、低通濾波及壓縮；預設音量 35%，可調音量與靜音，無音訊檔案 |
 | 後製特效 | 單一全螢幕 Shader Pass | 徑向速度模糊、色差、暗角、碰撞紅閃、膠片顆粒；WebGL2 下 RT 啟用 4x MSAA |
-| 後視鏡 | 低解析度 RenderTarget（256×64，隔幀更新） | 回望相機即時渲染場景，鏡面材質共用同一張 RT |
+| 後視鏡 | 低解析度 RenderTarget（256×64，隔幀更新） | 高畫質駕駛艙視角才渲染回望畫面；追車視角省略鏡面 pass |
 
 ### 效能與可靠性設計
 
 | 規範 | 實作 |
 | --- | --- |
-| 畫質分級 | 高畫質（後製 + 鏡面反射 + MSAA + 460 棵樹）／效能模式（直渲染 + 靜態鏡面 + 180 棵樹）；依 `pointer: coarse`、CPU 核心數與記憶體自動預設 |
+| 畫質分級 | 高畫質（後製 + 鏡面反射 + MSAA + 最多 460 棵樹）／效能模式（直渲染 + 靜態鏡面 + 最多 180 棵樹）；依裝置自動預設，選擇時即時更新渲染設定 |
 | 像素比上限 | 高畫質 1.75、效能模式 1.0，避免 4K 行動裝置爆量 |
 | 單一 rAF | 物理、AI、HUD、音效參數與渲染共用一個 `requestAnimationFrame` 迴圈 |
 | HUD 節流 | DOM 更新每 3 幀一次；Canvas 儀表（轉速／時速）以 CanvasTexture 同步節流 |
 | 自動暫停 | `visibilitychange` 時自動暫停比賽並 `suspend()` AudioContext |
-| 動態偏好 | `prefers-reduced-motion` 停用鏡頭晃動、震動與膠片顆粒，遊戲仍可完整遊玩 |
+| 動態偏好 | `prefers-reduced-motion` 停用鏡頭晃動、速度模糊、碰撞閃爍與膠片顆粒，倒數訊息仍可見 |
 | WebGL 偵測 | 無 WebGL 時顯示降級說明頁而非白屏 |
 | 觸控適配 | `(pointer: coarse)` 自動顯示觸控 UI（拖曳轉向 + GAS/BRAKE） |
-| 手把支援 | Gamepad API 標準映射（左軸轉向、RT/LT 油門煞車、A 手煞車） |
+| 手把支援 | Gamepad API 標準映射（左軸轉向、按鈕 7/6 即 RT/LT 油門煞車、A 手煞車）；搖桿與踏板有死區，斷線與失焦清除殘留輸入 |
+| 設定保存 | 轉向靈敏度、音量、靜音與視角存於瀏覽器 localStorage；儲存不可用時仍可遊玩 |
 
 ### 操作方式
 
-- **鍵盤**：`W`/`↑` 油門、`S`/`↓` 煞車、`A` `D`/`←` `→` 轉向、`Space` 手煞車漂移、`Esc` 暫停
-- **手把**：左類比軸轉向、RT 油門、LT 煞車、A 手煞車
-- **觸控**：左半螢幕拖曳轉向、右下 GAS/BRAKE 按鈕
+- **鍵盤**：`W`/`↑` 油門、`S`/`↓` 煞車（停車後繼續按住可倒車）、`A`/`←` 向左、`D`/`→` 向右、`Space` 手煞車、`C` 切換視角、`Esc` 暫停。
+- **手把**：標準映射的左類比軸轉向、RT 油門、LT 煞車、A 手煞車。右搖桿不會被當成踏板；非標準軸式踏板需先由作業系統或瀏覽器映射為標準按鈕 6/7。
+- **觸控**：左半螢幕拖曳轉向、右下 GAS/BRAKE 按鈕；右上角 CAM 切換視角。
+- **設定**：發車前或暫停時可調整轉向靈敏度（50%–150%）、音量（預設 35%）及視角。HUD 的 SND/MUTE 可快速切換靜音；靜音時調高音量會解除靜音。設定保存在目前瀏覽器。
 
 ## 本地預覽
 
@@ -253,6 +258,24 @@ npx serve .
 ```
 
 開啟 `http://localhost:8080` 即可預覽。（注意：Tailwind、Google Fonts 與 Lucide 需要網路才能載入。）
+
+### 回歸測試
+
+控制邏輯測試使用 Node.js 內建的 test runner，無需安裝套件：
+
+```bash
+node --test tests/race-controls.test.mjs
+```
+
+選用的 Chromium 瀏覽器測試會檢查實際頁面、鍵盤左右、自排、模擬手把中立值、雙視角、設定保存、手機版與 WebGL 降級。先啟動上方的靜態伺服器，再執行：
+
+```bash
+npm install --no-save --no-package-lock playwright
+npx playwright install chromium
+node tests/race-browser.smoke.mjs
+```
+
+可用 `RACE_BASE_URL` 指定伺服器網址。手把測試使用模擬的 Gamepad API，不能取代不同品牌實體手把與觸控裝置的實機驗證。
 
 ## Cloudflare Pages 部署說明
 
@@ -370,7 +393,7 @@ npx serve .
 | 觸控裝置適配 | ✅ | `(pointer: coarse)` 自動停用磁吸游標與 3D 傾斜、回退原生捲動，行動端滾動順滑 |
 | Resize 重算 | ✅ | 防抖 200ms 後呼叫 `lenis.resize()` + `ScrollTrigger.refresh()`，Pin / Scrub 座標自動重算 |
 | Console Errors | ✅ | 全部動效腳本以 `if (!window.gsap)` 等守衛包覆，CDN 失敗優雅降級；Canvas / Audio 例外安全；Cockpit Racer 初始化失敗時顯示降級頁而非白屏 |
-| 3D 遊戲邏輯 | ✅ | 賽道生成（無自我交疊）、帶狀幾何索引完整性、越線計圈與 AI 名次邏輯皆以 Node.js 對出貨代碼執行單元驗證通過 |
+| 賽車控制回歸 | ✅ | Node 測試覆蓋左右轉向、靈敏度、模擬手把死區、斷線、踏板、起步與自排；另有選用瀏覽器煙霧測試 |
 | 死連結 | ✅ 已檢查 | 本地資源、圖片與頁內錨點已以腳本檢查；外部 CDN 無法在建置環境中連線驗證，請於部署後確認 |
 
 ## 已知限制與後續建議
@@ -379,4 +402,5 @@ npx serve .
 - **表單未串接後端**：見上方「表單的整合」。
 - **內容為範例**：文案、數據與人物皆為虛構，請依品牌替換。
 - **Lucide 版本鎖定**：若升級版本，請留意圖示名稱是否有異動。
+- **賽車遊戲限制**：目前為純靜態、程序化場景與合成音效的街機原型，並非完整的商業 3A 模擬器；手把的非標準軸式踏板不會自動猜測，以避免誤觸倒車。
 - **後續可加強**：多語系（`hreflang`）、結構化資料（JSON-LD）、`sitemap.xml`、以及以 Lighthouse 進行效能與無障礙驗收。
