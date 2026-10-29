@@ -2,63 +2,234 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#080b0c">
-  <meta name="description" content="APEX GP 賽道日：以純靜態 HTML、CSS 與 JavaScript 打造的互動賽車體驗。探索賽道、車手與即時遙測。">
+  <meta name="description" content="APEX GP 賽道日：以 Canvas 2D 第一人稱駕駛艙與 Web Audio 引擎合成打造的即時賽車體驗。純靜態、無外部腳本依賴、60 幀遊戲迴圈。">
   <meta property="og:title" content="APEX GP — Race Day">
   <meta property="og:description" content="速度不是偶然，是每一個毫秒的選擇。">
   <meta property="og:image" content="assets/images/apex-hero.jpg">
-  <title>APEX GP — Race Day / 速度，由此開始</title>
+  <title>APEX GP — Race Day / 第一人稱駕駛艙</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800;900&family=DM+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{color-scheme:dark;--bg:#080b0c;--panel:#101516;--line:rgba(241,245,235,.13);--muted:#a2aaa3;--white:#f1f5eb;--acid:#d8ff3e;--red:#ff4c38;--mono:'DM Mono',monospace;--display:'Barlow Condensed','Noto Sans TC',sans-serif;--body:'Noto Sans TC',sans-serif}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--white);font-family:var(--body);font-size:14px;line-height:1.6}a{color:inherit;text-decoration:none}button{font:inherit}.wrap{width:min(1220px,calc(100% - 48px));margin:auto}.mono{font-family:var(--mono);font-size:11px;letter-spacing:.08em}.eyebrow{display:flex;align-items:center;gap:10px;color:var(--acid);font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase}.eyebrow:before{content:'';width:22px;height:1px;background:currentColor}.skip{position:absolute;left:-999px;top:10px;padding:10px;background:var(--acid);color:#080b0c;z-index:99}.skip:focus{left:12px}
-    .topline{border-bottom:1px solid var(--line);height:38px;color:#aab2aa}.topline .wrap{height:100%;display:flex;align-items:center;justify-content:space-between}.topline strong{color:var(--acid);font-weight:500}.nav{height:78px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px;font:800 23px var(--display);letter-spacing:.07em}.brand-mark{width:29px;height:29px;border:2px solid var(--acid);display:grid;place-items:center;transform:skew(-14deg);color:var(--acid);font:700 15px var(--mono)}.navlinks{display:flex;gap:32px;align-items:center;color:#b3bbb4;font-size:12px}.navlinks a:hover{color:var(--acid)}.nav-cta{border:1px solid var(--acid);padding:11px 16px;color:var(--acid);font:500 10px var(--mono);letter-spacing:.08em;transition:.2s}.nav-cta:hover{background:var(--acid);color:#101516}
-    .hero{min-height:660px;position:relative;isolation:isolate;display:flex;align-items:center;overflow:hidden;background:#0b1112}.hero:before{content:'';position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,#080b0c 0%,rgba(8,11,12,.91) 27%,rgba(8,11,12,.36) 68%,rgba(8,11,12,.15)),linear-gradient(0deg,#080b0c 0%,transparent 24%),url('assets/images/apex-hero.jpg') center 53%/cover no-repeat}.hero:after{content:'';position:absolute;inset:0;z-index:-1;opacity:.16;background-image:linear-gradient(rgba(255,255,255,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.09) 1px,transparent 1px);background-size:74px 74px;mask-image:linear-gradient(90deg,black,transparent 70%)}.hero-inner{padding:86px 0 78px;max-width:640px}.live-pill{display:inline-flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid rgba(216,255,62,.35);background:rgba(216,255,62,.07);color:var(--acid)}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--acid);box-shadow:0 0 12px var(--acid);animation:pulse 1.5s infinite}@keyframes pulse{50%{opacity:.35;box-shadow:0 0 2px var(--acid)}}h1{margin:26px 0 16px;font:900 clamp(76px,12vw,154px)/.78 var(--display);letter-spacing:-.045em;text-transform:uppercase}h1 span{display:block;color:var(--acid);font-size:.55em;letter-spacing:.01em;margin-top:17px}.hero-copy{max-width:420px;color:#c4cbc3;font-size:14px;line-height:1.9}.hero-actions{display:flex;gap:12px;margin-top:32px;align-items:center}.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;padding:0 20px;border:1px solid var(--acid);background:var(--acid);color:#101516;font:700 12px var(--mono);letter-spacing:.04em;cursor:pointer;transition:transform .2s,background .2s,color .2s}.btn:hover{transform:translateY(-2px);background:#e9ff9c}.btn.secondary{background:transparent;color:var(--white);border-color:rgba(241,245,235,.32)}.btn.secondary:hover{border-color:var(--acid);color:var(--acid)}.hero-note{margin-left:6px;color:#b3bbb4}.hero-bottom{position:absolute;bottom:0;left:0;right:0;border-top:1px solid var(--line);background:rgba(8,11,12,.7);backdrop-filter:blur(12px)}.hero-stats{display:grid;grid-template-columns:repeat(4,1fr)}.hero-stat{padding:17px 20px;border-right:1px solid var(--line)}.hero-stat:first-child{padding-left:0}.hero-stat:last-child{border:0}.hero-stat span{display:block;color:var(--muted);font-size:10px}.hero-stat strong{font:700 25px/.95 var(--display);letter-spacing:.02em}.hero-stat strong em{font:400 11px var(--mono);color:var(--acid);font-style:normal;margin-left:4px}
-    .section{padding:104px 0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:32px;margin-bottom:34px}.section-title{margin:9px 0 0;font:800 clamp(40px,6vw,64px)/.95 var(--display);letter-spacing:-.02em}.section-intro{max-width:370px;color:var(--muted);font-size:12px}.section-rule{border-top:1px solid var(--line)}.race-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:20px}.track-card,.telemetry-card{border:1px solid var(--line);background:var(--panel);min-height:380px}.track-card{padding:25px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}.card-top{display:flex;justify-content:space-between;align-items:start}.track-title{font:700 30px/.95 var(--display);margin:7px 0}.track-location{color:var(--muted);font-size:11px}.track-switch{display:flex;gap:6px}.track-switch button{background:transparent;color:var(--muted);border:1px solid var(--line);padding:9px 11px;font:10px var(--mono);cursor:pointer}.track-switch button[aria-pressed=true]{color:var(--acid);border-color:var(--acid);background:rgba(216,255,62,.07)}.track-svg{width:100%;height:190px;margin:8px auto 0;overflow:visible}.track-path{fill:none;stroke:var(--acid);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 7px rgba(216,255,62,.38));transition:d .35s}.track-path-ghost{fill:none;stroke:rgba(241,245,235,.1);stroke-width:22;stroke-linecap:round;stroke-linejoin:round}.track-foot{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:10px}.track-foot strong{display:block;color:var(--white);font:500 13px var(--mono);margin-top:4px}.telemetry-card{padding:25px}.telemetry-head{display:flex;justify-content:space-between;align-items:center}.telemetry-head h3{font:700 23px var(--display);margin:0}.signal{color:var(--acid);display:flex;gap:7px;align-items:center}.telemetry-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);margin-top:25px;border:1px solid var(--line)}.metric{background:var(--panel);padding:19px 17px;min-height:100px}.metric label{display:block;color:var(--muted);font-size:10px}.metric strong{display:block;font:700 35px/.95 var(--display);margin-top:9px}.metric strong small{font:500 11px var(--mono);color:var(--muted)}.meter{height:3px;background:#27302a;margin-top:12px;overflow:hidden}.meter i{height:100%;display:block;background:var(--acid);width:78%;transition:width .4s}.timing{margin-top:21px;border-top:1px solid var(--line);padding-top:15px;display:flex;justify-content:space-between;color:var(--muted);font-size:10px}.timing strong{font:500 12px var(--mono);color:var(--white)}
-    .drivers{background:#0b1010;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.driver-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.driver{position:relative;min-height:300px;border:1px solid var(--line);background:#111818;padding:24px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}.driver:after{content:attr(data-number);position:absolute;right:-5px;bottom:-40px;font:900 210px/.9 var(--display);color:rgba(241,245,235,.035);pointer-events:none}.driver:first-child{background:linear-gradient(145deg,rgba(216,255,62,.08),transparent 58%),#111818}.driver-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted)}.driver-number{color:var(--acid);font:500 12px var(--mono)}.driver-name{font:800 42px/.9 var(--display);text-transform:uppercase;margin:0;position:relative;z-index:1}.driver-name span{display:block;color:var(--muted);font-size:17px;font-weight:500;margin-top:8px}.driver-stats{display:flex;gap:24px;position:relative;z-index:1}.driver-stats span{color:var(--muted);font-size:9px}.driver-stats b{display:block;color:var(--white);font:500 13px var(--mono);margin-top:3px}.carline{display:flex;align-items:center;gap:8px;color:var(--acid);font:10px var(--mono)}.carline:before{content:'';width:19px;height:2px;background:var(--acid)}
-    .cta{padding:85px 0}.cta-box{border:1px solid rgba(216,255,62,.3);background:linear-gradient(105deg,rgba(216,255,62,.1),rgba(216,255,62,.015) 55%,transparent);padding:44px;display:flex;align-items:center;justify-content:space-between;gap:30px}.cta h2{font:800 clamp(36px,5vw,58px)/.9 var(--display);margin:10px 0}.cta p{color:var(--muted);font-size:12px}.footer{border-top:1px solid var(--line);padding:22px 0 35px;color:var(--muted);font-size:10px}.footer .wrap{display:flex;justify-content:space-between;gap:20px}.footer a:hover{color:var(--acid)}
-    .toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--acid);color:#080b0c;padding:12px 18px;font:500 11px var(--mono);z-index:5;transition:.25s}.toast.show{transform:translate(-50%,0);opacity:1}.reduced-motion *{scroll-behavior:auto}
-    @media(max-width:760px){.wrap{width:min(100% - 34px,600px)}.topline .wrap{font-size:9px}.nav{height:66px}.navlinks{gap:16px}.navlinks a:not(.nav-cta){display:none}.hero{min-height:685px;align-items:flex-start}.hero:before{background-position:62% center;background-image:linear-gradient(90deg,#080b0c 0%,rgba(8,11,12,.82) 39%,rgba(8,11,12,.16)),linear-gradient(0deg,#080b0c 0%,transparent 48%),url('assets/images/apex-hero.jpg')}.hero-inner{padding:88px 0 165px}.hero-stats{grid-template-columns:1fr 1fr}.hero-stat{padding:12px 10px;border-bottom:1px solid var(--line)}.hero-stat:first-child{padding-left:10px}.hero-stat:nth-child(2){border-right:0}.hero-stat:nth-child(3),.hero-stat:nth-child(4){border-bottom:0}.hero-stat strong{font-size:22px}.section{padding:72px 0}.section-head{display:block}.section-intro{margin-top:18px}.race-layout{grid-template-columns:1fr}.track-card,.telemetry-card{min-height:0}.driver-grid{grid-template-columns:1fr}.driver{min-height:260px}.cta-box{padding:28px;display:block}.cta .btn{margin-top:15px}.footer .wrap{display:block}.footer .wrap span{display:block;margin-top:8px}}
-    @media(max-width:430px){.brand{font-size:20px}.nav-cta{padding:9px 10px;font-size:9px}.hero-inner{padding-top:70px}.hero-actions{align-items:flex-start;flex-direction:column}.hero-note{margin:0}.track-switch{gap:4px}.track-switch button{padding:8px 7px;font-size:9px}.track-card,.telemetry-card{padding:18px}.telemetry-grid .metric{padding:15px 12px}.metric strong{font-size:30px}}
-    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+    :root{color-scheme:dark;--bg:#080b0c;--panel:#0e1313;--line:rgba(241,245,235,.12);--muted:#9aa39d;--white:#f1f5eb;--acid:#d8ff3e;--red:#ff4c38;--mono:'DM Mono',monospace;--display:'Barlow Condensed','Noto Sans TC',sans-serif;--body:'Noto Sans TC',sans-serif}
+    *,::before,::after{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--white);font-family:var(--body);font-size:14px;line-height:1.55;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit}
+    button{background:none;border:none;color:inherit;cursor:pointer;outline:none;touch-action:manipulation}
+    .skip{position:absolute;left:-10000px;top:1rem;padding:.7rem 1rem;background:var(--acid);color:var(--ink,#080b0c);font:700 12px var(--mono);z-index:100}
+    .skip:focus{left:1rem}
+    .wrap{width:min(1220px,calc(100% - 48px));margin:auto}
+    .mono{font-family:var(--mono)}
+    .eyebrow{display:flex;align-items:center;gap:10px;color:var(--acid);font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+    .eyebrow:before{content:'';width:22px;height:1px;background:currentColor}
+    .topline{border-bottom:1px solid var(--line);height:38px;color:#aab2aa}
+    .topline .wrap{height:100%;display:flex;align-items:center;justify-content:space-between}
+    .nav{height:72px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:12px;font:800 22px var(--display);letter-spacing:.06em}
+    .brand-mark{width:27px;height:27px;border:2px solid var(--acid);display:grid;place-items:center;transform:skew(-12deg);color:var(--acid);font:700 14px var(--mono)}
+    .navlinks{display:flex;gap:28px;align-items:center;color:#b3bbb4;font-size:12px}
+    .navlinks a:hover{color:var(--acid)}
+    .nav-cta{border:1px solid var(--acid);padding:10px 15px;color:var(--acid);font:500 10px var(--mono);letter-spacing:.08em}
+    .nav-cta:hover{background:var(--acid);color:var(--bg)}
+    /* ---------- 第一人稱駕駛艙 ---------- */
+    .hero{position:relative;min-height:84vh;background:#060a0a;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .hero-game{position:absolute;inset:0}
+    #raceCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;background:#040707;touch-action:none;user-select:none}
+    .hero-hud{position:absolute;top:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;z-index:20}
+    .hud-block{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .hud-label{font:500 9px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--mixed,#9aa39d)}
+    .hud-value{font:700 15px var(--mono);letter-spacing:.05em}
+    .hud-value b{color:var(--acid)}
+    .ignite-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:25;text-align:center;padding:0 24px}
+    .ignite-title{font:900 clamp(24px,5vw,40px)/1.15 var(--display);letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px}
+    .ignite-title b{color:var(--acid)}
+    .ignite-sub{color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:26px}
+    .btn-ignite{display:inline-flex;align-items:center;gap:10px;padding:16px 34px;border:1px solid var(--acid);background:var(--acid);color:var(--bg);font:800 13px var(--mono);letter-spacing:.16em;text-transform:uppercase;box-shadow:0 0 28px rgba(216,255,62,.45)}
+    .btn-ignite:hover{background:#e9ff9c;box-shadow:0 0 45px rgba(216,255,62,.7)}
+    .btn-ignite:active{transform:scale(.96)}
+    .touch-controls{position:absolute;bottom:22px;left:0;right:0;display:none;justify-content:space-between;padding:0 26px;z-index:30}
+    .tpad{width:84px;height:84px;border:1px solid var(--line);border-radius:50%;color:var(--muted);font:700 15px var(--mono);display:flex;align-items:center;justify-content:center}
+    .tpad:active{color:var(--acid);border-color:var(--acid)}
+    .tgo{width:106px;height:106px;border:1px solid var(--acid);border-radius:50%;background:var(--acid);color:var(--bg);font:800 12px var(--mono);display:flex;align-items:center;justify-content:center;letter-spacing:.14em;text-transform:uppercase}
+    .tgo:active{background:#e9ff9c}
+    @media (pointer:coarse){.touch-controls{display:flex}}
+    @media (pointer:fine) and (hover:none){.touch-controls{display:flex}}
+    /* ---------- 靜態降級（減少動態） ---------- */
+    .hero-static{display:none;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 32px;text-align:center;z-index:10}
+    .reduced-notice{display:none;margin-bottom:18px;color:var(--muted);font-size:12px}
+    .hero-static .live-pill{display:inline-flex;align-items:center;gap:9px;padding:8px 12px;border:1px solid rgba(216,255,62,.35);background:rgba(216,255,62,.07);color:var(--acid);font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:24px}
+    .hero-static .live-dot{width:7px;height:7px;border-radius:50%;background:var(--acid);box-shadow:0 0 12px var(--acid)}
+    .hero-static h1{font:900 clamp(52px,12vw,110px)/.8 var(--display);letter-spacing:-.04em;text-transform:uppercase;margin:0 0 14px}
+    .hero-static h1 span{display:block;color:var(--acid);font-size:.5em;letter-spacing:.02em}
+    .hero-static p{color:#c4cbc3;font-size:14px;line-height:1.9;max-width:560px;margin:0 0 26px}
+    .hero-static .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border:1px solid var(--acid);background:var(--acid);color:var(--bg);font:700 12px var(--mono);letter-spacing:.04em}
+    .btn:hover{transform:translateY(-2px);background:#e9ff9c}
+    .btn.secondary{background:transparent;color:var(--white);border-color:rgba(241,245,235,.35)}
+    .btn.secondary:hover{border-color:var(--acid);color:var(--acid)}
+    .hero-static .hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);margin-top:34px;width:100%}
+    .hero-static .hero-stat{padding:16px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--muted);font-size:10px}
+    .hero-static .hero-stat strong{display:block;color:var(--white);font:700 24px/.95 var(--display);letter-spacing:.02em;margin-top:6px}
+    .hero-static .hero-stat strong em{font:400 11px var(--mono);color:var(--acid);font-style:normal;margin-left:4px}
+    /* ---------- 共用區塊 ---------- */
+    .section{padding:96px 0}
+    .section-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:26px}
+    .section-title{margin:0;font:800 clamp(34px,5vw,52px)/.95 var(--display);letter-spacing:-.02em}
+    .section-intro{max-width:460px;color:var(--muted);font-size:12px;line-height:1.8}
+    .tracksel{display:flex;gap:8px}
+    .tracksel button{border:1px solid var(--line);padding:7px 13px;font:500 10px var(--mono);color:var(--muted)}
+    .tracksel button.active{color:var(--acid);border-color:var(--acid);background:rgba(216,255,62,.08)}
+    .pit{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:10px}
+    .pit-card{border:1px solid var(--line);background:var(--panel);padding:16px 14px;border-radius:10px}
+    .pit-card .label{font:500 9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.16em}
+    .pit-card .value{font:700 20px var(--mono);margin-top:5px}
+    .pit-card .value.ok{color:var(--acid)}
+    .pit-card .value.warn{color:#ffb347}
+    .pit-card .value.danger{color:var(--red)}
+    .pit-bar{height:4px;background:rgba(241,245,235,.1);margin-top:7px;border-radius:2px;overflow:hidden}
+    .pit-bar i{display:block;height:100%;background:var(--acid);width:0%;transition:width .15s}
+    .pit-bar i.hot{background:var(--red)}
+    .lapboard{display:flex;gap:26px;align-items:center;border:1px solid var(--line);background:var(--panel);padding:18px 24px;border-radius:12px;margin-top:14px}
+    .lapboard .item{display:flex;flex-direction:column;gap:4px}
+    .lapboard .k{font:500 9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.16em}
+    .lapboard .v{font:700 16px var(--mono)}
+    .mapwrap{position:relative;width:260px;height:140px;margin-left:auto}
+    #raceMap{width:100%;height:100%;display:block;background:rgba(2,5,6,.45);border:1px solid var(--line);border-radius:10px}
+    .dot{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;box-shadow:0 0 10px currentColor}
+    .dot.p{background:var(--acid)}
+    .dot.r{background:var(--red)}
+    .drivers{background:#0b1010;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .driver-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .driver{position:relative;min-height:300px;border:1px solid var(--line);background:#111818;padding:24px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}
+    .driver:after{content:attr(data-number);position:absolute;right:-6px;bottom:-44px;font:900 180px/.9 var(--display);color:rgba(241,245,235,.025);pointer-events:none}
+    .driver-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted)}
+    .driver-number{color:var(--acid);font:500 12px var(--mono)}
+    .driver-name{font:800 40px/.9 var(--display);text-transform:uppercase;margin:0;position:relative;z-index:1}
+    .driver-name span{display:block;color:var(--muted);font-size:17px;font-weight:500;margin-top:8px}
+    .driver-stats{display:flex;gap:24px;position:relative;z-index:1}
+    .driver-stats span{color:var(--muted);font-size:9px}
+    .driver-stats b{display:block;color:var(--white);font:500 13px var(--mono);margin-top:3px}
+    .carline{display:flex;align-items:center;gap:8px;color:var(--acid);font:10px var(--mono)}
+    .carline:before{content:'';width:19px;height:2px;background:var(--acid)}
+    .cta{padding:80px 0}
+    .cta-box{border:1px solid rgba(216,255,62,.3);background:linear-gradient(105deg,rgba(216,255,62,.1),rgba(216,255,62,.015) 55%,transparent);padding:44px;display:flex;align-items:center;justify-content:space-between;gap:30px}
+    .cta h2{font:800 clamp(32px,5vw,52px)/.9 var(--display);margin:6px 0 4px}
+    .cta p{color:var(--muted);font-size:12px}
+    .footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--mixed,#9aa39d);font-size:10px}
+    .footer .wrap{display:flex;justify-content:space-between;gap:20px}
+    .footer a:hover{color:var(--acid)}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,34px);opacity:0;pointer-events:none;background:var(--acid);color:var(--bg);padding:10px 16px;font:500 11px var(--mono);z-index:60;transition:.25s;border-radius:4px}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+    /* ---------- 動態偏好降級 ---------- */
+    @media (prefers-reduced-motion: reduce){
+      .hero-game{display:none !important}
+      .hero-static{display:block !important}
+      .reduced-notice{display:block !important}
+      .btn-ignite{animation:none !important}
+      *,::before,::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+    }
+    @media (max-width:760px){
+      .wrap{width:min(100% - 28px,640px)}
+      .nav{height:62px}.navlinks{display:none}
+      .hero-hud{padding:0 16px;height:52px}
+      .hud-block{display:none}
+      .pit{grid-template-columns:1fr 1fr}
+      .lapboard{flex-direction:column;align-items:flex-start;gap:12px}
+      .mapwrap{margin-left:0;margin-top:14px;width:100%}
+      .driver-grid{grid-template-columns:1fr}
+      .cta-box{padding:28px;display:block}
+      .cta .btn{margin-top:14px;width:100%;justify-content:center}
+    }
   </style>
 </head>
 <body>
   <a class="skip" href="#main">跳至主要內容</a>
+
   <div class="topline"><div class="wrap"><span>APEX GP <strong>／ 2025 車隊賽季</strong></span><span class="mono">ENGINEERED FOR THE EDGE&nbsp;&nbsp; · &nbsp;&nbsp;TAICHUNG / TW</span></div></div>
   <header class="wrap nav">
     <a class="brand" href="RaceDay01.html" aria-label="APEX GP 首頁"><span class="brand-mark" aria-hidden="true">A</span> APEX GP</a>
-    <nav class="navlinks" aria-label="主要導覽"><a href="#race">賽事遙測</a><a href="#team">車手陣容</a><a class="nav-cta" href="#race">進入維修站&nbsp; ↗</a></nav>
+    <nav class="navlinks" aria-label="主要導覽"><a href="#race">駕駛艙</a><a href="#race">即時遙測</a><a href="#team">車手陣容</a><a class="nav-cta" href="#race">進入維修站&nbsp; ↗</a></nav>
   </header>
+
   <main id="main">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="wrap hero-inner">
-        <div class="live-pill mono"><span class="live-dot" aria-hidden="true"></span>RACE CONTROL&nbsp; / &nbsp;SESSION OPEN</div>
-        <h1 id="hero-title">No limits<span>Just the line.</span></h1>
-        <p class="hero-copy">速度不是偶然，是每一個毫秒的選擇。走進 APEX GP 賽道日，切換賽道、讀取即時遙測，感受極限之上的精準控制。</p>
-        <div class="hero-actions"><a class="btn" href="#race">探索賽道 <span aria-hidden="true">↘</span></a><button class="btn secondary" type="button" id="race-toggle" aria-pressed="false">啟動模擬 <span aria-hidden="true">▶</span></button><span class="hero-note mono" id="session-state" aria-live="polite">SYSTEM STANDBY</span></div>
+    <section class="hero" id="hero" aria-label="第一人稱駕駛艙視圖">
+      <div class="hero-game">
+        <canvas id="raceCanvas" width="1280" height="720" aria-label="駕駛艙儀表與賽道視圖"></canvas>
+        <div class="hero-hud">
+          <div class="hud-block"><div class="hud-label">TRACK</div><div class="hud-value" id="hudTrack">SUZUKA INTERNATIONAL</div></div>
+          <div class="hud-block"><div class="hud-label">LAP</div><div class="hud-value" id="hudLap">1 / 5</div></div>
+          <div class="hud-block"><div class="hud-label">POSITION</div><div class="hud-value" id="hudPos">—</div></div>
+          <div class="hud-block"><div class="hud-label">GAP TO LEADER</div><div class="hud-value" id="hudGap">LEADER</div></div>
+          <div class="hud-block"><div class="hud-label">FLAG</div><div class="hud-value" id="hudFlag">GREEN</div></div>
+        </div>
+        <div class="ignite-overlay" id="igniteOverlay">
+          <div class="ignite-title">ENGINE STOPPED<b>·</b>DRAWING TO LINE</div>
+          <div class="ignite-sub">← → 轉向&nbsp; · &nbsp;↑ / Space 油門&nbsp; · &nbsp;↓ 煞車&nbsp; · &nbsp;支援手把與觸控</div>
+          <button class="btn-ignite" id="startBtn">啟動引擎&nbsp; START ENGINE<span aria-hidden="true"> ▶</span></button>
+        </div>
+        <div class="touch-controls" id="touchControls">
+          <div class="tpad" id="btnL" data-key="L">◀</div>
+          <div class="tgo" id="btnThrottle">THROTTLE</div>
+          <div class="tpad" id="btnR" data-key="R">▶</div>
+        </div>
       </div>
-      <div class="hero-bottom"><div class="wrap hero-stats">
-        <div class="hero-stat"><span>最高速度</span><strong>312<em>KM/H</em></strong></div><div class="hero-stat"><span>最大下壓力</span><strong>1,240<em>KG</em></strong></div><div class="hero-stat"><span>0—100 KM/H</span><strong>2.4<em>SEC</em></strong></div><div class="hero-stat"><span>車隊積分</span><strong>286<em>PTS</em></strong></div>
-      </div></div>
+      <div class="hero-static" id="heroStatic">
+        <div class="reduced-notice">偏好設定為「減少動態」，駕駛艙已切換為靜態預覽。</div>
+        <div class="live-pill mono"><span class="live-dot" aria-hidden="true"></span>RACE CONTROL / SESSION OPEN</div>
+        <h1>No limits<span>Just the line.</span></h1>
+        <p>速度不是偶然，是每一個毫秒的選擇。純靜態頁面上的第一人稱駕駛艙已啟用減少動態模式。</p>
+        <div class="actions"><a class="btn" href="#race">檢視遙測</a><a class="btn secondary" href="#team">車手陣容</a></div>
+        <div class="hero-stats">
+          <div class="hero-stat"><span>最高速度</span><strong>250<em>KM/H</em></strong></div>
+          <div class="hero-stat"><span>圈數</span><strong>5<em>LAPS</em></strong></div>
+          <div class="hero-stat"><span>賽道</span><strong>3<em>COURSES</em></strong></div>
+          <div class="hero-stat"><span>技術棧</span><strong>Canvas 2D<em>＋ Web Audio</em></strong></div>
+        </div>
+      </div>
     </section>
+
     <section class="section wrap" id="race" aria-labelledby="race-title">
-      <div class="section-head"><div><p class="eyebrow">Live telemetry / 01</p><h2 class="section-title" id="race-title">賽道遙測</h2></div><p class="section-intro">選擇你的賽道，掌握每一個彎角的節奏。數據模擬器可由上方「啟動模擬」控制。</p></div>
-      <div class="race-layout">
-        <article class="track-card">
-          <div class="card-top"><div><p class="eyebrow">Circuit selection</p><h3 class="track-title" id="track-name">SUZUKA INTERNATIONAL</h3><div class="track-location" id="track-location">鈴鹿，日本　／　5.807 KM</div></div><div class="track-switch" role="group" aria-label="選擇賽道"><button type="button" data-track="suzuka" aria-pressed="true">SUZUKA</button><button type="button" data-track="monza" aria-pressed="false">MONZA</button><button type="button" data-track="spa" aria-pressed="false">SPA</button></div></div>
-          <svg class="track-svg" viewBox="0 0 600 230" role="img" aria-label="鈴鹿賽道平面示意圖"><path class="track-path-ghost" id="track-ghost" d="M105 116 C68 83 107 41 174 54 C230 65 254 122 306 105 C366 85 360 31 423 42 C492 54 495 104 452 116 C408 128 367 129 381 165 C393 193 457 191 473 163 C497 120 551 130 543 164 C530 211 437 217 388 189 C343 164 317 140 267 154 C216 168 181 201 137 178 C98 157 75 138 105 116Z"/><path class="track-path" id="track-path" d="M105 116 C68 83 107 41 174 54 C230 65 254 122 306 105 C366 85 360 31 423 42 C492 54 495 104 452 116 C408 128 367 129 381 165 C393 193 457 191 473 163 C497 120 551 130 543 164 C530 211 437 217 388 189 C343 164 317 140 267 154 C216 168 181 201 137 178 C98 157 75 138 105 116Z"/></svg>
-          <div class="track-foot"><div>圈數紀錄<strong id="track-record">1:30.983</strong></div><div>賽道距離<strong id="track-distance">5.807 KM</strong></div><div>彎道數<strong id="track-corners">18 TURNS</strong></div><div>海拔差<strong id="track-elevation">40 M</strong></div></div>
-        </article>
-        <article class="telemetry-card" aria-labelledby="telemetry-title"><div class="telemetry-head"><h3 id="telemetry-title">CAR 07 / TELEMETRY</h3><span class="signal mono"><span class="live-dot" aria-hidden="true"></span><span id="telemetry-status">STANDBY</span></span></div>
-          <div class="telemetry-grid"><div class="metric"><label>車速 / SPEED</label><strong><span data-value="speed">000</span><small> KM/H</small></strong><div class="meter"><i data-meter="speed" style="width:0%"></i></div></div><div class="metric"><label>引擎轉速 / RPM</label><strong><span data-value="rpm">0.0</span><small> ×1000</small></strong><div class="meter"><i data-meter="rpm" style="width:0%"></i></div></div><div class="metric"><label>輪胎溫度 / TYRE</label><strong><span data-value="tyre">68</span><small> °C</small></strong><div class="meter"><i data-meter="tyre" style="width:42%"></i></div></div><div class="metric"><label>燃油負載 / FUEL</label><strong><span data-value="fuel">82</span><small> %</small></strong><div class="meter"><i data-meter="fuel" style="width:82%"></i></div></div></div>
-          <div class="timing"><span>最佳單圈&nbsp; <strong id="best-lap">1:30.983</strong></span><span>模擬圈數&nbsp; <strong id="lap-count">—</strong></span><span>環境&nbsp; <strong>DRY / 24°C</strong></span></div>
-        </article>
+      <div class="section-head">
+        <div><p class="eyebrow">Pit wall telemetry / 01</p><h2 class="section-title" id="race-title">即時遙測儀表板</h2></div>
+        <div class="tracksel">
+          <button type="button" class="tracksel-btn active" data-track="suzuka">SUZUKA</button>
+          <button type="button" class="tracksel-btn" data-track="monza">MONZA</button>
+          <button type="button" class="tracksel-btn" data-track="spa">SPA</button>
+        </div>
+      </div>
+      <p class="section-intro">遊戲迴圈以 requestAnimationFrame 在 Canvas 2D 上以 60 FPS 運作；引擎與輪胎聲音皆由 Web Audio 源碼即時合成，不載入任何音訊檔案，亦無外部腳本依賴。</p>
+      <div class="pit" id="pitGrid">
+        <div class="pit-card"><div class="label">車速 / SPEED</div><div class="value ok" id="pwSpeed">0</div><div class="value mono" style="font-size:11px;color:var(--muted)">KM/H</div><div class="pit-bar"><i id="pwSpeedBar"></i></div></div>
+        <div class="pit-card"><div class="label">引擎轉速 / RPM</div><div class="value" id="pwRpmVal">0.0</div><div class="value mono" style="font-size:11px;color:var(--muted)">×1000</div><div class="pit-bar"><i id="pwRpmBar"></i></div></div>
+        <div class="pit-card"><div class="label">檔位 / GEAR</div><div class="value ok" id="pwGear">1</div></div>
+        <div class="pit-card"><div class="label">燃油 / FUEL</div><div class="value" id="pwFuel">100</div><div class="value mono" style="font-size:11px;color:var(--muted)">%</div><div class="pit-bar"><i id="pwFuelBar"></i></div></div>
+        <div class="pit-card"><div class="label">胎溫 FL</div><div class="value" id="pwTyreFL">85</div><div class="value mono" style="font-size:11px;color:var(--muted)">°C</div><div class="pit-bar"><i id="pwTyreFLBar"></i></div></div>
+        <div class="pit-card"><div class="label">胎溫 FR</div><div class="value" id="pwTyreFR">85</div><div class="value mono" style="font-size:11px;color:var(--muted)">°C</div><div class="pit-bar"><i id="pwTyreFRBar"></i></div></div>
+        <div class="pit-card"><div class="label">胎溫 RL</div><div class="value" id="pwTyreRL">85</div><div class="value mono" style="font-size:11px;color:var(--muted)">°C</div><div class="pit-bar"><i id="pwTyreRLBar"></i></div></div>
+        <div class="pit-card"><div class="label">胎溫 RR</div><div class="value" id="pwTyreRR">85</div><div class="value mono" style="font-size:11px;color:var(--muted)">°C</div><div class="pit-bar"><i id="pwTyreRRBar"></i></div></div>
+        <div class="pit-card"><div class="label">水溫 / WATER</div><div class="value" id="pwWater">88</div><div class="value mono" style="font-size:11px;color:var(--muted)">°C</div><div class="pit-bar"><i id="pwWaterBar"></i></div></div>
+        <div class="pit-card"><div class="label">油溫 / OIL</div><div class="value" id="pwOil">95</div><div class="value mono" style="font-size:11px;color:var(--muted)">°C</div><div class="pit-bar"><i id="pwOilBar"></i></div></div>
+        <div class="pit-card"><div class="label">ERS 電池</div><div class="value" id="pwErs">82</div><div class="value mono" style="font-size:11px;color:var(--muted)">%</div><div class="pit-bar"><i id="pwErsBar"></i></div></div>
+      </div>
+      <div class="lapboard">
+        <div class="item"><div class="k">圈數</div><div class="v" id="pbLap">1 / 5</div></div>
+        <div class="item"><div class="k">上一圈</div><div class="v" id="pbLast">—</div></div>
+        <div class="item"><div class="k">最佳圈</div><div class="v" id="pbBest">—</div></div>
+        <div class="item"><div class="k">名次</div><div class="v" id="pbPos">—</div></div>
+        <div class="item"><div class="k">與領先差距</div><div class="v" id="pbGap">LEADER</div></div>
+      </div>
+      <div class="mapwrap"><canvas id="raceMap" width="260" height="140" aria-label="賽道小地圖"></canvas>
+        <div id="dotP" class="dot p" style="left:130px;top:70px"></div>
+        <div id="dotR0" class="dot r"></div><div id="dotR1" class="dot r"></div><div id="dotR2" class="dot r"></div>
+        <div id="dotR3" class="dot r"></div><div id="dotR4" class="dot r"></div><div id="dotR5" class="dot r"></div>
       </div>
     </section>
+
     <section class="section drivers" id="team" aria-labelledby="team-title"><div class="wrap"><div class="section-head"><div><p class="eyebrow">The crew / 02</p><h2 class="section-title" id="team-title">車手陣容</h2></div><p class="section-intro">三位車手，一個目標。每一次進站、每一筆設定，都是為了找到那條更快的線。</p></div>
       <div class="driver-grid">
         <article class="driver" data-number="07"><div class="driver-top"><span class="driver-number">DRIVER / 01</span><span class="mono">★ 2 WINS</span></div><div><h3 class="driver-name">Ethan Lin<span>伊森・林　／　台灣</span></h3><div class="driver-stats"><span>車號<b>07</b></span><span>積分<b>142 PTS</b></span><span>桿位<b>03</b></span></div></div><div class="carline">APEX VORTEX R / NO. 07</div></article>
@@ -66,27 +237,791 @@
         <article class="driver" data-number="88"><div class="driver-top"><span class="driver-number">DRIVER / 03</span><span class="mono">ROOKIE</span></div><div><h3 class="driver-name">Kai Nakamura<span>中村 凱　／　日本</span></h3><div class="driver-stats"><span>車號<b>88</b></span><span>積分<b>48 PTS</b></span><span>最快圈<b>1</b></span></div></div><div class="carline">APEX VORTEX R / NO. 88</div></article>
       </div>
     </div></section>
-    <section class="wrap cta"><div class="cta-box"><div><p class="eyebrow">The next lap is yours</p><h2>READY TO RACE?</h2><p>切換賽道，啟動遙測模擬，親自感受每一圈的節奏。</p></div><a href="#race" class="btn">回到賽道 <span aria-hidden="true">↑</span></a></div></section>
+
+    <section class="wrap cta"><div class="cta-box"><div><p class="eyebrow">The next lap is yours</p><h2>READY TO RACE?</h2><p>切換賽道，啟動駕駛艙，親自感受每一圈的節奏。</p></div><a href="#race" class="btn">回到賽道 <span aria-hidden="true">↑</span></a></div></section>
   </main>
-  <footer class="footer"><div class="wrap"><a class="brand" href="RaceDay01.html"><span class="brand-mark" aria-hidden="true">A</span> APEX GP</a><span>© 2025 APEX GP　／　此頁為純靜態互動網站範例，車隊、數據與車手皆為虛構內容。</span></div></footer>
+
+  <footer class="footer"><div class="wrap"><a class="brand" href="RaceDay01.html"><span class="brand-mark" aria-hidden="true">A</span> APEX GP</a><span>© 2025 APEX GP　／　純靜態互動網站，車隊與數據皆為虛構內容。無外部腳本依賴，離線開啟後除字型外皆可運作。</span></div></footer>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="sr-only" id="a11y" aria-live="polite"></div>
+
   <script>
     (function(){
       'use strict';
-      var tracks={
-        suzuka:{name:'SUZUKA INTERNATIONAL',location:'鈴鹿，日本　／　5.807 KM',distance:'5.807 KM',record:'1:30.983',corners:'18 TURNS',elevation:'40 M',d:'M105 116 C68 83 107 41 174 54 C230 65 254 122 306 105 C366 85 360 31 423 42 C492 54 495 104 452 116 C408 128 367 129 381 165 C393 193 457 191 473 163 C497 120 551 130 543 164 C530 211 437 217 388 189 C343 164 317 140 267 154 C216 168 181 201 137 178 C98 157 75 138 105 116Z'},
-        monza:{name:'AUTODROMO NAZIONALE',location:'蒙札，義大利　／　5.793 KM',distance:'5.793 KM',record:'1:21.046',corners:'11 TURNS',elevation:'13 M',d:'M119 60 L425 60 Q468 60 468 94 L468 136 Q468 160 430 160 L342 160 Q320 160 320 181 Q320 201 346 201 L474 201 Q500 201 500 176 L500 70 Q500 43 475 43 L145 43 Q118 43 118 72 L118 147 Q118 174 146 174 L215 174 Q241 174 241 145 L241 84 Q241 60 265 60 L310 60'},
-        spa:{name:'CIRCUIT DE SPA-FRANCORCHAMPS',location:'斯帕， 比利時　／　7.004 KM',distance:'7.004 KM',record:'1:44.701',corners:'19 TURNS',elevation:'102 M',d:'M110 174 C140 160 138 93 174 92 C207 91 202 156 232 153 C265 150 256 42 301 42 C340 42 324 122 357 126 C390 130 410 45 445 52 C485 60 459 119 485 139 C512 160 543 120 545 87 C548 57 520 47 504 65 C480 94 501 180 465 187 C429 194 409 139 375 157 C339 176 350 208 310 208 C267 208 275 175 240 178 C205 181 208 209 172 203 C143 198 139 173 110 174Z'}
+
+      /* ================= 設定常數 ================= */
+      var CFG = {
+        SEG_LEN: 15,       // 世界單位每段（約 15 m）
+        FOV: 100,          // 視距（像素·單位）
+        CAM_H: 950,        // 攝影機高度
+        DRAW: 220,         // 繪製段數（前方視距）
+        ROAD_W: 1450,      // 道路寬度
+        MAX_SPEED: 250,    // km/h
+        LAPS: 5,
+        N: 400             // 賽道段數（總長 6 km）
       };
-      var path=document.getElementById('track-path'),ghost=document.getElementById('track-ghost');
-      document.querySelectorAll('[data-track]').forEach(function(button){button.addEventListener('click',function(){var t=tracks[button.dataset.track];document.querySelectorAll('[data-track]').forEach(function(b){b.setAttribute('aria-pressed',String(b===button));});document.getElementById('track-name').textContent=t.name;document.getElementById('track-location').textContent=t.location;document.getElementById('track-distance').textContent=t.distance;document.getElementById('track-record').textContent=t.record;document.getElementById('best-lap').textContent=t.record;document.getElementById('track-corners').textContent=t.corners;document.getElementById('track-elevation').textContent=t.elevation;path.setAttribute('d',t.d);ghost.setAttribute('d',t.d);});});
-      var running=false,timer=null,tick=0,fuel=82,button=document.getElementById('race-toggle');
-      function display(key,value){document.querySelector('[data-value="'+key+'"]').textContent=value;}
-      function setMeter(key,value){document.querySelector('[data-meter="'+key+'"]').style.width=value+'%';}
-      function update(){tick++;var speed=110+Math.round((Math.sin(tick*.62)+1)*92)+Math.round(Math.random()*22),rpm=(3.2+speed/58+(Math.random()*.4)).toFixed(1),tyre=68+Math.min(30,Math.floor(tick/3));fuel=Math.max(1,fuel-(tick%12===0?.3:0));display('speed',String(speed).padStart(3,'0'));display('rpm',rpm);display('tyre',tyre);display('fuel',Math.round(fuel));setMeter('speed',Math.min(100,speed/3.2));setMeter('rpm',Math.min(100,parseFloat(rpm)/9));setMeter('tyre',Math.min(100,tyre));setMeter('fuel',fuel);document.getElementById('lap-count').textContent=String(Math.floor(tick/12)+1).padStart(2,'0');document.getElementById('session-state').textContent='SIMULATION ACTIVE';document.getElementById('telemetry-status').textContent='LIVE FEED';}
-      button.addEventListener('click',function(){running=!running;button.setAttribute('aria-pressed',String(running));button.innerHTML=running?'暫停模擬 <span aria-hidden="true">Ⅱ</span>':'啟動模擬 <span aria-hidden="true">▶</span>';if(running){update();timer=window.setInterval(update,900);}else{window.clearInterval(timer);document.getElementById('session-state').textContent='SYSTEM PAUSED';document.getElementById('telemetry-status').textContent='PAUSED';}});
-      var toast=document.getElementById('toast');document.querySelector('.nav-cta').addEventListener('click',function(){toast.textContent='維修站已就緒 — 遙測模擬可在主視覺啟動';toast.classList.add('show');window.setTimeout(function(){toast.classList.remove('show');},2400);});
-    }());
+
+      var TL = CFG.SEG_LEN * CFG.N; // 賽道總長
+
+      /* ================= DOM ================= */
+      var canvas = document.getElementById('raceCanvas');
+      var ctx = canvas.getContext('2d', { alpha: false });
+      var mapCanvas = document.getElementById('raceMap');
+      var mctx = mapCanvas.getContext('2d');
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w, h, center, horizon;
+      var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      var el = {
+        startBtn: document.getElementById('startBtn'),
+        ignite: document.getElementById('igniteOverlay'),
+        hudTrack: document.getElementById('hudTrack'),
+        hudLap: document.getElementById('hudLap'),
+        hudPos: document.getElementById('hudPos'),
+        hudGap: document.getElementById('hudGap'),
+        hudFlag: document.getElementById('hudFlag'),
+        toast: document.getElementById('toast'),
+        a11y: document.getElementById('a11y'),
+        mapWrap: document.getElementById('mapWrap'),
+        dots: [document.getElementById('dotP'), document.getElementById('dotR0'), document.getElementById('dotR1'), document.getElementById('dotR2'), document.getElementById('dotR3'), document.getElementById('dotR4'), document.getElementById('dotR5')]
+      };
+
+      /* ================= 遊戲狀態 ================= */
+      var G = {
+        started: false,
+        finished: false,
+        reduced: reduced,
+        speedKmh: 0,
+        rpm: 900,
+        gear: 1,
+        steer: 0,
+        throttle: 0,
+        brake: 0,
+        playerDist: 0,
+        playerX: 0,
+        lap: 1,
+        lapTime: 0,
+        raceTime: 0,
+        lastLap: 0,
+        bestLap: 99.99,
+        onRoad: true,
+        fuel: 100,
+        tyreTemp: 90,
+        oilTemp: 95,
+        waterTemp: 88,
+        ers: 82,
+        position: 1,
+        gapStr: 'LEADER',
+        fps: 0,
+        frameCount: 0,
+        lastFpsTime: 0
+      };
+
+      var input = { L: false, R: false, A: false, B: false };
+      var segments = [];
+      var totalX = 0;
+      var rivals = [];
+      var audio = { ready: false };
+      var lastTime = null;
+      var rafId = null;
+
+      /* ================= 賽道資料 ================= */
+      var TRACKS = {
+        suzuka: { name: 'SUZUKA INTERNATIONAL', country: '鈴鹿，日本 / 5.807 KM',
+          curves: [[70,140,1.5],[260,350,-1.3],[480,580,1.1],[720,840,-1.0],[1020,1180,1.4],[1380,1540,-1.6],[1950,2120,1.2],[2320,2480,-1.4]],
+          rivals: [215,228,205,232,210,220] },
+        monza: { name: 'AUTODROMO NAZIONALE', country: '蒙札，義大利 / 5.793 KM',
+          curves: [[50,100,-1.2],[150,220,1.4],[290,350,-1.1],[560,630,1.0],[700,780,-1.3],[1050,1220,0.9],[1420,1560,-1.1]],
+          rivals: [230,240,225,245,235,228] },
+        spa: { name: 'CIRCUIT DE SPA-FRANCORCHAMPS', country: '斯帕，比利時 / 7.004 KM',
+          curves: [[40,130,1.4],[250,370,-1.7],[540,700,1.6],[860,1020,-1.3],[1240,1400,1.2],[1650,1810,-1.5]],
+          rivals: [220,235,212,238,226,218] }
+      };
+
+      function buildTrack(key){
+        var def = TRACKS[key];
+        var N = CFG.N;
+        el.hudTrack.textContent = def.name;
+        document.title = def.name + ' — APEX GP';
+        segments = [];
+        for(var i = 0; i < N; i++){
+          segments.push({
+            i: i, z: i * CFG.SEG_LEN, curve: 0, x: 0,
+            grass: (Math.floor(i / 2) % 2) ? '#0b1410' : '#070d0a',
+            color: (Math.floor(i / 3) % 2) ? '#14241f' : '#0d1916'
+          });
+        }
+        def.curves.forEach(function(c){
+          for(var k = c[0]; k < c[1] && k < N; k++) segments[k].curve += c[2];
+        });
+        var x = 0;
+        for(var i = 0; i < N; i++){ segments[i].x = x; x += segments[i].curve * 14; }
+        // 兩端對齊，讓賽道首尾銜接（totalX 趨近於 0）
+        var comp = Math.min(60, N);
+        var per = -x / (comp * 14);
+        for(var i = N - comp; i < N; i++) segments[i].curve += per;
+        x = 0;
+        for(var i = 0; i < N; i++){ segments[i].x = x; x += segments[i].curve * 14; }
+        totalX = x;
+      }
+
+      function currentSegment(dist){
+        var pz = dist % TL;
+        var idx = Math.floor(pz / CFG.SEG_LEN) % CFG.N;
+        return segments[idx];
+      }
+
+      /* ================= 音訊（Web Audio 源碼合成） ================= */
+      function bootAudio(){
+        if(audio.ready) return;
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if(!AC) return;
+        audio.ctx = new AC();
+        var ctx = audio.ctx;
+
+        audio.osc1 = ctx.createOscillator(); audio.osc1.type = 'sawtooth';
+        audio.osc2 = ctx.createOscillator(); audio.osc2.type = 'sawtooth'; audio.osc2.detune.value = 7;
+        audio.filt = ctx.createBiquadFilter(); audio.filt.type = 'lowpass'; audio.filt.Q = 1;
+        audio.egain = ctx.createGain();
+        audio.osc1.connect(audio.filt); audio.osc2.connect(audio.filt);
+        audio.filt.connect(audio.egain); audio.egain.connect(ctx.destination);
+        audio.osc1.start(0); audio.osc2.start(0);
+
+        var buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+        var d = buf.getChannelData(0);
+        for(var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        audio.noise = ctx.createBufferSource(); audio.noise.buffer = buf; audio.noise.loop = true;
+        audio.nfilt = ctx.createBiquadFilter(); audio.nfilt.type = 'bandpass'; audio.nfilt.frequency.value = 1500;
+        audio.ngain = ctx.createGain(); audio.ngain.gain.value = 0;
+        audio.noise.connect(audio.nfilt); audio.nfilt.connect(audio.ngain); audio.ngain.connect(ctx.destination);
+        audio.noise.start(0);
+
+        audio.ready = true;
+      }
+
+      function playTone(freq, dur, type, vol){
+        if(!audio.ready) return;
+        var ctx = audio.ctx, t = ctx.currentTime;
+        var o = ctx.createOscillator(); o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
+        var g = ctx.createGain(); g.gain.setValueAtTime(vol || 0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t); o.stop(t + dur);
+      }
+
+      function playShift(){ playTone(980, 0.06, 'square', 0.05); }
+
+      function updateAudio(){
+        if(!audio.ready || !G.started) return;
+        var rn = (G.rpm - 900) / 7400;
+        var pitch = 90 + rn * 560;
+        audio.osc1.frequency.value = pitch;
+        audio.osc2.frequency.value = pitch;
+        audio.egain.gain.value = 0.10 + G.throttle * 0.55 + G.brake * 0.08;
+        audio.filt.frequency.value = Math.max(160, Math.min(5400, 300 + rn * 4400));
+        var slip = (Math.abs(G.steer) > 0.55 && G.speedKmh > 55 && G.throttle > 0.3 && G.onRoad)
+          ? Math.min(1, (Math.abs(G.steer) - 0.55) / 0.45) : 0;
+        audio.ngain.gain.value = slip * 0.3;
+      }
+
+      /* ================= 對手車輛 ================= */
+      function resetRivals(key){
+        var def = TRACKS[key];
+        rivals = [];
+        var lanes = [-CFG.ROAD_W * 0.26, -CFG.ROAD_W * 0.16, -CFG.ROAD_W * 0.06, CFG.ROAD_W * 0.06, CFG.ROAD_W * 0.16, CFG.ROAD_W * 0.26];
+        var colors = ['#ff4c38', '#22d3ee', '#a855f7', '#f59e0b', '#10b981', '#ef4444'];
+        for(var i = 0; i < 6; i++){
+          rivals.push({
+            dist: (i + 1) * (TL / 7) + 400,
+            laneOff: lanes[i],
+            color: colors[i],
+            speed: def.rivals[i] || 220,
+            lap: 1,
+            worldX: 0
+          });
+        }
+      }
+
+      function updateRivals(dt){
+        rivals.forEach(function(r){
+          r.dist += r.speed * 0.2778 * dt;
+          r.lap = Math.floor(r.dist / TL) + 1;
+          var idx = Math.floor((r.dist % TL) / CFG.SEG_LEN) % CFG.N;
+          r.worldX = segments[idx].x + r.laneOff;
+        });
+      }
+
+      /* ================= 視窗大小 ================= */
+      function resize(){
+        var rect = canvas.getBoundingClientRect();
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        w = rect.width; h = rect.height; center = w / 2; horizon = h * 0.40;
+
+        var mrect = mapCanvas.getBoundingClientRect();
+        mapCanvas.width = Math.max(1, Math.floor(mrect.width * dpr));
+        mapCanvas.height = Math.max(1, Math.floor(mrect.height * dpr));
+        mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      /* ================= 輸入 ================= */
+      var KEY_MAP = { ArrowLeft:'L', ArrowRight:'R', a:'L', d:'R', ArrowUp:'A', w:'A', ' ':'A', ArrowDown:'B', s:'B' };
+      function onKey(down, e){
+        var key = KEY_MAP[e.key];
+        if(!key) return;
+        if(e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
+        input[key] = down;
+      }
+      window.addEventListener('keydown', onKey.bind(null, true));
+      window.addEventListener('keyup', onKey.bind(null, false));
+      window.addEventListener('blur', function(){ input.L = input.R = input.A = input.B = false; });
+      window.addEventListener('visibilitychange', function(){
+        if(document.hidden){ input.L = input.R = input.A = input.B = false; }
+      });
+
+      el.startBtn.addEventListener('click', function(){
+        if(!audio.ready) bootAudio();
+        if(audio.ctx) audio.ctx.resume();
+        G.started = true;
+        el.startBtn.style.display = 'none';
+        el.ignite.style.display = 'none';
+        playTone(220, 0.05, 'square', 0.06);
+        playTone(330, 0.1, 'square', 0.06);
+      });
+
+      ['btnL','btnR'].forEach(function(id){
+        var btn = document.getElementById(id); var key = id === 'btnL' ? 'L' : 'R';
+        function down(e){ e.preventDefault(); input[key] = true; }
+        function up(e){ e.preventDefault(); input[key] = false; }
+        btn.addEventListener('pointerdown', down);
+        btn.addEventListener('pointerup', up);
+        btn.addEventListener('pointerleave', up);
+      });
+      var thr = document.getElementById('btnThrottle');
+      thr.addEventListener('pointerdown', function(e){ e.preventDefault(); input.A = true; });
+      thr.addEventListener('pointerup', function(e){ e.preventDefault(); input.A = false; });
+      thr.addEventListener('pointerleave', function(e){ e.preventDefault(); input.A = false; });
+
+      canvas.addEventListener('pointerdown', function(e){
+        e.preventDefault();
+        var rect = canvas.getBoundingClientRect();
+        var cx = e.clientX - rect.left;
+        input.A = true;
+        if(cx < rect.width / 3) input.L = true;
+        else if(cx > rect.width * 2 / 3) input.R = true;
+      });
+      canvas.addEventListener('pointerup', function(e){ e.preventDefault(); input.L = input.R = input.A = false; });
+      canvas.addEventListener('pointerleave', function(e){ input.L = input.R = input.A = false; });
+
+      /* ================= 更新 ================= */
+      function update(dt){
+        dt = Math.min(dt, 0.1);
+
+        var gp = navigator.getGamepads ? navigator.getGamepads()[0] : null;
+        var gSteer = 0, gTh = 0, gBr = 0;
+        if(gp){
+          gSteer = Math.abs(gp.axes[0]) > 0.15 ? gp.axes[0] : 0;
+          gTh = gp.buttons[7] ? (gp.buttons[7].value > 0.4 ? 1 : 0) : 0;
+          gBr = gp.buttons[6] ? (gp.buttons[6].value > 0.4 ? 1 : 0) : 0;
+        }
+
+        var steerTarget = (input.R ? 1 : 0) - (input.L ? 1 : 0) + gSteer;
+        var throttle = input.A || gTh ? 1 : 0;
+        var brake = input.B || gBr ? 1 : 0;
+
+        G.steer += (steerTarget - G.steer) * 0.14;
+        G.throttle = throttle;
+        G.brake = brake;
+
+        var accel = throttle * 560 - brake * 900 - G.speedKmh * 1.9;
+        if(!G.onRoad) accel *= 0.55;
+        G.speedKmh = Math.max(0, Math.min(CFG.MAX_SPEED, G.speedKmh + accel * dt));
+
+        var seg = currentSegment(G.playerDist);
+        var leftEdge = seg.x - CFG.ROAD_W / 2;
+        var rightEdge = seg.x + CFG.ROAD_W / 2;
+        var carHalf = 115;
+        G.onRoad = G.playerX > leftEdge + carHalf && G.playerX < rightEdge - carHalf;
+        var grip = G.onRoad ? 1 : 0.5;
+
+        G.playerX += G.steer * (G.speedKmh * 0.2778) * 3.4 * grip * dt;
+        if(!G.onRoad) G.speedKmh *= Math.pow(0.98, dt * 60);
+
+        G.playerDist += G.speedKmh * 0.2778 * dt;
+
+        var newGear = Math.min(7, Math.max(1, 1 + Math.floor(G.speedKmh / CFG.MAX_SPEED * 6)));
+        if(newGear !== G.gear && G.speedKmh > 25){ G.gear = newGear; playShift(); }
+
+        var rpmTarget = 900 + (G.speedKmh / CFG.MAX_SPEED) * 7900;
+        G.rpm += (rpmTarget - G.rpm) * (1 - Math.exp(-5 * dt));
+
+        G.fuel = Math.max(0, G.fuel - dt * 0.12);
+        G.tyreTemp = 82 + Math.abs(G.steer) * 18 + (G.onRoad ? 6 : -4) + Math.sin(Date.now() / 700) * 3;
+        G.oilTemp = 92 + Math.sin(Date.now() / 900) * 2 + (G.speedKmh / CFG.MAX_SPEED) * 6;
+        G.waterTemp = 86 + (G.speedKmh / CFG.MAX_SPEED) * 7;
+        G.ers = Math.max(0, Math.min(100, G.ers + (G.brake ? 3 : -1) * dt));
+
+        var newLap = Math.floor(G.playerDist / TL) + 1;
+        if(newLap !== G.lap){
+          G.lastLap = G.lapTime;
+          if(G.lastLap > 0 && G.lastLap < G.bestLap) G.bestLap = G.lastLap;
+          G.lapTime = 0;
+          G.lap = newLap;
+          playTone(660, 0.1, 'sine', 0.04);
+        }
+        if(G.lap > CFG.LAPS){
+          G.lap = CFG.LAPS;
+          G.finished = true;
+          G.speedKmh *= 0.92;
+          if(G.speedKmh < 1) G.speedKmh = 0;
+        }
+
+        if(G.started && !G.finished){
+          G.lapTime += dt;
+          G.raceTime += dt;
+        }
+
+        updateAudio();
+        updateRivals(dt);
+
+        var leaderDist = G.playerDist;
+        rivals.forEach(function(r){ if(r.dist > leaderDist) leaderDist = r.dist; });
+        var ahead = 0;
+        rivals.forEach(function(r){ if(r.dist > G.playerDist) ahead++; });
+        G.position = 1 + ahead;
+        var gap = leaderDist - G.playerDist;
+        G.gapStr = G.position === 1 ? 'LEADER' : '+' + Math.round(gap) + ' m';
+
+        G.frameCount++;
+        var now = performance.now();
+        if(now - G.lastFpsTime >= 1000){ G.fps = G.frameCount; G.frameCount = 0; G.lastFpsTime = now; }
+      }
+
+      /* ================= 繪製 ================= */
+      function drawWorld(){
+        ctx.clearRect(0, 0, w, h);
+
+        var sky = ctx.createLinearGradient(0, 0, 0, horizon);
+        sky.addColorStop(0, '#020505');
+        sky.addColorStop(1, '#0a1410');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, horizon);
+
+        ctx.strokeStyle = 'rgba(216,255,62,.07)';
+        ctx.beginPath(); ctx.moveTo(0, horizon); ctx.lineTo(w, horizon); ctx.stroke();
+
+        ctx.fillStyle = 'rgba(216,255,62,.10)';
+        ctx.beginPath(); ctx.arc(w - 120, 70, 40, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(216,255,62,.035)';
+        ctx.beginPath(); ctx.arc(w - 120, 70, 100, 0, Math.PI * 2); ctx.fill();
+
+        if(G.started){
+          var pz = G.playerDist % TL;
+          var startIdx = Math.floor(pz / CFG.SEG_LEN) % CFG.N;
+          var seg0 = segments[startIdx];
+          var nearZ = Math.max(pz - seg0.z, 0.5);
+          var prevScale = CFG.FOV / nearZ;
+          var prevX = center + (seg0.x - G.playerX) * prevScale;
+          var prevY = horizon + CFG.CAM_H * prevScale;
+          var prevLeft = prevX - CFG.ROAD_W * prevScale / 2;
+          var prevRight = prevX + CFG.ROAD_W * prevScale / 2;
+          var lastY = prevY;
+
+          for(var n = CFG.DRAW; n >= 1; n--){
+            var seg = segments[(startIdx + n) % CFG.N];
+            var zrel = seg.z - pz;
+            if(zrel <= 0) zrel += TL;
+            if(zrel > CFG.DRAW * CFG.SEG_LEN) continue;
+            var scale = CFG.FOV / zrel;
+            var y = horizon + CFG.CAM_H * scale;
+            if(y >= lastY) continue;
+            if(y > h + 200 && lastY > h + 200){ lastY = y; prevLeft = 0; prevRight = w; continue; }
+            var x = center + (seg.x - G.playerX) * scale;
+            var rw = CFG.ROAD_W * scale;
+            var left = x - rw / 2;
+            var right = x + rw / 2;
+
+            ctx.fillStyle = seg.grass;
+            ctx.beginPath();
+            ctx.moveTo(0, lastY); ctx.lineTo(left, y); ctx.lineTo(prevLeft, lastY); ctx.lineTo(0, lastY);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(right, y); ctx.lineTo(w, lastY); ctx.lineTo(prevRight, lastY); ctx.lineTo(right, y);
+            ctx.fill();
+
+            ctx.fillStyle = seg.color;
+            ctx.beginPath();
+            ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.lineTo(prevRight, lastY); ctx.lineTo(prevLeft, lastY);
+            ctx.fill();
+
+            if(n < 44){
+              var stripW = rw * 0.05;
+              var prevStripW = CFG.ROAD_W * (lastY > h + 200 ? 0.02 : (CFG.ROAD_W * 0.05)) ;
+              var curb = ((Math.floor(seg.i / 3) + n) & 1) ? '#d8ff3e' : '#ffffff';
+              ctx.fillStyle = curb;
+              ctx.beginPath();
+              ctx.moveTo(left, y); ctx.lineTo(left + stripW, y);
+              ctx.lineTo(prevLeft + (CFG.ROAD_W * (CFG.FOV / Math.max(lastY - horizon, 1)) * 0.05), lastY);
+              ctx.lineTo(prevLeft, lastY);
+              ctx.fill();
+              ctx.beginPath();
+              ctx.moveTo(right - stripW, y); ctx.lineTo(right, y);
+              ctx.lineTo(prevRight, lastY);
+              ctx.lineTo(prevRight - (CFG.ROAD_W * (CFG.FOV / Math.max(lastY - horizon, 1)) * 0.05), lastY);
+              ctx.fill();
+            }
+
+            if(seg.i === 0){
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(left, y, rw, Math.max(1, (lastY - y) * 0.10));
+            }
+
+            lastY = y;
+            prevLeft = left; prevRight = right;
+          }
+
+          ctx.fillStyle = 'rgba(2,5,6,.44)';
+          ctx.fillRect(0, horizon - 22, w, 62);
+        }
+
+        drawRivalsWorld();
+      }
+
+      function drawRivalsWorld(){
+        var list = rivals.slice().sort(function(a,b){ return b.dist - a.dist; });
+        list.forEach(function(r){
+          var relZ = r.dist - G.playerDist;
+          if(relZ <= 0 || relZ > CFG.DRAW * CFG.SEG_LEN) return;
+          var scale = CFG.FOV / relZ;
+          var y = horizon + CFG.CAM_H * scale;
+          var x = center + (r.worldX - G.playerX) * scale;
+          var cw = 150 * scale, ch = 80 * scale;
+          ctx.fillStyle = 'rgba(0,0,0,.42)';
+          ctx.beginPath(); ctx.ellipse(x, y + ch * 0.62, cw * 0.55, ch * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = r.color;
+          ctx.fillRect(x - cw / 2, y - ch, cw, ch);
+          ctx.fillStyle = '#0a1110';
+          ctx.fillRect(x - cw / 2 + 5, y - ch + 4, cw - 10, ch * 0.34);
+          ctx.fillStyle = 'rgba(216,255,62,.32)';
+          ctx.fillRect(x - cw / 2 + 9, y - ch + 8, cw - 18, ch * 0.24);
+        });
+      }
+
+      function drawGauge(cx, cy, r, pct, label, value, unit){
+        pct = Math.max(0, Math.min(1, pct));
+        var a0 = Math.PI + 0.55;
+        var a1 = 2 * Math.PI - 0.55;
+        var span = a1 - a0;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, a0, a1, false);
+        ctx.strokeStyle = 'rgba(216,255,62,.10)';
+        ctx.lineWidth = r * 0.13;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        var end = a0 + pct * span;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, a0, end, false);
+        ctx.strokeStyle = pct > 0.92 ? '#ff4c38' : '#d8ff3e';
+        ctx.lineWidth = r * 0.15;
+        ctx.stroke();
+
+        for(var i = 0; i <= 12; i++){
+          var ta = a0 + (i / 12) * span;
+          var r1 = r - r * 0.15, r2 = r;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(ta) * r1, cy + Math.sin(ta) * r1);
+          ctx.lineTo(cx + Math.cos(ta) * r2, cy + Math.sin(ta) * r2);
+          ctx.strokeStyle = 'rgba(216,255,62,.25)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(a0 + pct * span);
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 0.10);
+        ctx.lineTo(0, r - 10);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.075, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = '#9aa39d';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, cx, cy - r - 16);
+        ctx.fillStyle = '#d8ff3e';
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText(value, cx, cy + r * 0.5);
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#9aa39d';
+        ctx.fillText(unit, cx, cy + r * 0.5 + 16);
+      }
+
+      function drawWheel(){
+        var cx = w / 2, cy = h * 0.905, r = h * 0.105;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(G.steer * 2.0);
+        ctx.beginPath();
+        ctx.arc(0, 0, r, Math.PI + 0.45, 2 * Math.PI - 0.45, false);
+        ctx.strokeStyle = 'rgba(216,255,62,.42)';
+        ctx.lineWidth = 13;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.24, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(216,255,62,.22)'; ctx.fill();
+        ctx.strokeStyle = 'rgba(216,255,62,.30)'; ctx.lineWidth = 3; ctx.stroke();
+        var spokes = [-0.75, 0, 0.75];
+        spokes.forEach(function(a){
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * r * 0.26, Math.sin(a) * r * 0.26);
+          ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+          ctx.strokeStyle = 'rgba(216,255,62,.28)';
+          ctx.lineWidth = 6;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      function drawDash(){
+        var pad = h * 0.635;
+        ctx.fillStyle = 'rgba(8,11,12,0.82)';
+        ctx.fillRect(0, pad, w, h);
+        ctx.strokeStyle = 'rgba(216,255,62,.22)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, pad); ctx.lineTo(w, pad); ctx.stroke();
+        ctx.strokeStyle = 'rgba(216,255,62,.05)';
+        for(var i = 1; i < 5; i++){
+          var yy = pad + (h - pad) * i / 5;
+          ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(w, yy); ctx.stroke();
+        }
+
+        if(!G.started){
+          ctx.fillStyle = 'rgba(216,255,62,.85)';
+          ctx.font = 'bold 28px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('ENGINE STOPPED', w / 2, h * 0.72);
+          ctx.fillStyle = '#9aa39d';
+          ctx.font = '14px monospace';
+          ctx.fillText('PRESS START TO IGNITE', w / 2, h * 0.755);
+          return;
+        }
+
+        drawGauge(w * 0.17, h * 0.865, h * 0.072, G.speedKmh / CFG.MAX_SPEED, 'SPEED', Math.round(G.speedKmh).toString(), 'KM/H');
+        drawGauge(w * 0.83, h * 0.865, h * 0.072, Math.min(1, G.rpm / 8800), 'RPM', (G.rpm / 1000).toFixed(1), '×1000');
+
+        var ly = h * 0.70;
+        for(var i = 0; i < 6; i++){
+          var lit = G.rpm > 8800 * (0.70 + i * 0.055);
+          ctx.fillStyle = lit ? '#d8ff3e' : 'rgba(216,255,62,.12)';
+          ctx.beginPath();
+          ctx.arc(w * 0.60 + i * 33, ly, 7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = '#d8ff3e';
+        ctx.font = 'bold 64px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(G.gear, w / 2, h * 0.79);
+        ctx.fillStyle = '#9aa39d';
+        ctx.font = '12px monospace';
+        ctx.fillText('GEAR', w / 2, h * 0.742);
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#d8ff3e';
+        ctx.font = 'bold 15px monospace';
+        ctx.fillText('LAP ' + G.lap + ' / ' + CFG.LAPS, w - 24, h * 0.76);
+        ctx.fillStyle = '#9aa39d';
+        ctx.font = '12px monospace';
+        ctx.fillText('LAST ' + (G.lastLap ? fmt(G.lastLap) : '—'), w - 24, h * 0.795);
+        ctx.fillText('BEST ' + (G.bestLap < 99 ? fmt(G.bestLap) : '—'), w - 24, h * 0.825);
+
+        drawWheel();
+
+        ctx.fillStyle = 'rgba(216,255,62,.75)';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('FIRST-PERSON COCKPIT  •  APEX GP  •  ' + G.fps + ' FPS', 18, h - 12);
+        ctx.textAlign = 'right';
+        ctx.fillText(fmt(G.raceTime), w - 18, h - 12);
+      }
+
+      function fmt(sec){
+        if(!isFinite(sec) || sec < 0) sec = 0;
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1);
+      }
+
+      function drawMap(){
+        var rect = mapCanvas.getBoundingClientRect();
+        var mw = rect.width, mh = rect.height;
+        mctx.clearRect(0, 0, mw, mh);
+
+        var minX = 1e9, maxX = -1e9;
+        for(var i = 0; i < segments.length; i++){
+          if(segments[i].x < minX) minX = segments[i].x;
+          if(segments[i].x > maxX) maxX = segments[i].x;
+        }
+        var rangeX = maxX - minX || 1;
+        var pad = 14;
+        var innerW = mw - pad * 2;
+        var innerH = mh - pad * 2;
+
+        mctx.beginPath();
+        mctx.strokeStyle = 'rgba(216,255,62,.11)';
+        mctx.lineWidth = 1.2;
+        var first = true;
+        segments.forEach(function(seg){
+          var mx = pad + (seg.x - minX) / rangeX * innerW;
+          var my = pad + (seg.z / TL) * innerH;
+          if(first){ mctx.moveTo(mx, my); first = false; } else mctx.lineTo(mx, my);
+        });
+        mctx.stroke();
+
+        var sx = pad + (segments[0].x - minX) / rangeX * innerW;
+        mctx.strokeStyle = 'rgba(255,255,255,.55)';
+        mctx.lineWidth = 2;
+        mctx.beginPath(); mctx.moveTo(sx, pad); mctx.lineTo(sx, pad + innerH * 0.07); mctx.stroke();
+
+        // dots
+        var dots = [];
+        var pz = G.playerDist % TL;
+        var pIdx = Math.floor(pz / CFG.SEG_LEN) % CFG.N;
+        dots.push({ x: pad + (segments[pIdx].x - minX) / rangeX * innerW, y: pad + (pz / TL) * innerH, el: el.dots[0], color: '#d8ff3e' });
+        rivals.forEach(function(r, i){
+          var rz = r.dist % TL;
+          var ridx = Math.floor(rz / CFG.SEG_LEN) % CFG.N;
+          dots.push({ x: pad + (segments[ridx].x - minX) / rangeX * innerW, y: pad + (rz / TL) * innerH, el: el.dots[i + 1], color: r.color });
+        });
+        dots.forEach(function(d){
+          d.el.style.left = (d.x - 4) + 'px';
+          d.el.style.top = (d.y - 4) + 'px';
+        });
+      }
+
+      function speak(text){
+        if(el.a11y) el.a11y.textContent = text;
+      }
+
+      function updateHUD(){
+        el.hudLap.textContent = G.lap + ' / ' + CFG.LAPS;
+        el.hudPos.textContent = G.position + ' / 7';
+        el.hudGap.textContent = G.gapStr;
+        el.hudFlag.textContent = G.finished ? 'CHEQUERED' : 'GREEN';
+        speak('第 ' + G.lap + ' 圈，時速 ' + Math.round(G.speedKmh) + ' 公里，第 ' + G.position + ' 名。');
+      }
+
+      function updatePitWall(){
+        document.getElementById('pwSpeed').textContent = Math.round(G.speedKmh);
+        var rp = Math.min(100, Math.max(0, (G.rpm / 8800) * 100));
+        var rb = document.getElementById('pwRpmBar');
+        rb.style.width = rp + '%';
+        rb.style.backgroundColor = rp > 90 ? '#ff4c38' : 'var(--acid)';
+        document.getElementById('pwRpmVal').textContent = (G.rpm / 1000).toFixed(1);
+        document.getElementById('pwGear').textContent = G.gear;
+        document.getElementById('pwFuel').textContent = Math.round(G.fuel) + ' %';
+        document.getElementById('pwFuelBar').style.width = G.fuel + '%';
+        ['FL','FR','RL','RR'].forEach(function(p){
+          var t = Math.round(80 + Math.abs(G.steer) * 20 + (G.onRoad ? 6 : -6) + Math.sin(Date.now() / 600 + p.charCodeAt(0)) * 4);
+          document.getElementById('pwTyre' + p).textContent = t + ' °C';
+          var b = document.getElementById('pwTyre' + p + 'Bar');
+          b.style.width = Math.min(100, Math.max(0, (t - 60) / 60 * 100)) + '%';
+          b.style.backgroundColor = t > 108 ? '#ff4c38' : 'var(--acid)';
+        });
+        document.getElementById('pwWater').textContent = Math.round(G.waterTemp) + ' °C';
+        document.getElementById('pwWaterBar').style.width = Math.min(100, 40 + (G.speedKmh / CFG.MAX_SPEED) * 60) + '%';
+        document.getElementById('pwOil').textContent = Math.round(G.oilTemp) + ' °C';
+        document.getElementById('pwOilBar').style.width = Math.min(100, 50 + (G.speedKmh / CFG.MAX_SPEED) * 50) + '%';
+        document.getElementById('pwErs').textContent = Math.round(G.ers) + ' %';
+        document.getElementById('pwErsBar').style.width = G.ers + '%';
+        document.getElementById('pbLap').textContent = G.lap + ' / ' + CFG.LAPS;
+        document.getElementById('pbLast').textContent = G.lastLap ? fmt(G.lastLap) : '—';
+        document.getElementById('pbBest').textContent = G.bestLap < 99 ? fmt(G.bestLap) : '—';
+        document.getElementById('pbPos').textContent = G.position + ' / 7';
+        document.getElementById('pbGap').textContent = G.gapStr;
+      }
+
+      function showToast(msg){
+        el.toast.textContent = msg;
+        el.toast.classList.add('show');
+        setTimeout(function(){ el.toast.classList.remove('show'); }, 2000);
+      }
+
+      function selectTrack(key){
+        buildTrack(key);
+        resetRivals(key);
+        resetCar();
+        Array.from(document.querySelectorAll('.tracksel-btn')).forEach(function(b){
+          b.classList.toggle('active', b.getAttribute('data-track') === key);
+        });
+        drawMap();
+        showToast('賽道已切換：' + TRACKS[key].name);
+      }
+
+      function resetCar(){
+        G.playerDist = 0;
+        G.playerX = segments[0] ? segments[0].x : 0;
+        G.speedKmh = 0;
+        G.rpm = 900;
+        G.gear = 1;
+        G.lap = 1;
+        G.lapTime = 0;
+        G.lastLap = 0;
+        G.finished = false;
+        G.raceTime = 0;
+      }
+
+      /* ================= 主迴圈 ================= */
+      function loop(ts){
+        if(!lastTime) lastTime = ts;
+        var dt = (ts - lastTime) / 1000;
+        lastTime = ts;
+        dt = Math.min(dt, 0.1);
+
+        update(dt);
+        drawWorld();
+        drawDash();
+        drawMap();
+        updateHUD();
+        updatePitWall();
+
+        rafId = requestAnimationFrame(loop);
+      }
+
+      /* ================= 初始化 ================= */
+      function init(){
+        resize();
+        window.addEventListener('resize', resize);
+        buildTrack('suzuka');
+        resetRivals('suzuka');
+        resetCar();
+
+        Array.from(document.querySelectorAll('.tracksel-btn')).forEach(function(b){
+          b.addEventListener('click', function(){ selectTrack(b.getAttribute('data-track')); });
+        });
+
+        if(G.reduced){
+          el.startBtn.style.display = 'none';
+          el.ignite.style.display = 'none';
+          return;
+        }
+
+        drawMap();
+        rafId = requestAnimationFrame(loop);
+      }
+
+      init();
+    })();
   </script>
 </body>
 </html>

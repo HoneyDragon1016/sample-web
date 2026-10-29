@@ -45,7 +45,7 @@
 | 科技敘事、產品解構、深度專題 | 電影感、捲動敘事、空間感 | `SpatialStory01.html` |
 | 先鋒數位創意工作室 | 賽博、動態排版、強烈互動 | `KineticAgency01.html` |
 | 微互動展示、互動實驗、產品手感 | 流體、物理、多感官回饋 | `InteractivePlayground01.html` |
-| 賽車品牌、賽道活動、車隊介紹 | 競速、數據、霓虹酸綠 | `RaceDay01.html` |
+| 賽車品牌、賽道活動、車隊介紹 | 競速、數據、霓虹酸綠、第一人稱駕駛艙 | `RaceDay01.html` |
 
 ## 視覺設計概念
 
@@ -74,7 +74,7 @@
 | 7 | [`SpatialStory01.html`](SpatialStory01.html) | 動效互動 | **Lenis + GSAP Pin & Scrub** | 釘選式 360° 空間解構（分層爆發 + 數據飛入）、SVG 路徑動態繪製、文字遮罩擦除、章節深度儀表板 |
 | 8 | [`KineticAgency01.html`](KineticAgency01.html) | 動效互動 | **Lenis + GSAP + Magnetic Cursor** | 磁吸自定義游標（延遲外環 + 差值反色 + 提示字）、橫向滾動視差展廊（containerAnimation）、字元波浪抖動、Kinetic Marquee |
 | 9 | [`InteractivePlayground01.html`](InteractivePlayground01.html) | 動效互動 | **Lenis + GSAP + Canvas + Web Audio** | 3D 傾斜流光卡（Specular Glare）、Canvas 粒子場（點擊衝擊波）、慣性物理拖曳（邊界回彈）、Web Audio 微晶片聲效 |
-| 10 | [`RaceDay01.html`](RaceDay01.html) | 賽車體驗 | **Vanilla JS + SVG** | 賽道即時切換、賽事數據儀表板、可啟停遙測模擬、車手陣容與響應式賽車 Hero |
+| 10 | [`RaceDay01.html`](RaceDay01.html) | 賽車體驗 | **Canvas 2D + Web Audio** | 第一人稱駕駛艙（Canvas 2D 60 FPS 遊戲迴圈）、Web Audio 引擎源碼合成、即時遙測儀表板、賽道小地圖、鍵盤／手把／觸控操控 |
 
 ## 專案目錄架構
 
@@ -124,7 +124,7 @@ sample-web/
 | 樣式 | Tailwind CSS（Play CDN）+ `assets/css/site.css` | 原子化樣式負責排版與響應式；自訂 CSS 負責玻璃擬態、光暈、視差與動態 |
 | 字體 | Google Fonts：Inter、Playfair Display、Noto Sans TC、Noto Serif TC | 以 `preconnect` + `display=swap` 優化載入 |
 | 圖示 | Lucide Icons（UMD CDN，版本鎖定 `0.460.0`） | 以 `data-lucide` 屬性宣告 |
-| 互動 | 原生 ES6+（無套件） | IntersectionObserver、`<dialog>`、WAI-ARIA Tabs 模式 |
+| 互動 | 原生 ES6+（無套件） | IntersectionObserver、`<dialog>`、WAI-ARIA Tabs 模式；`RaceDay01.html` 另以 Canvas 2D + Web Audio 實作第一人稱駕駛艙 |
 | 動效引擎（動效頁） | Lenis 1.x + GSAP 3.12.5 + ScrollTrigger | 平滑滾動與捲動觸發動畫，以 `motion-engine.js` 統一同步，見[動態引擎架構指南](#動態引擎架構指南) |
 | 部署 | Cloudflare Pages | 無構建指令，直接發布根目錄 |
 
