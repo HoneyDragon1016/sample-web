@@ -1,14 +1,14 @@
 /**
  * APEX GP — Cockpit Racer
  * ------------------------------------------------------------------
- * 第一人稱駕駛艙 3D 賽車體驗（WebGL / Three.js r160 / 程序化生成）
+ * 雙視角 3D 賽車體驗（WebGL / Three.js r160 / 程序化生成）
  *
  * 技術重點：
  *  - 程序化賽道：極座標閉合樣條（CatmullRomCurve3）→ 柏油帶狀幾何、路緣石、護欄、看台、廣告板
- *  - 駕駛艙：碳纖維車體、Halo 安全環、方向盤（含換檔燈）、雙手模型、雙後視鏡（即時 RT 反射）
- *  - 街機物理：油門／煞車／手排滑移（Drift）、草地減速、護欄碰撞、G 力計算
+ *  - 鏡頭：駕駛艙與第三人稱追車視角、玩家車模型、方向盤與後視鏡
+ *  - 街機物理：可調轉向、自動排檔、油門／煞車／漂移、草地減速、護欄碰撞
  *  - AI 對手：沿樣條行駛、依曲率預先計算彎道極速、即時名次計算
- *  - 程序化音效：Web Audio 合成引擎聲（三振盪器 + 濾波 + 噪音進氣）、胎噪、風噪、碰撞
+ *  - 程序化音效：較柔和的 Web Audio 引擎、可調音量、胎噪、風噪與碰撞
  *  - 後製特效：單一 Pass 自訂 Shader（徑向速度模糊、色差、暗角、碰撞紅閃、膠片顆粒）
  *  - 效能：InstancedMesh 大量物件、低解析度鏡面 RT、像素比上限、能見度自動暫停
  *  - 無障礙：prefers-reduced-motion 停用鏡頭晃動與顆粒；鍵盤可完整操作；觸控 UI 自動顯示
@@ -16,6 +16,10 @@
  * 相依：three.module.min.js（已於本儲存庫內 vendor，無外部 CDN 相依）
  */
 import * as THREE from '../vendor/three.module.min.js';
+import {
+  DrivingInput, DEFAULT_SETTINGS, sanitizeSettings, steeringYawRate,
+  selectAutomaticGear, forwardSpeedAfterForces,
+} from './race-controls.mjs';
 
 /* ================================================================
  * 0. 常數與工具
@@ -326,39 +330,45 @@ function ribbonGeometry(track, uMin, uMax, filter) {
  * 2. 音效引擎（Web Audio 程序化合成）
  * ============================================================== */
 class EngineAudio {
-  constructor() { this.ctx = null; this.ready = false; this.muted = false; }
+  constructor(volume = 0.35, muted = false) {
+    this.ctx = null;
+    this.ready = false;
+    this.volume = volume;
+    this.muted = muted;
+  }
 
   init() {
     if (this.ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    const ctx = new AC();
+    let ctx;
+    try { ctx = new AC(); } catch (_) { return; }
     this.ctx = ctx;
 
     this.master = ctx.createGain();
     this.master.gain.value = 0.0001;
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -18; comp.ratio.value = 6;
+    comp.threshold.value = -20; comp.knee.value = 18; comp.ratio.value = 4;
     this.master.connect(comp).connect(ctx.destination);
 
-    // --- 引擎：三振盪器 + 低通 + 輕微失真 ---
+    // --- 柔和的基音與少量泛音，避免原本尖銳刺耳的方波 ---
     this.engGain = ctx.createGain(); this.engGain.gain.value = 0;
     this.engFilter = ctx.createBiquadFilter();
-    this.engFilter.type = 'lowpass'; this.engFilter.frequency.value = 500; this.engFilter.Q.value = 1.1;
+    this.engFilter.type = 'lowpass'; this.engFilter.frequency.value = 500; this.engFilter.Q.value = 0.6;
     const shaper = ctx.createWaveShaper();
     const curveArr = new Float32Array(1024);
     for (let i = 0; i < 1024; i++) {
       const x = (i / 1023) * 2 - 1;
-      curveArr[i] = Math.tanh(x * 2.2) * 0.8;
+      curveArr[i] = Math.tanh(x * 1.25) * 0.65;
     }
     shaper.curve = curveArr;
     this.engFilter.connect(shaper).connect(this.engGain).connect(this.master);
 
     this.oscs = [];
     const defs = [
-      { type: 'sawtooth', mult: 1.0, gain: 0.5 },
-      { type: 'sawtooth', mult: 2.02, gain: 0.22 },
-      { type: 'square', mult: 0.5, gain: 0.3 },
+      { type: 'triangle', mult: 1.0, gain: 0.55 },
+      { type: 'sine', mult: 0.5, gain: 0.28 },
+      { type: 'sawtooth', mult: 2.0, gain: 0.08 },
     ];
     for (const d of defs) {
       const o = ctx.createOscillator();
@@ -404,29 +414,30 @@ class EngineAudio {
     scrSrc.start();
 
     this.ready = true;
-    this.master.gain.setTargetAtTime(this.muted ? 0 : 0.85, ctx.currentTime, 0.15);
+    this.applyVolume(0.15);
   }
 
-  resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); }
-  suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend(); }
-  setMuted(m) {
-    this.muted = m;
-    if (this.ready) this.master.gain.setTargetAtTime(m ? 0 : 0.85, this.ctx.currentTime, 0.08);
+  resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); }
+  suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); }
+  applyVolume(timeConstant = 0.08) {
+    if (this.ready) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume * 0.6, this.ctx.currentTime, timeConstant);
   }
+  setVolume(volume) { this.volume = clamp(volume, 0, 1); this.applyVolume(); }
+  setMuted(muted) { this.muted = muted; this.applyVolume(); }
 
   /** rpmNorm 0..1, throttle 0..1, speedNorm 0..1, slip 0..1, onTrack */
   update(rpmNorm, throttle, speedNorm, slip, onTrack, dt) {
     if (!this.ready || !this.ctx) return;
     const t = this.ctx.currentTime;
-    const tau = Math.min(dt, 0.1);
-    const f = 52 + rpmNorm * 340;
+    const tau = Math.max(0.015, Math.min(dt, 0.1));
+    const f = 48 + rpmNorm * 220;
     for (const o of this.oscs) o.osc.frequency.setTargetAtTime(f * o.mult, t, 0.03);
-    this.engFilter.frequency.setTargetAtTime(320 + rpmNorm * 2800 + throttle * 900, t, 0.05);
-    this.engGain.gain.setTargetAtTime(0.045 + throttle * 0.085 + rpmNorm * 0.03, t, tau);
-    this.intakeGain.gain.setTargetAtTime(throttle * rpmNorm * 0.05, t, 0.06);
+    this.engFilter.frequency.setTargetAtTime(300 + rpmNorm * 1400 + throttle * 350, t, 0.08);
+    this.engGain.gain.setTargetAtTime(0.035 + throttle * 0.055 + rpmNorm * 0.015, t, tau);
+    this.intakeGain.gain.setTargetAtTime(throttle * rpmNorm * 0.014, t, 0.08);
     this.intakeFilter.frequency.setTargetAtTime(600 + rpmNorm * 1000, t, 0.08);
-    this.windGain.gain.setTargetAtTime(speedNorm * speedNorm * 0.07, t, 0.15);
-    this.screechGain.gain.setTargetAtTime(onTrack ? slip * 0.11 : 0, t, 0.04);
+    this.windGain.gain.setTargetAtTime(speedNorm * speedNorm * 0.025, t, 0.15);
+    this.screechGain.gain.setTargetAtTime(onTrack ? slip * 0.035 : 0, t, 0.06);
   }
 
   blip(freq = 880, dur = 0.14, gain = 0.22) {
@@ -451,7 +462,7 @@ class EngineAudio {
     o.type = 'sine';
     o.frequency.setValueAtTime(110, t);
     o.frequency.exponentialRampToValueAtTime(38, t + 0.35);
-    g.gain.setValueAtTime(0.5 * intensity, t);
+    g.gain.setValueAtTime(0.24 * intensity, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
     o.connect(g).connect(this.master);
     o.start(t); o.stop(t + 0.45);
@@ -461,7 +472,7 @@ class EngineAudio {
     const nf = ctx.createBiquadFilter();
     nf.type = 'bandpass'; nf.frequency.value = 1600; nf.Q.value = 0.7;
     const ng = ctx.createGain();
-    ng.gain.setValueAtTime(0.34 * intensity, t);
+    ng.gain.setValueAtTime(0.12 * intensity, t);
     ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
     n.connect(nf).connect(ng).connect(this.master);
     n.start(t); n.stop(t + 0.35);
@@ -469,78 +480,22 @@ class EngineAudio {
 
   shiftBlip() {
     if (!this.ready) return;
-    this.engGain.gain.setTargetAtTime(0.02, this.ctx.currentTime, 0.012);
-    this.engGain.gain.setTargetAtTime(0.075, this.ctx.currentTime + 0.06, 0.03);
+    this.engGain.gain.setTargetAtTime(0.025, this.ctx.currentTime, 0.015);
+    this.engGain.gain.setTargetAtTime(0.055, this.ctx.currentTime + 0.06, 0.04);
   }
 }
 
 /* ================================================================
- * 3. 輸入（鍵盤 / 手把 / 觸控）
+ * 3. 玩家設定（儲存不可用時仍可遊玩）
  * ============================================================== */
-class Input {
-  constructor() {
-    this.keys = {};
-    this.steer = 0;          // 平滑後 -1..1
-    this.steerTarget = 0;
-    this.throttle = 0;
-    this.brake = 0;
-    this.handbrake = false;
-    this.touchSteer = 0;
-    this.touchThrottle = false;
-    this.touchBrake = false;
-    this.gamepadIndex = null;
-    this.onPause = null;
-
-    window.addEventListener('keydown', (e) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
-      this.keys[e.code] = true;
-      if (e.code === 'Escape' && this.onPause) this.onPause();
-    });
-    window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
-    window.addEventListener('blur', () => { this.keys = {}; this.touchSteer = 0; });
-    window.addEventListener('gamepadconnected', (e) => { this.gamepadIndex = e.gamepad.index; });
-    window.addEventListener('gamepaddisconnected', () => { this.gamepadIndex = null; });
-  }
-
-  poll(dt) {
-    const k = this.keys;
-    let target = 0;
-    if (k['ArrowLeft'] || k['KeyA']) target -= 1;
-    if (k['ArrowRight'] || k['KeyD']) target += 1;
-    let throttle = k['ArrowUp'] || k['KeyW'] ? 1 : 0;
-    let brake = k['ArrowDown'] || k['KeyS'] ? 1 : 0;
-    let hb = !!k['Space'];
-
-    // 手把（標準映射：左類比軸、RT/LT）
-    if (this.gamepadIndex != null && navigator.getGamepads) {
-      const gp = navigator.getGamepads()[this.gamepadIndex];
-      if (gp && gp.connected) {
-        const ax = gp.axes[0] || 0;
-        if (Math.abs(ax) > 0.1) target = clamp(ax * 1.25, -1, 1);
-        const rt = gp.buttons[7] ? gp.buttons[7].value : 0;
-        const lt = gp.buttons[6] ? gp.buttons[6].value : 0;
-        const axT = gp.axes[5] != null ? (gp.axes[5] + 1) / 2 : 0;
-        const axB = gp.axes[2] != null ? (gp.axes[2] + 1) / 2 : 0;
-        throttle = Math.max(throttle, rt, axT);
-        brake = Math.max(brake, lt, axB);
-        if (gp.buttons[0] && gp.buttons[0].pressed) hb = true;
-      }
-    }
-
-    // 觸控
-    if (IS_COARSE) {
-      if (this.touchSteer) target = this.touchSteer;
-      if (this.touchThrottle) throttle = 1;
-      if (this.touchBrake) brake = 1;
-    }
-
-    const rate = target === 0 ? 9 : 6.5; // 回正比轉向更快
-    this.steer += (target - this.steer) * Math.min(1, dt * rate);
-    if (Math.abs(this.steer) < 0.005) this.steer = 0;
-    this.throttle = throttle;
-    this.brake = brake;
-    this.handbrake = hb;
-  }
+const SETTINGS_KEY = 'apex-gp-racer-settings-v1';
+function loadSettings() {
+  try { return sanitizeSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch (_) { return { ...DEFAULT_SETTINGS }; }
+}
+function saveSettings(settings) {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+  catch (_) { /* 隱私模式或儲存空間不足：只保留本次設定 */ }
 }
 
 /* ================================================================
@@ -549,10 +504,13 @@ class Input {
 class CockpitRacer {
   constructor() {
     this.quality = detectQuality();
+    this.settings = loadSettings();
     this.state = 'loading';   // loading | ready | countdown | racing | paused | finished
     this.dom = {};
-    this.audio = new EngineAudio();
-    this.input = new Input();
+    this.audio = new EngineAudio(this.settings.volume, this.settings.muted);
+    this.input = new DrivingInput({ coarse: IS_COARSE });
+    this.input.sensitivity = this.settings.sensitivity;
+    this.chaseSnap = true;
     this.clock = new THREE.Clock();
     this.frame = 0;
     this.shake = 0;
@@ -562,7 +520,7 @@ class CockpitRacer {
     this.raceTime = 0;
     this.lapTimes = [];
     this.bestLap = Infinity;
-    this.bannerTimer = 0;
+    this.bannerDeadline = 0;
     this.pausedByVisibility = false;
 
     // 玩家狀態
@@ -587,9 +545,11 @@ class CockpitRacer {
       return;
     }
     this.input.onPause = () => this.togglePause();
+    this.input.onCamera = () => this.toggleView();
     this.bindUI();
 
     await this.buildWorld();
+    this.setView(this.settings.view, false);
     this.resetRace();
     this.state = 'ready';
     this.showScreen('start');
@@ -619,8 +579,11 @@ class CockpitRacer {
       banner: q('banner'), bannerText: q('banner-text'), bannerSub: q('banner-sub'),
       hitFlash: q('hit-flash'),
       touchUi: q('touch-ui'),
-      muteBtn: q('mute-btn'),
+      muteBtn: q('mute-btn'), viewBtn: q('view-btn'),
       pauseBtn: q('pause-btn'),
+      viewBtns: Array.from(document.querySelectorAll('[data-view]')),
+      sensitivityInputs: Array.from(document.querySelectorAll('[data-setting="sensitivity"]')),
+      volumeInputs: Array.from(document.querySelectorAll('[data-setting="volume"]')),
       posBox: q('hud-pos-box'),
       qualityBtns: Array.from(document.querySelectorAll('[data-quality]')),
       raceClock: q('hud-raceclock'),
@@ -739,6 +702,7 @@ class CockpitRacer {
       ['種植賽道景觀…', () => this.buildScenery()],
       ['搭建天空與群山…', () => this.buildSky()],
       ['組裝駕駛艙…', () => this.buildCockpit()],
+      ['組裝玩家賽車…', () => this.buildPlayerCar()],
       ['部署對手賽車…', () => this.buildAI()],
       ['校準儀器與 HUD…', () => this.buildHudStatics()],
     ];
@@ -949,7 +913,7 @@ class CockpitRacer {
 
   buildScenery() {
     const t = this.track;
-    const count = this.quality === 'high' ? 460 : 180;
+    const count = 460; // 配置一次，切換畫質只需調整實例數
     const trunkGeo = new THREE.CylinderGeometry(0.32, 0.5, 3.4, 5);
     const crownGeo = new THREE.ConeGeometry(2.9, 7.2, 6);
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3524, roughness: 1 });
@@ -984,7 +948,9 @@ class CockpitRacer {
       crowns.setColorAt(placed, col);
       placed++;
     }
-    trunks.count = crowns.count = placed;
+    this.treeMeshes = [trunks, crowns];
+    this.treeCount = placed;
+    trunks.count = crowns.count = this.quality === 'high' ? placed : Math.min(180, placed);
     trunks.instanceMatrix.needsUpdate = true;
     crowns.instanceMatrix.needsUpdate = true;
     if (crowns.instanceColor) crowns.instanceColor.needsUpdate = true;
@@ -1082,8 +1048,7 @@ class CockpitRacer {
 
     // 車頭鼻錐 + 前翼（鏡頭前方可見）
     const nose = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.34, 2.6, 8), carbon);
-    nose.rotation.x = Math.PI / 2;
-    add(nose, 0, -0.52, -1.95);
+    add(nose, 0, -0.52, -1.95, Math.PI / 2);
     const noseTip = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 1.2), carbon);
     add(noseTip, 0, -0.56, -3.0);
     const wing = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.05, 0.62), carbonDark);
@@ -1147,9 +1112,7 @@ class CockpitRacer {
     // Halo 安全環（F1 標誌性結構）
     const haloMat = new THREE.MeshStandardMaterial({ color: 0x1d2126, roughness: 0.35, metalness: 0.65 });
     const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.035, 8, 28, Math.PI * 1.35), haloMat);
-    haloRing.rotation.x = Math.PI / 2;
-    haloRing.rotation.z = Math.PI * 0.825;
-    add(haloRing, 0, -0.02, -0.32);
+    add(haloRing, 0, -0.16, -1.2, Math.PI / 2, 0, Math.PI * 0.825);
     const haloStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.42, 6), haloMat);
     add(haloStrut, 0, -0.2, -0.98, 0.28);
     for (const s of [-1, 1]) {
@@ -1160,16 +1123,14 @@ class CockpitRacer {
     // 後視鏡
     this.mirrorMeshes = [];
     const mirrorShellGeo = new THREE.BoxGeometry(0.26, 0.1, 0.1);
-    const mirrorTex = this.quality === 'high'
-      ? this.mirrorRT.texture
-      : (() => {
-          const c = makeCanvas(128, 32);
-          const g = c.getContext('2d');
-          const grd = g.createLinearGradient(0, 0, 0, 32);
-          grd.addColorStop(0, '#9db9d8'); grd.addColorStop(0.55, '#6f8aa8'); grd.addColorStop(0.56, '#3a4a3a'); grd.addColorStop(1, '#2c3a2c');
-          g.fillStyle = grd; g.fillRect(0, 0, 128, 32);
-          const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
-        })();
+    const mirrorCanvas = makeCanvas(128, 32);
+    const mirrorCtx = mirrorCanvas.getContext('2d');
+    const grd = mirrorCtx.createLinearGradient(0, 0, 0, 32);
+    grd.addColorStop(0, '#9db9d8'); grd.addColorStop(0.55, '#6f8aa8'); grd.addColorStop(0.56, '#3a4a3a'); grd.addColorStop(1, '#2c3a2c');
+    mirrorCtx.fillStyle = grd; mirrorCtx.fillRect(0, 0, 128, 32);
+    this.staticMirrorTexture = new THREE.CanvasTexture(mirrorCanvas);
+    this.staticMirrorTexture.colorSpace = THREE.SRGBColorSpace;
+    const mirrorTex = this.quality === 'high' ? this.mirrorRT.texture : this.staticMirrorTexture;
     for (const s of [-1, 1]) {
       const shell = new THREE.Mesh(mirrorShellGeo, carbon);
       add(shell, s * 0.66, -0.24, -0.72, 0, -s * 0.35, 0);
@@ -1240,7 +1201,6 @@ class CockpitRacer {
       new THREE.CylinderGeometry(0.95, 0.95, 0.5, 24, 1, true, Math.PI * 0.72, Math.PI * 0.56),
       new THREE.MeshStandardMaterial({ color: 0x14161a, roughness: 0.6, metalness: 0.3, side: THREE.DoubleSide })
     );
-    dashCurve.rotation.x = Math.PI / 2 - 0.22;
     add(dashCurve, 0, -0.42, -0.52);
     const dashBase = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.1, 0.28), carbonDark);
     add(dashBase, 0, -0.55, -0.72, 0.2);
@@ -1265,6 +1225,89 @@ class CockpitRacer {
 
     // 將駕駛艙掛在相機上
     this.camera.add(cockpit);
+  }
+
+  /* ---------- 第三人稱玩家車：獨立世界模型，不與相機綁定 ---------- */
+  buildPlayerCar() {
+    const car = new THREE.Group();
+    const body = new THREE.MeshStandardMaterial({ color: 0x526b66, emissive: 0x102522, emissiveIntensity: 0.35, metalness: 0.55, roughness: 0.34 });
+    const carbon = new THREE.MeshStandardMaterial({ color: 0x202a2d, emissive: 0x0c1113, emissiveIntensity: 0.25, metalness: 0.38, roughness: 0.48 });
+    const accent = new THREE.MeshStandardMaterial({ color: 0xc6f229, emissive: 0x526500, emissiveIntensity: 0.32, metalness: 0.35, roughness: 0.3 });
+    const rubber = new THREE.MeshStandardMaterial({ color: 0x171a1b, roughness: 0.94 });
+    const rim = new THREE.MeshStandardMaterial({ color: 0x6f8380, metalness: 0.82, roughness: 0.27 });
+    const add = (geometry, material, x, y, z, rx = 0, ry = 0, rz = 0) => {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(x, y, z);
+      mesh.rotation.set(rx, ry, rz);
+      car.add(mesh);
+      return mesh;
+    };
+
+    // 長鼻錐、地板與具有高對比識別線的側箱。
+    add(new THREE.BoxGeometry(1.7, 0.12, 4.9), carbon, 0, 0.18, -0.05);
+    add(new THREE.BoxGeometry(0.92, 0.46, 3.15), body, 0, 0.48, -0.1);
+    add(new THREE.CylinderGeometry(0.20, 0.36, 2.35, 8), body, 0, 0.42, -2.35, Math.PI / 2);
+    add(new THREE.BoxGeometry(0.15, 0.025, 2.2), accent, 0, 0.65, -2.25);
+    for (const side of [-1, 1]) {
+      add(new THREE.BoxGeometry(0.55, 0.4, 1.9), body, side * 0.67, 0.43, 0.32);
+      add(new THREE.BoxGeometry(0.48, 0.035, 1.8), accent, side * 0.68, 0.65, 0.2);
+      add(new THREE.BoxGeometry(0.1, 0.22, 0.48), carbon, side * 0.96, 0.53, -0.35);
+    }
+
+    // 前後翼與翼端板。
+    add(new THREE.BoxGeometry(2.45, 0.07, 0.62), carbon, 0, 0.24, -3.55);
+    add(new THREE.BoxGeometry(2.32, 0.045, 0.3), accent, 0, 0.32, -3.7, -0.13);
+    for (const side of [-1, 1]) {
+      add(new THREE.BoxGeometry(0.07, 0.36, 0.72), accent, side * 1.22, 0.37, -3.48);
+      add(new THREE.BoxGeometry(0.06, 0.67, 0.64), accent, side * 1.08, 1.19, 2.18);
+      add(new THREE.BoxGeometry(0.08, 0.7, 0.08), carbon, side * 0.35, 0.87, 2.08);
+    }
+    add(new THREE.BoxGeometry(2.2, 0.11, 0.62), carbon, 0, 1.43, 2.18);
+    add(new THREE.BoxGeometry(2.08, 0.055, 0.12), accent, 0, 1.49, 2.47);
+    add(new THREE.BoxGeometry(1.4, 0.12, 0.3), body, 0, 0.34, 2.28);
+    for (const x of [-0.5, 0, 0.5]) add(new THREE.BoxGeometry(0.045, 0.18, 0.4), rim, x, 0.25, 2.31);
+    const wingLabel = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 0.3), new THREE.MeshBasicMaterial({ map: billboardTexture('APEX GP', '#d8ff3e') }));
+    wingLabel.position.set(0, 1.26, 2.51);
+    car.add(wingLabel);
+
+    // 駕駛頭盔與 Halo。
+    add(new THREE.SphereGeometry(0.31, 16, 12), accent, 0, 0.98, 0.08);
+    add(new THREE.BoxGeometry(0.45, 0.14, 0.08), carbon, 0, 1.02, -0.21);
+    add(new THREE.TorusGeometry(0.48, 0.038, 8, 24, Math.PI * 1.5), carbon, 0, 0.93, -0.02, Math.PI / 2, 0, Math.PI * 0.75);
+    add(new THREE.CylinderGeometry(0.035, 0.04, 0.42, 6), carbon, 0, 0.73, -0.52, -0.12);
+
+    this.playerWheels = [];
+    this.playerFrontPivots = [];
+    for (const [x, z] of [[-1.05, -2.1], [1.05, -2.1], [-1.08, 1.55], [1.08, 1.55]]) {
+      const pivot = new THREE.Group();
+      pivot.position.set(x, 0.43, z);
+      const wheel = new THREE.Group();
+      const tyre = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.43, 0.4, 20), rubber);
+      tyre.rotation.z = Math.PI / 2;
+      wheel.add(tyre);
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.415, 14), rim);
+      hub.rotation.z = Math.PI / 2;
+      wheel.add(hub);
+      const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.275, 0.275, 0.025, 18), accent);
+      stripe.rotation.z = Math.PI / 2;
+      stripe.position.x = x < 0 ? -0.215 : 0.215;
+      wheel.add(stripe);
+      pivot.add(wheel);
+      car.add(pivot);
+      this.playerWheels.push(wheel);
+      if (z < 0) this.playerFrontPivots.push(pivot);
+      add(new THREE.BoxGeometry(0.55, 0.045, 0.06), carbon, x * 0.68, 0.43, z);
+    }
+    const lightMat = new THREE.MeshBasicMaterial({ color: 0xb41f16 });
+    this.playerBrakeLight = add(new THREE.BoxGeometry(0.18, 0.12, 0.06), lightMat, 0, 0.36, 2.55);
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.33, depthWrite: false }));
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.scale.set(1.7, 3.7, 1);
+    shadow.position.y = 0.025;
+    car.add(shadow);
+    car.visible = false;
+    this.playerCar = car;
+    this.scene.add(car);
   }
 
   makeGauge() {
@@ -1313,7 +1356,7 @@ class CockpitRacer {
       g.fillStyle = '#d8ff3e';
       g.font = '700 46px "Barlow Condensed", Arial';
       g.textAlign = 'center';
-      g.fillText(String(p.gear), 128, 150);
+      g.fillText(p.fSpeed < -0.5 ? 'R' : String(p.gear), 128, 150);
       g.fillStyle = '#7d877f';
       g.font = '500 17px "DM Mono", monospace';
       g.fillText('RPM ×1000', 128, 178);
@@ -1432,22 +1475,92 @@ class CockpitRacer {
     if (IS_COARSE) this.dom.touchUi.classList.remove('hidden');
   }
 
+  /* ---------- 可即時套用的畫質、鏡頭與駕駛設定 ---------- */
+  setQuality(quality) {
+    if (quality !== 'high' && quality !== 'low') return;
+    this.quality = quality;
+    this.dom.qualityBtns.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.quality === quality)));
+    if (!this.renderer) return;
+    this.renderer.setPixelRatio(quality === 'high' ? Math.min(devicePixelRatio, 1.75) : Math.min(devicePixelRatio, 1));
+    this.scene.fog.far = quality === 'high' ? 2400 : 1200;
+    const samples = this.isWebGL2 && quality === 'high' ? 4 : 0;
+    if (this.rt.samples !== samples) {
+      this.rt.samples = samples;
+      this.rt.dispose(); // Three.js 在下次渲染時重建 render target
+    }
+    if (this.treeMeshes) for (const mesh of this.treeMeshes) {
+      mesh.count = quality === 'high' ? this.treeCount : Math.min(180, this.treeCount);
+      mesh.computeBoundingSphere(); // 畫質切換後重新計算實例的裁切範圍
+    }
+    if (this.mirrorMeshes) for (const mirror of this.mirrorMeshes) {
+      mirror.material.map = quality === 'high' ? this.mirrorRT.texture : this.staticMirrorTexture;
+      mirror.material.needsUpdate = true;
+    }
+    this.onResize();
+  }
+
+  syncSettingsUI() {
+    const d = this.dom;
+    for (const [inputs, value] of [[d.sensitivityInputs, this.settings.sensitivity], [d.volumeInputs, this.settings.volume]]) {
+      for (const input of inputs) {
+        const percent = Math.round(value * 100);
+        input.value = String(percent);
+        input.setAttribute('aria-valuetext', `${percent}%`);
+        input.closest('.setting-control').querySelector('output').textContent = `${percent}%`;
+      }
+    }
+    d.viewBtns.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === this.settings.view)));
+    d.viewBtn.setAttribute('aria-label', this.settings.view === 'cockpit' ? '切換至第三人稱視角' : '切換至駕駛艙視角');
+    d.viewBtn.textContent = this.settings.view === 'cockpit' ? 'CAM' : 'CHASE';
+    const silent = this.settings.muted || this.settings.volume === 0;
+    d.muteBtn.textContent = silent ? 'MUTE' : 'SND';
+    d.muteBtn.setAttribute('aria-pressed', String(silent));
+    d.muteBtn.setAttribute('aria-label', silent ? '開啟音效' : '靜音');
+  }
+
+  setView(view, persist = true) {
+    if (view !== 'cockpit' && view !== 'chase') return;
+    if (view !== this.settings.view) this.chaseSnap = true;
+    this.settings.view = view;
+    if (this.cockpit) this.cockpit.visible = view === 'cockpit';
+    if (this.playerCar) this.playerCar.visible = view === 'chase';
+    if (persist) saveSettings(this.settings);
+    this.syncSettingsUI();
+  }
+
+  toggleView() { this.setView(this.settings.view === 'cockpit' ? 'chase' : 'cockpit'); }
+
   /* ---------- UI 綁定 ---------- */
   bindUI() {
     const d = this.dom;
-    d.qualityBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this.quality = btn.dataset.quality;
-        d.qualityBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-      });
-      btn.setAttribute('aria-pressed', String(btn.dataset.quality === this.quality));
+    d.qualityBtns.forEach((button) => {
+      button.addEventListener('click', () => this.setQuality(button.dataset.quality));
+      button.setAttribute('aria-pressed', String(button.dataset.quality === this.quality));
     });
+    d.viewBtns.forEach((button) => button.addEventListener('click', () => this.setView(button.dataset.view)));
+    d.sensitivityInputs.forEach((input) => input.addEventListener('input', () => {
+      this.settings.sensitivity = clamp(Number(input.value) / 100, 0.5, 1.5);
+      this.input.sensitivity = this.settings.sensitivity;
+      saveSettings(this.settings);
+      this.syncSettingsUI();
+    }));
+    d.volumeInputs.forEach((input) => input.addEventListener('input', () => {
+      this.settings.volume = clamp(Number(input.value) / 100, 0, 1);
+      this.audio.setVolume(this.settings.volume);
+      if (this.settings.volume > 0 && this.settings.muted) {
+        this.settings.muted = false;
+        this.audio.setMuted(false);
+      }
+      saveSettings(this.settings);
+      this.syncSettingsUI();
+    }));
+    this.syncSettingsUI();
 
     d.startBtn.addEventListener('click', () => this.startRace());
     d.resumeBtn.addEventListener('click', () => this.setPaused(false));
     d.quitBtn.addEventListener('click', () => {
-      this.setPaused(false);
       this.state = 'ready';
+      this.audio.suspend();
       this.resetRace();
       this.showScreen('start');
     });
@@ -1458,11 +1571,24 @@ class CockpitRacer {
     });
     d.backBtn.addEventListener('click', () => { window.location.href = 'RaceDay01.html'; });
     d.pauseBtn.addEventListener('click', () => this.togglePause());
-    d.muteBtn.addEventListener('click', () => {
-      const muted = !this.audio.muted;
-      this.audio.setMuted(muted);
-      d.muteBtn.textContent = muted ? '🔇 音效已靜音' : '🔊 音效開啟';
-      d.muteBtn.setAttribute('aria-pressed', String(muted));
+    d.viewBtn.addEventListener('click', (event) => {
+      this.toggleView();
+      if (event.detail > 0) event.currentTarget.blur(); // 滑鼠點擊後仍可用 Space 手煞車
+    });
+    d.muteBtn.addEventListener('click', (event) => {
+      if (this.settings.muted || this.settings.volume === 0) {
+        this.settings.muted = false;
+        if (this.settings.volume === 0) {
+          this.settings.volume = DEFAULT_SETTINGS.volume;
+          this.audio.setVolume(this.settings.volume);
+        }
+      } else {
+        this.settings.muted = true;
+      }
+      this.audio.setMuted(this.settings.muted);
+      saveSettings(this.settings);
+      this.syncSettingsUI();
+      if (event.detail > 0) event.currentTarget.blur();
     });
 
     // 觸控控制
@@ -1518,7 +1644,7 @@ class CockpitRacer {
     d.banner.classList.remove('animate');
     void d.banner.offsetWidth; // 重新觸發動畫
     d.banner.classList.add('animate');
-    this.bannerTimer = duration;
+    this.bannerDeadline = performance.now() + duration;
   }
 
   /* ---------- 賽事流程 ---------- */
@@ -1531,6 +1657,8 @@ class CockpitRacer {
 
   startCountdown() {
     this.state = 'countdown';
+    this.input.setActive(true);
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     this.countdownT = 0;
     this.dom.hud.classList.remove('hidden');
     this.audio.init();
@@ -1538,6 +1666,8 @@ class CockpitRacer {
   }
 
   resetRace() {
+    this.input.setActive(false);
+    this.chaseSnap = true;
     const t = this.track;
     const p = this.player;
     // 玩家發車位：起跑線後方（最後位 P4）、右側
@@ -1579,10 +1709,13 @@ class CockpitRacer {
     if (paused && (this.state === 'racing' || this.state === 'countdown')) {
       this.prevState = this.state;
       this.state = 'paused';
+      this.input.setActive(false);
       this.showScreen('pause');
       this.audio.suspend();
     } else if (!paused && this.state === 'paused') {
       this.state = this.prevState || 'racing';
+      this.input.setActive(true);
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       this.showScreen(null);
       this.dom.hud.classList.remove('hidden');
       this.audio.resume();
@@ -1592,6 +1725,7 @@ class CockpitRacer {
 
   finishRace() {
     this.state = 'finished';
+    this.input.setActive(false);
     const totalTime = this.lapTimes.reduce((a, b) => a + b, 0);
     const pos = this.computePosition();
     const rows = this.lapTimes.map((ms, i) =>
@@ -1605,6 +1739,7 @@ class CockpitRacer {
     this.showScreen('finish');
     this.dom.hud.classList.add('hidden');
     this.audio.blip(1320, 0.5, 0.3);
+    setTimeout(() => { if (this.state === 'finished') this.audio.suspend(); }, 600);
   }
 
   /* ---------- 主迴圈 ---------- */
@@ -1678,22 +1813,12 @@ class CockpitRacer {
     const throttle = inp.throttle;
     const brake = inp.brake;
 
-    let accel = 0;
-    if (throttle > 0) accel += CFG.engineAccel * throttle * (1 - fSpeed / CFG.topSpeed);
-    if (brake > 0) {
-      if (fSpeed > 0.5) accel -= CFG.brakeAccel * brake;
-      else fSpeed = Math.max(fSpeed - 5 * brake * dt, -7); // 倒車
-    }
-    accel -= CFG.rollResist * Math.sign(fSpeed);
-    if (!p.onTrack) accel -= CFG.grassDecel * Math.sign(fSpeed) * Math.min(1, Math.abs(fSpeed) / 8);
-    fSpeed += accel * dt;
-    fSpeed = clamp(fSpeed, -7, CFG.topSpeed);
-    p.lonG = accel / 9.81;
+    const longitudinal = forwardSpeedAfterForces(fSpeed, throttle, brake, p.onTrack, dt, CFG);
+    fSpeed = longitudinal.speed;
+    p.lonG = longitudinal.acceleration / 9.81;
 
-    // 橫向：轉向 + 抓地力模型
-    const speedFac = Math.min(Math.abs(fSpeed) / 9, 1);
-    const authority = clamp(1.75 / (1 + Math.abs(fSpeed) * 0.03), 0.3, 1.75) * (inp.handbrake ? 1.55 : 1);
-    const yawRate = inp.steer * authority * speedFac * Math.sign(fSpeed || 1);
+    // 車頭以 +Z 為基準，而螢幕右側是車體的 -X；修正左右符號。
+    const yawRate = steeringYawRate(inp.steer, inp.sensitivity, fSpeed, inp.handbrake);
     p.heading += yawRate * dt;
 
     // 離心力產生橫向速度，抓地力將其衰減
@@ -1739,6 +1864,9 @@ class CockpitRacer {
     }
     this.crashCooldown -= dt;
 
+    // 碰撞可能改變速度，換檔依實際前進速度而非橫滑或倒車速度。
+    p.fSpeed = p.vel.x * newFwd.x + p.vel.y * newFwd.z;
+    p.speed = Math.hypot(p.vel.x, p.vel.y);
     this.updateGearRpm(dt);
   }
 
@@ -1817,16 +1945,12 @@ class CockpitRacer {
   updateGearRpm(dt, countdown = false) {
     const p = this.player;
     const gears = CFG.gears;
-    let g = 1;
-    for (let i = 1; i < gears.length; i++) {
-      if (p.speed >= gears[i - 1]) g = i;
-    }
-    if (g !== p.gear && !countdown) {
-      this.audio.shiftBlip();
-    }
+    const forwardSpeed = Math.max(0, p.fSpeed);
+    const g = countdown ? 1 : selectAutomaticGear(forwardSpeed, p.gear, gears);
+    if (g !== p.gear && !countdown) this.audio.shiftBlip();
     p.gear = g;
     const lo = gears[g - 1], hi = gears[g] || CFG.topSpeed + 6;
-    const gearN = clamp((p.speed - lo) / Math.max(hi - lo, 1), 0, 1);
+    const gearN = clamp((forwardSpeed - lo) / Math.max(hi - lo, 1), 0, 1);
     const target = countdown
       ? p.rpm
       : CFG.idleRpm + gearN * (CFG.redlineRpm - CFG.idleRpm) * 0.96 + this.input.throttle * 320;
@@ -1858,7 +1982,7 @@ class CockpitRacer {
       const c = t.points[i], r = t.rights[i];
       const lateral = instant ? ai.lateral : ai.lateral + Math.sin(ai.weave) * 1.6;
       ai.group.position.set(c.x + r.x * lateral, 0, c.z + r.z * lateral);
-      ai.group.rotation.y = t.yaws[i];
+      ai.group.rotation.y = t.yaws[i] + Math.PI; // 模型車頭朝 -Z，需對齊樣條的前進方向
       const spin = (ai.speed * 0.016) || 0;
       for (const w of ai.wheels) w.rotation.x += spin;
     }
@@ -1876,50 +2000,68 @@ class CockpitRacer {
   updateCamera(dt, idle = false) {
     const p = this.player;
     const speedN = clamp(p.speed / CFG.topSpeed, 0, 1);
-    const fov = this.baseFov + speedN * (idle ? 4 : 20);
-    this.camera.fov += (fov - this.camera.fov) * Math.min(1, dt * 5);
+    const chase = this.settings.view === 'chase';
+    const fov = (chase ? 66 : this.baseFov) + (REDUCED_MOTION ? 0 : speedN * (idle ? 4 : chase ? 10 : 20));
+    this.camera.fov += (fov - this.camera.fov) * (1 - Math.exp(-dt * 5));
     this.camera.updateProjectionMatrix();
 
-    // 駕駛艙視點：位於車中心往後 0.42m、高 1.06m
-    this.camera.position.set(
-      p.pos.x - Math.sin(p.heading) * 0.42,
-      1.06,
-      p.pos.z - Math.cos(p.heading) * 0.42
-    );
-
-    // G 力滾轉 + 高速微晃
     const targetRoll = clamp(-p.latG * 0.028, -0.05, 0.05);
-    this.cameraRoll = lerp(this.cameraRoll || 0, REDUCED_MOTION ? 0 : targetRoll, Math.min(1, dt * 6));
+    this.cameraRoll = lerp(this.cameraRoll || 0, REDUCED_MOTION ? 0 : targetRoll, 1 - Math.exp(-dt * 6));
     const bob = REDUCED_MOTION || idle ? 0 : speedN * speedN * 0.006;
     const bobY = Math.sin(this.frame * 0.21) * bob;
     const bobX = Math.cos(this.frame * 0.13) * bob * 0.6;
-    this.camera.position.y += bobY;
-
-    // 碰撞震動衰減
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.hitFlash = Math.max(0, this.hitFlash - dt * 2.6);
     const sh = REDUCED_MOTION ? 0 : this.shake;
     const shakeX = (Math.random() - 0.5) * sh * 0.16;
     const shakeY = (Math.random() - 0.5) * sh * 0.14;
+    const forwardX = Math.sin(p.heading), forwardZ = Math.cos(p.heading);
 
-    // 朝向：車頭方向 + 轉向預視
-    const steerPeek = this.input.steer * (5 + speedN * 7);
-    const yaw = p.heading + steerPeek * 0.02;
-    this.camYaw = yaw + Math.PI; // 相機 -Z 為前：yaw+PI 使車頭對齊視線
-    this.camera.rotation.set(0, 0, 0);
-    this.camera.rotateY(this.camYaw);
-    this.camera.rotateX(shakeY * 0.5 + bobY * 0.4);
-    this.camera.rotateZ(this.cameraRoll + shakeX);
-    this.camera.position.x += shakeX + bobX;
-    this.camera.position.y += shakeY;
+    if (chase) {
+      // 跟隨相機使用時間無關的阻尼，切換視角或重置時立即定位，避免穿越賽車。
+      this.chaseDesired = this.chaseDesired || new THREE.Vector3();
+      this.chaseLook = this.chaseLook || new THREE.Vector3();
+      this.chaseTarget = this.chaseTarget || new THREE.Vector3();
+      const distance = 7.9 + speedN * 1.1;
+      this.chaseDesired.set(p.pos.x - forwardX * distance, 3.25 + speedN * 0.3, p.pos.z - forwardZ * distance);
+      this.chaseTarget.set(p.pos.x + forwardX * 5.5, 0.8, p.pos.z + forwardZ * 5.5);
+      if (this.chaseSnap || REDUCED_MOTION) {
+        this.camera.position.copy(this.chaseDesired);
+        this.chaseLook.copy(this.chaseTarget);
+        this.chaseSnap = false;
+      } else {
+        this.camera.position.lerp(this.chaseDesired, 1 - Math.exp(-dt * 6));
+        this.chaseLook.lerp(this.chaseTarget, 1 - Math.exp(-dt * 8));
+      }
+      this.camera.position.x += shakeX * 0.4;
+      this.camera.position.y += shakeY * 0.4;
+      this.camera.lookAt(this.chaseLook);
+      this.camera.rotateZ(this.cameraRoll * 0.3);
+      this.camYaw = p.heading + Math.PI;
+    } else {
+      // 駕駛艙視點：車中心後方 0.42m；預視方向與實際轉向一致。
+      this.camera.position.set(p.pos.x - forwardX * 0.42 + shakeX + bobX, 1.06 + bobY + shakeY, p.pos.z - forwardZ * 0.42);
+      const steerPeek = this.input.steer * this.input.sensitivity * (5 + speedN * 7);
+      this.camYaw = p.heading - steerPeek * 0.02 + Math.PI;
+      this.camera.rotation.set(0, 0, 0);
+      this.camera.rotateY(this.camYaw);
+      this.camera.rotateX(shakeY * 0.5 + bobY * 0.4);
+      this.camera.rotateZ(this.cameraRoll + shakeX);
+    }
 
-    // 方向盤與前輪聯動
-    const steerVis = this.input.steer;
-    if (this.steerWheel) this.steerWheel.rotation.z = -steerVis * 2.6;
+    // 駕駛艙與追車模型共享同一套方向和速度。
+    const steerVis = clamp(this.input.steer * this.input.sensitivity, -1, 1);
+    const wheelDt = idle ? 0 : dt;
+    this.steerWheel.rotation.z = -steerVis * 2.6;
     for (let i = 0; i < this.wheelPivots.length; i++) {
       this.wheelPivots[i].rotation.y = -steerVis * 0.34;
-      this.frontWheels[i].rotation.x -= p.speed * dt * 2.8;
+      this.frontWheels[i].rotation.x -= p.fSpeed * wheelDt * 2.8;
     }
+    this.playerCar.position.set(p.pos.x, 0, p.pos.z);
+    this.playerCar.rotation.y = p.heading + Math.PI;
+    for (const pivot of this.playerFrontPivots) pivot.rotation.y = -steerVis * 0.34;
+    for (const wheel of this.playerWheels) wheel.rotation.x -= p.fSpeed * wheelDt / 0.43;
+    this.playerBrakeLight.material.color.setHex(this.input.brake > 0.08 ? 0xff4132 : 0xb41f16);
 
     // 換檔燈
     const rpmN = clamp((p.rpm - CFG.idleRpm) / (CFG.redlineRpm - CFG.idleRpm), 0, 1);
@@ -1952,7 +2094,7 @@ class CockpitRacer {
     const d = this.dom, p = this.player;
 
     d.speed.textContent = String(Math.round(p.speed * 3.6)).padStart(3, '0');
-    d.gear.textContent = String(p.gear);
+    d.gear.textContent = p.fSpeed < -0.5 ? 'R' : String(p.gear);
     const rpmN = clamp((p.rpm - CFG.idleRpm) / (CFG.redlineRpm - CFG.idleRpm), 0, 1);
     d.rpmFill.style.width = `${rpmN * 100}%`;
     d.rpmFill.style.background = rpmN > 0.85 ? '#ff4c38' : rpmN > 0.65 ? '#ffd23d' : '#d8ff3e';
@@ -1982,13 +2124,13 @@ class CockpitRacer {
 
     this.drawMinimap(pos);
     this.drawGMeter();
-    this.drawGauges();
+    if (this.settings.view === 'cockpit') this.drawGauges();
 
-    if (this.bannerTimer > 0) {
-      this.bannerTimer -= 50;
-      if (this.bannerTimer <= 0) d.banner.classList.add('hidden');
+    if (this.bannerDeadline && performance.now() >= this.bannerDeadline) {
+      d.banner.classList.add('hidden');
+      this.bannerDeadline = 0;
     }
-    d.hitFlash.style.opacity = String(this.hitFlash * 0.55);
+    d.hitFlash.style.opacity = String(REDUCED_MOTION ? 0 : this.hitFlash * 0.55);
   }
 
   drawMinimap() {
@@ -2040,9 +2182,9 @@ class CockpitRacer {
     const highFx = this.quality === 'high';
 
     // 後視鏡（僅高畫質、隔幀更新）
-    if (highFx && this.mirrorMeshes.length && this.frame % 2 === 0) {
+    if (highFx && this.settings.view === 'cockpit' && this.mirrorMeshes.length && this.frame % 2 === 0) {
       this.cockpit.visible = false;
-      const wPos = new THREE.Vector3();
+      const wPos = this.mirrorWorldPos || (this.mirrorWorldPos = new THREE.Vector3());
       this.camera.getWorldPosition(wPos);
       const yawBack = (this.camYaw || Math.PI) + Math.PI; // 回望車尾方向
       this.mirrorCam.position.copy(wPos);
@@ -2057,8 +2199,8 @@ class CockpitRacer {
 
     if (highFx) {
       this.postMat.uniforms.uTime.value = performance.now() * 0.001;
-      this.postMat.uniforms.uSpeed.value = clamp(this.player.speed / CFG.topSpeed, 0, 1) * (this.state === 'racing' ? 1 : 0.15);
-      this.postMat.uniforms.uHit.value = this.hitFlash;
+      this.postMat.uniforms.uSpeed.value = REDUCED_MOTION ? 0 : clamp(this.player.speed / CFG.topSpeed, 0, 1) * (this.state === 'racing' ? 1 : 0.15);
+      this.postMat.uniforms.uHit.value = REDUCED_MOTION ? 0 : this.hitFlash;
       this.renderer.setRenderTarget(this.rt);
       this.renderer.render(this.scene, this.camera);
       this.renderer.setRenderTarget(null);
