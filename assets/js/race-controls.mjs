@@ -1,11 +1,86 @@
 /** Input and vehicle helpers shared by the game and its regression tests. */
 export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+/**
+ * Difficulty presets. `pace` scales the AI speed profile (corner speeds and
+ * straights alike), so a pace of 1.02 is roughly 2% quicker around a lap.
+ * `mistakeRate` is a Poisson-ish probability per second of a small error, and
+ * `aggression` drives how boldly opponents dive down the inside.
+ */
+export const DIFFICULTIES = Object.freeze([
+  Object.freeze({
+    id: 'rookie',
+    label: '新秀',
+    tag: 'ROOKIE',
+    opponents: 3,
+    pace: 0.855,
+    paceSpread: 0.030,
+    aggression: 0.32,
+    mistakeRate: 0.16,
+    reaction: [0.52, 0.72],
+    accel: 12.5,
+    brake: 20,
+    blurb: '3 位對手 · 節奏寬裕，適合熟悉賽道與煞車點',
+  }),
+  Object.freeze({
+    id: 'pro',
+    label: '職業',
+    tag: 'PRO',
+    opponents: 5,
+    pace: 0.925,
+    paceSpread: 0.024,
+    aggression: 0.58,
+    mistakeRate: 0.075,
+    reaction: [0.38, 0.54],
+    accel: 13.8,
+    brake: 23,
+    blurb: '5 位對手 · 會防守、會抓失誤，需要乾淨的一圈才拿得到頒獎台',
+  }),
+  Object.freeze({
+    id: 'elite',
+    label: '菁英',
+    tag: 'ELITE',
+    opponents: 7,
+    pace: 0.975,
+    paceSpread: 0.018,
+    aggression: 0.82,
+    mistakeRate: 0.030,
+    reaction: [0.28, 0.40],
+    accel: 15.0,
+    brake: 25,
+    blurb: '7 位對手 · 逼近理想圈速，尾流與晚煞車是唯一機會',
+  }),
+  Object.freeze({
+    id: 'legend',
+    label: '傳奇',
+    tag: 'LEGEND',
+    opponents: 9,
+    pace: 1.035,
+    paceSpread: 0.014,
+    aggression: 1,
+    mistakeRate: 0.008,
+    reaction: [0.20, 0.30],
+    accel: 16.2,
+    brake: 27,
+    blurb: '9 位對手 · 快過理想駕駛，需要零失誤與完美出彎',
+  }),
+]);
+
+export const DEFAULT_DIFFICULTY = 'pro';
+
+/** Accepts an id string or a full level object; always returns a valid level. */
+export function resolveDifficulty(id) {
+  const key = id && typeof id === 'object' ? id.id : id;
+  return DIFFICULTIES.find((level) => level.id === key)
+    || DIFFICULTIES.find((level) => level.id === DEFAULT_DIFFICULTY);
+}
+
 export const DEFAULT_SETTINGS = Object.freeze({
   sensitivity: 1,
-  volume: 0.35,
+  volume: 0.7,
   view: 'cockpit',
   muted: false,
+  difficulty: DEFAULT_DIFFICULTY,
 });
 
 export function sanitizeSettings(value) {
@@ -17,7 +92,18 @@ export function sanitizeSettings(value) {
     volume: numberOr(settings.volume, DEFAULT_SETTINGS.volume, 0, 1),
     view: settings.view === 'chase' ? 'chase' : 'cockpit',
     muted: settings.muted === true,
+    difficulty: resolveDifficulty(settings.difficulty).id,
   };
+}
+
+/**
+ * Perceptual volume law for the audio master bus. Human loudness is roughly
+ * logarithmic, so a linear slider feels dead until the top half; raising the
+ * slider to 70% now delivers about the level the old 100% did.
+ */
+export function masterGainForVolume(volume, ceiling = 1.3) {
+  const v = Number.isFinite(volume) ? clamp(volume, 0, 1) : 0;
+  return clamp(Math.pow(v, 1.35) * ceiling, 0, ceiling);
 }
 
 // Remap the remaining travel, rather than jumping when leaving the dead zone.
@@ -164,14 +250,20 @@ export function selectAutomaticGear(forwardSpeed, previousGear, thresholds, hyst
   return gear;
 }
 
-/** Apply propulsion and resistance without rolling resistance crossing through zero. */
-export function forwardSpeedAfterForces(speed, throttle, brake, onTrack, dt, config) {
+/**
+ * Apply propulsion and resistance without rolling resistance crossing through
+ * zero. `drag` below 1 models slipstream/DRS: it raises both the achievable top
+ * speed and the acceleration, exactly as a reduction in aerodynamic drag would.
+ */
+export function forwardSpeedAfterForces(speed, throttle, brake, onTrack, dt, config, drag = 1) {
   const previous = speed;
+  const slip = clamp(2 - clamp(drag, 0.8, 1), 1, 1.2);
   let acceleration = config.engineAccel * throttle * (1 - speed / config.topSpeed);
+  acceleration *= 1 + (slip - 1) * 1.4;
   if (brake > 0) acceleration -= (speed > 0.5 ? config.brakeAccel : 5) * brake;
   speed += acceleration * dt;
   const resistance = config.rollResist + (onTrack ? 0 : config.grassDecel * Math.min(1, Math.abs(speed) / 8));
   speed = Math.sign(speed) * Math.max(0, Math.abs(speed) - resistance * dt);
-  speed = clamp(speed, -7, config.topSpeed);
-  return { speed, acceleration: dt > 0 ? (speed - previous) / dt : 0 };
+  speed = clamp(speed, -7, config.topSpeed * slip);
+  return { speed, acceleration: dt > 0 ? (speed - previous) / dt : 0, slip };
 }
