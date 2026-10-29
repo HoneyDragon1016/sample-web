@@ -34,3 +34,9 @@
 # Apex GP Race Day
 /race-day               /RaceDay01              301
 /apex-gp                /RaceDay01              301
+
+# Apex GP Cockpit Racer（第一人稱 3D 賽車）
+/race-cockpit           /RaceCockpit01          301
+/cockpit                /RaceCockpit01          301
+/cockpit-racer          /RaceCockpit01          301
+/RaceCockpit            /RaceCockpit01          301
