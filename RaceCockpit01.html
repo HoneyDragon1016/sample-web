@@ -258,7 +258,7 @@
     <div class="screen-box">
       <span class="eyebrow">WEBGL UNAVAILABLE</span>
       <h1 style="margin-top:12px">無法啟動<span>引擎</span></h1>
-      <p>你的瀏覽器或裝置目前不支援 WebGL，無法執行 3D 駕駛艙體驗。請改用最新版 Chrome / Edge / Firefox / Safari，或於設定中啟用硬體加速。</p>
+      <p>遊戲無法載入或啟動。請確認網路連線，使用最新版瀏覽器並啟用硬體加速；若直接開啟本機檔案，請改用本地伺服器預覽。</p>
       <p class="fallback-detail"></p>
       <a class="btn secondary" href="RaceDay01.html">返回 Race Day</a>
     </div>
@@ -268,9 +268,28 @@
     <div class="screen"><div class="screen-box"><h1>需要 JavaScript</h1><p>Cockpit Racer 需要啟用 JavaScript 與 WebGL。</p></div></div>
   </noscript>
 
-  <script type="importmap">
-    { "imports": { "three": "assets/vendor/three.module.min.js" } }
+  <script>
+    // 入口或相依模組載入失敗時，也要能離開載入畫面。
+    window.cockpitLoadError = function (error) {
+      console.error('[CockpitRacer] 載入失敗:', error);
+      document.getElementById('screen-loading').classList.add('hidden');
+      const fallback = document.getElementById('screen-fallback');
+      fallback.classList.remove('hidden');
+      fallback.querySelector('.fallback-detail').textContent =
+        '載入失敗：' + (error && error.message ? error.message : '請重新整理頁面後再試。');
+    };
+    setTimeout(function () {
+      const loading = document.getElementById('screen-loading');
+      if (!loading.classList.contains('hidden')) {
+        document.getElementById('load-pct').textContent = '載入時間較長，請檢查網路連線或重新整理頁面。';
+      }
+    }, 30000);
   </script>
-  <script type="module" src="assets/js/race-cockpit.js"></script>
+  <script type="module">
+    import('./assets/js/race-cockpit.js').catch(window.cockpitLoadError);
+  </script>
+  <script nomodule>
+    window.cockpitLoadError(new Error('此瀏覽器不支援 JavaScript 模組，請更新瀏覽器。'));
+  </script>
 </body>
 </html>

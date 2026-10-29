@@ -210,7 +210,7 @@ gsap.ticker.lagSmoothing(0);
 
 | 模組 | 選型 | 說明 |
 | --- | --- | --- |
-| 3D 渲染 | Three.js r160（`assets/vendor/three.module.min.js`，MIT） | 以 Import Map 對應 `three` 模組名稱；本地 vendor，離線可用、不受 CDN 影響 |
+| 3D 渲染 | Three.js r160（`assets/vendor/three.module.min.js`，MIT） | 使用相對路徑載入本地 vendor，不受外部 CDN 影響 |
 | 賽道生成 | 極座標閉合 CatmullRom 樣條 | 半徑函數疊加多個正弦項，保證封閉且不自我交疊；取樣 1000 點建立中心線、切線、法線與曲率 |
 | 賽道幾何 | 自訂帶狀 BufferGeometry | 柏油路面、路緣石（僅彎道）、起跑線；紋理全部以 Canvas 程序化生成，零圖片請求 |
 | 場景物件 | InstancedMesh | 護欄、輪胎堆、樹木以實例化繪製，單一 Draw Call 容納數百物件 |

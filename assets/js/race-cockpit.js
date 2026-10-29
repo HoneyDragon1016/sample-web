@@ -15,7 +15,7 @@
  *
  * 相依：three.module.min.js（已於本儲存庫內 vendor，無外部 CDN 相依）
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three.module.min.js';
 
 /* ================================================================
  * 0. 常數與工具
@@ -2075,10 +2075,5 @@ class CockpitRacer {
 const game = new CockpitRacer();
 game.init().catch((err) => {
   console.error('[CockpitRacer] init failed:', err);
-  const fb = document.getElementById('screen-fallback');
-  if (fb) {
-    fb.classList.remove('hidden');
-    const msg = fb.querySelector('.fallback-detail');
-    if (msg) msg.textContent = `初始化失敗：${err && err.message ? err.message : err}`;
-  }
+  window.cockpitLoadError(err);
 });
