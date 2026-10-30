@@ -21,16 +21,16 @@
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
-    body{background:var(--bg);color:var(--white);font-family:var(--body);overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none}
+    body{background:var(--bg);color:var(--white);font-family:var(--body);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
     .hidden{display:none!important}
     .mono{font-family:var(--mono)}
 
     /* ---------- 3D 舞台 ---------- */
-    #stage{position:fixed;inset:0;z-index:0}
+    #stage{position:fixed;inset:0;z-index:0;touch-action:none}
     #stage canvas{display:block;width:100%;height:100%}
 
     /* ---------- 全螢幕面板（載入 / 開始 / 暫停 / 結束 / 降級） ---------- */
-    .screen{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;background:rgba(5,8,9,.86);backdrop-filter:blur(14px)}
+    .screen{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;overscroll-behavior:contain;touch-action:auto;background:rgba(5,8,9,.86);backdrop-filter:blur(14px)}
     .screen-box{width:min(760px,calc(100% - 32px));margin:auto;text-align:center;padding:32px 24px}
     .screen-box h1{font:900 clamp(46px,8vw,88px)/.9 var(--display);letter-spacing:-.02em;text-transform:uppercase}
     .screen-box h1 span{color:var(--acid)}
@@ -56,7 +56,7 @@
     .setup-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
     .setting-control label{display:flex;justify-content:space-between;gap:8px;color:var(--white);font-size:12px}
     .setting-control output{color:var(--acid);font:500 12px var(--mono)}
-    .setting-control input{display:block;width:100%;height:22px;margin-top:7px;accent-color:var(--acid);cursor:pointer;touch-action:pan-x}
+    .setting-control input{display:block;width:100%;height:22px;margin-top:7px;accent-color:var(--acid);cursor:pointer;touch-action:auto;user-select:auto;-webkit-user-select:auto}
     .setting-hint{display:flex;justify-content:space-between;color:var(--muted);font-size:10px}
     .view-setting{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;padding-top:14px;border-top:1px solid var(--line);font-size:12px}
     .view-buttons{display:flex;gap:6px;flex-wrap:wrap}
@@ -137,7 +137,7 @@
     #hit-flash{position:fixed;inset:0;z-index:9;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(255,40,25,.55) 100%)}
 
     /* ---------- 觸控 UI ---------- */
-    #touch-ui{position:fixed;inset:0;z-index:12;pointer-events:none}
+    #touch-ui{position:fixed;inset:0;z-index:12;pointer-events:none;touch-action:none}
     .touch-steer{position:absolute;left:0;top:0;bottom:0;width:42%;pointer-events:auto}
     .touch-steer:after{content:'◀ 拖曳轉向 ▶';position:absolute;left:24px;bottom:96px;color:rgba(241,245,235,.4);font:400 11px var(--mono);letter-spacing:.14em}
     .touch-pedals{position:absolute;right:16px;bottom:16px;display:flex;gap:12px;pointer-events:auto}
@@ -269,11 +269,16 @@
             <div class="setting-hint"><span>穩定</span><span>靈敏</span></div>
           </div>
           <div class="setting-control">
-            <label for="start-volume">音效音量 <output for="start-volume">35%</output></label>
-            <input id="start-volume" data-setting="volume" type="range" min="0" max="100" step="5" value="35">
+            <label for="start-volume">音效音量 <output for="start-volume">60%</output></label>
+            <input id="start-volume" data-setting="volume" type="range" min="0" max="100" step="5" value="60">
             <div class="setting-hint"><span>安靜</span><span>響亮</span></div>
           </div>
         </div>
+        <div class="view-setting"><span>對手難度</span><div class="view-buttons" role="group" aria-label="對手難度">
+          <button type="button" data-difficulty="rookie" aria-pressed="false">新秀</button>
+          <button type="button" data-difficulty="pro" aria-pressed="true">職業</button>
+          <button type="button" data-difficulty="elite" aria-pressed="false">菁英</button>
+        </div></div>
         <div class="view-setting"><span>鏡頭視角</span><div class="view-buttons" role="group" aria-label="選擇鏡頭視角">
           <button type="button" data-view="cockpit" aria-pressed="true">駕駛艙</button>
           <button type="button" data-view="chase" aria-pressed="false">第三人稱追車</button>
@@ -284,7 +289,7 @@
         <button type="button" data-quality="low" aria-pressed="false">效能模式</button>
       </div>
       <button type="button" class="btn" id="start-btn">開始比賽 <span aria-hidden="true">▶</span></button>
-      <p class="start-note">需要支援 WebGL 的現代瀏覽器 · 音量預設較低 · <a href="RaceDay01.html">← 返回 APEX GP Race Day</a></p>
+      <p class="start-note">需要支援 WebGL 的現代瀏覽器 · <a href="RaceDay01.html">← 返回 APEX GP Race Day</a></p>
     </div>
   </div>
 
@@ -302,11 +307,16 @@
             <div class="setting-hint"><span>穩定</span><span>靈敏</span></div>
           </div>
           <div class="setting-control">
-            <label for="pause-volume">音效音量 <output for="pause-volume">35%</output></label>
-            <input id="pause-volume" data-setting="volume" type="range" min="0" max="100" step="5" value="35">
+            <label for="pause-volume">音效音量 <output for="pause-volume">60%</output></label>
+            <input id="pause-volume" data-setting="volume" type="range" min="0" max="100" step="5" value="60">
             <div class="setting-hint"><span>安靜</span><span>響亮</span></div>
           </div>
         </div>
+        <div class="view-setting"><span>對手難度</span><div class="view-buttons" role="group" aria-label="對手難度">
+          <button type="button" data-difficulty="rookie" aria-pressed="false">新秀</button>
+          <button type="button" data-difficulty="pro" aria-pressed="true">職業</button>
+          <button type="button" data-difficulty="elite" aria-pressed="false">菁英</button>
+        </div></div>
         <div class="view-setting"><span>鏡頭視角</span><div class="view-buttons" role="group" aria-label="選擇鏡頭視角">
           <button type="button" data-view="cockpit" aria-pressed="true">駕駛艙</button>
           <button type="button" data-view="chase" aria-pressed="false">第三人稱追車</button>

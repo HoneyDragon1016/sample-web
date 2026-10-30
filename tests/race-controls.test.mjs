@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DrivingInput, DEFAULT_SETTINGS, sanitizeSettings, signedDeadzone, pedalDeadzone,
-  steeringYawRate, selectAutomaticGear, forwardSpeedAfterForces,
+  steeringYawRate, selectAutomaticGear, forwardSpeedAfterForces, raceProgress, AI_DIFFICULTY,
 } from '../assets/js/race-controls.mjs';
 
 const gears = [0, 14, 24, 36, 49, 62, 74, 83, 89];
@@ -235,7 +235,19 @@ test('resistance never reverses a coasting car and reverse requires brake input'
 test('stored settings fall back safely and stay within supported bounds', () => {
   assert.deepEqual(sanitizeSettings(null), DEFAULT_SETTINGS);
   assert.deepEqual(sanitizeSettings({ sensitivity: 5, volume: -1, view: 'chase', muted: true }), {
-    sensitivity: 1.5, volume: 0, view: 'chase', muted: true,
+    sensitivity: 1.5, volume: 0, view: 'chase', difficulty: 'pro', muted: true,
   });
   assert.deepEqual(sanitizeSettings({ sensitivity: NaN, volume: 'loud', view: 'bad', muted: 'true' }), DEFAULT_SETTINGS);
+});
+
+test('finish crossing advances player progress before ranking against opponents', () => {
+  const ai = [3.2, 3.8, 4.01];
+  const rank = (progress) => 1 + ai.filter((other) => other > progress).length;
+  assert.equal(rank(raceProgress(3, 999, 1000)), 2);
+  assert.equal(rank(raceProgress(4, 0, 1000)), 2);
+  assert.equal(rank(raceProgress(4, 100, 1000)), 1);
+  assert.equal(rank(raceProgress(4, 0, 1000)), 2);
+  assert.ok(AI_DIFFICULTY.elite.speed > AI_DIFFICULTY.pro.speed);
+  assert.ok(AI_DIFFICULTY.pro.speed > AI_DIFFICULTY.rookie.speed);
+  assert.equal(sanitizeSettings({ difficulty: 'elite' }).difficulty, 'elite');
 });

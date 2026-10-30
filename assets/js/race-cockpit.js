@@ -18,7 +18,7 @@
 import * as THREE from '../vendor/three.module.min.js';
 import {
   DrivingInput, DEFAULT_SETTINGS, sanitizeSettings, steeringYawRate,
-  selectAutomaticGear, forwardSpeedAfterForces,
+  selectAutomaticGear, forwardSpeedAfterForces, raceProgress, AI_DIFFICULTY,
 } from './race-controls.mjs';
 
 /* ================================================================
@@ -354,12 +354,12 @@ class EngineAudio {
     // --- 柔和的基音與少量泛音，避免原本尖銳刺耳的方波 ---
     this.engGain = ctx.createGain(); this.engGain.gain.value = 0;
     this.engFilter = ctx.createBiquadFilter();
-    this.engFilter.type = 'lowpass'; this.engFilter.frequency.value = 500; this.engFilter.Q.value = 0.6;
+    this.engFilter.type = 'lowpass'; this.engFilter.frequency.value = 900; this.engFilter.Q.value = 0.6;
     const shaper = ctx.createWaveShaper();
     const curveArr = new Float32Array(1024);
     for (let i = 0; i < 1024; i++) {
       const x = (i / 1023) * 2 - 1;
-      curveArr[i] = Math.tanh(x * 1.25) * 0.65;
+      curveArr[i] = Math.tanh(x * 1.5) * 0.85;
     }
     shaper.curve = curveArr;
     this.engFilter.connect(shaper).connect(this.engGain).connect(this.master);
@@ -420,7 +420,7 @@ class EngineAudio {
   resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); }
   suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); }
   applyVolume(timeConstant = 0.08) {
-    if (this.ready) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume * 0.6, this.ctx.currentTime, timeConstant);
+    if (this.ready) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume * 0.9, this.ctx.currentTime, timeConstant);
   }
   setVolume(volume) { this.volume = clamp(volume, 0, 1); this.applyVolume(); }
   setMuted(muted) { this.muted = muted; this.applyVolume(); }
@@ -584,6 +584,7 @@ class CockpitRacer {
       viewBtns: Array.from(document.querySelectorAll('[data-view]')),
       sensitivityInputs: Array.from(document.querySelectorAll('[data-setting="sensitivity"]')),
       volumeInputs: Array.from(document.querySelectorAll('[data-setting="volume"]')),
+      difficultyBtns: Array.from(document.querySelectorAll('[data-difficulty]')),
       posBox: q('hud-pos-box'),
       qualityBtns: Array.from(document.querySelectorAll('[data-quality]')),
       raceClock: q('hud-raceclock'),
@@ -1441,7 +1442,7 @@ class CockpitRacer {
         t: gridIdx / t.S,
         crossings: 0,
         speed: 0,
-        skill: 0.885 + k * 0.028,
+        skill: 0.96 + k * 0.025,
         weave: Math.random() * TAU,
         lateral: (k % 2 === 0 ? 3.4 : -3.4),
         progress: gridIdx / t.S,
@@ -1509,6 +1510,7 @@ class CockpitRacer {
         input.closest('.setting-control').querySelector('output').textContent = `${percent}%`;
       }
     }
+    d.difficultyBtns.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.difficulty === this.settings.difficulty)));
     d.viewBtns.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === this.settings.view)));
     d.viewBtn.setAttribute('aria-label', this.settings.view === 'cockpit' ? '切換至第三人稱視角' : '切換至駕駛艙視角');
     d.viewBtn.textContent = this.settings.view === 'cockpit' ? 'CAM' : 'CHASE';
@@ -1538,6 +1540,11 @@ class CockpitRacer {
       button.setAttribute('aria-pressed', String(button.dataset.quality === this.quality));
     });
     d.viewBtns.forEach((button) => button.addEventListener('click', () => this.setView(button.dataset.view)));
+    d.difficultyBtns.forEach((button) => button.addEventListener('click', () => {
+      this.settings.difficulty = button.dataset.difficulty;
+      saveSettings(this.settings);
+      this.syncSettingsUI();
+    }));
     d.sensitivityInputs.forEach((input) => input.addEventListener('input', () => {
       this.settings.sensitivity = clamp(Number(input.value) / 100, 0.5, 1.5);
       this.input.sensitivity = this.settings.sensitivity;
@@ -1919,9 +1926,10 @@ class CockpitRacer {
     }
 
     // 進度與跨圈偵測（以「越線次數」為準：起跑位於線後方，第一次越線＝計時開始）
-    p.progress = p.crossings + best / S;
+    p.progress = raceProgress(p.crossings, best, S);
     if (prevIdx > S * 0.75 && best < S * 0.25 && p.speed > 4) {
       p.crossings++;
+      p.progress = raceProgress(p.crossings, best, S);
       const lapMs = this.raceTime - p.lapStart;
       p.lapStart = this.raceTime;
       // 起跑後第一次越線僅開始計時；此後每次越線完成一圈（最短圈時門檻防誤判）
@@ -1961,16 +1969,17 @@ class CockpitRacer {
   updateAI(dt) {
     const t = this.track;
     for (const ai of this.ai) {
-      const targetSpeed = t.speedLimit[ai.idx % t.S] * ai.skill;
+      const profile = AI_DIFFICULTY[this.settings.difficulty];
+      const targetSpeed = Math.min(CFG.topSpeed * 1.08, t.speedLimit[ai.idx % t.S] * ai.skill * profile.speed);
       // 起步加速
-      const maxAccel = 11;
+      const maxAccel = profile.accel;
       if (ai.speed < targetSpeed) ai.speed = Math.min(ai.speed + maxAccel * dt, targetSpeed);
       else ai.speed = Math.max(ai.speed - 9 * dt, targetSpeed);
       ai.t += (ai.speed * dt) / t.totalLength;
       if (ai.t >= 1) { ai.t -= 1; ai.crossings++; }
       ai.idx = Math.floor(ai.t * t.S);
       ai.weave += dt * 0.8;
-      ai.progress = ai.crossings + ai.t;
+      ai.progress = raceProgress(ai.crossings, ai.t * t.S, t.S);
     }
     this.updateAiTransforms();
   }
